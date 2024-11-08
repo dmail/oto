@@ -10,7 +10,7 @@ export const BattleBackgroundSpriteSheet = ({ col, row }) => {
     <SpriteSheet
       url={battleBackgroundsSpritesheetUrl}
       x={col * 260 + 5}
-      y={row * 100 + 5}
+      y={row * 100 + 0}
       width={255}
       height={200}
     />

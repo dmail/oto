@@ -42,6 +42,7 @@ export const App = () => {
         >
           <div
             style={{
+              top: "26px",
               position: "relative",
               height: "100px",
               width: "100px",
