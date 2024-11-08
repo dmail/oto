@@ -1,4 +1,4 @@
-import { SpriteSheet } from "./spritesheet.jsx";
+import { SpriteSheet } from "../sprite/spritesheet.jsx";
 
 const battleBackgroundsSpritesheetUrl = new URL(
   "./battle_background_spritesheet.png",

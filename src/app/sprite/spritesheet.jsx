@@ -27,12 +27,22 @@ class MqlSprite extends HTMLElement {
     const image = new Image();
     const context = canvas.getContext("2d");
     image.onload = () => {
-      context.drawImage(
+      console.log(
+        "draw",
         image,
         x,
         y,
         width,
         height,
+        canvas.offsetWidth,
+        canvas.offsetHeight,
+      );
+      context.drawImage(
+        image,
+        parseInt(x),
+        parseInt(y),
+        parseInt(width),
+        parseInt(height),
         0,
         0,
         canvas.offsetWidth,
@@ -42,7 +52,6 @@ class MqlSprite extends HTMLElement {
     image.src = url;
   }
 }
-
 customElements.define(MqlSprite.tagName, MqlSprite);
 
 export const SpriteSheet = (props) => {
