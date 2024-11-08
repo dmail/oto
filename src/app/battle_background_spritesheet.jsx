@@ -1,26 +1,22 @@
 import { SpriteSheet } from "./spritesheet.jsx";
 
 const battleBackgroundsSpritesheetUrl = new URL(
-  "./battle_backgrounds_spritesheet.png",
+  "./battle_background_spritesheet.png",
   import.meta.url,
 );
 
-export const BattleBackgroundSpriteSheet = ({ row, col }) => {
+export const BattleBackgroundSpriteSheet = ({ col, row }) => {
   return (
     <SpriteSheet
       url={battleBackgroundsSpritesheetUrl}
-      colWidth={260}
-      rowHeight={200}
-      gapX={10}
-      gapY={2}
-      width={250}
-      height={198}
-      row={row}
-      col={col}
+      x={col * 260 + 5}
+      y={row * 100 + 5}
+      width={255}
+      height={200}
     />
   );
 };
 
 export const MountainAndSkyBattleBackground = () => {
-  return <BattleBackgroundSpriteSheet row={0} col={1} />;
+  return <BattleBackgroundSpriteSheet col={1} row={0} />;
 };
