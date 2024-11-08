@@ -1,0 +1,35 @@
+{
+  "name": "mql",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "start": "npm run dev -- --open",
+    "dev": "node ./scripts/dev.mjs",
+    "test": "node ./scripts/test.mjs",
+    "test:coverage": "npm run test -- --coverage",
+    "build": "node ./scripts/build.mjs",
+    "build:serve": "node ./scripts/build_serve.mjs --open",
+    "eslint": "npx eslint . --ext=.html,.js,.jsx,.mjs,.cjs",
+    "prettier": "prettier --write .",
+    "playwright:install": "npx playwright install-deps && npx playwright install"
+  },
+  "dependencies": {
+    "preact": "10.24.3"
+  },
+  "devDependencies": {
+    "@babel/plugin-syntax-import-attributes": "7.26.0",
+    "@babel/plugin-transform-react-jsx": "7.25.9",
+    "@jsenv/assert": "4.4.2",
+    "@jsenv/core": "39.5.19",
+    "@jsenv/plugin-preact": "1.6.25",
+    "@jsenv/plugin-bundling": "2.7.16",
+    "@jsenv/plugin-minification": "1.5.10",
+    "@jsenv/eslint-config-relax": "1.2.12",
+    "@jsenv/test": "3.5.22",
+    "eslint": "9.14.0",
+    "open": "10.1.0",
+    "@playwright/browser-chromium": "1.48.2",
+    "prettier": "3.3.3"
+  }
+}
