@@ -1,0 +1,11 @@
+- Quand on attaque notre perso se fige et on le fait avancer
+(ça c'est facile on fera un translate)
+- le fond d'écran brille
+- les dégats partent de la ligne centrale (du monstre) en hauteur puis rebondissent
+  le haut du texte est au niveau du centre du monstre
+- Quand l'ennemi attaque il "brille" (une sorte d'effet de glow)
+- Quand on prends des dégats notre perso tremble (bas, haut x3)
+  il y a un truc css dans le genre qui simule un rebond dont l'intensité diminue
+  puis les dégats apparaissent
+  le chiffre par du bas du perso, monte haut  (1,5 hauteur du perso)
+  puis rebomdi jusqu'a revenir au bas du perso
