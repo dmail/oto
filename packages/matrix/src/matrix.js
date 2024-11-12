@@ -1,13 +1,13 @@
-// https://github.com/leeoniya/transformation-matrix-js/blob/3595d2b36a_ab0f593bdffdb786b9e832c50c3b0/src/matrix.js#L45
+// https://github.com/leeoniya/transformation-matrix-js/blob/3595d2b36aa1b0f593bdffdb786b9e832c50c3b0/src/matrix.js#L45
 
 export const fromTransformations = ({ flip, translate, rotate, scale }) => {
-  let _a = 0;
+  let _a = 1;
   let _b = 0;
   let _c = 0;
-  let _d = 0;
+  let _d = 1;
   let _e = 0;
   let _f = 0;
-  const transform = ({ a, b, c, d, e, f }) => {
+  const transform = (a, b, c, d, e, f) => {
     _a = _a * a + _c * b;
     _b = _b * a + _d * b;
     _c = _a * c + _c * d;

@@ -19,14 +19,14 @@ const CharacterSpriteSheet = ({ col, row, ...rest }) => {
 };
 
 const HERO_STATE_CELL = {
-  idle_top_a: { col: 3, row: 1, mirrorX: true },
-  idle_top_b: { col: 3, row: 2 },
-  idle_right_a: { col: 3, row: 1 },
-  idle_right_b: { col: 3, row: 2 },
-  idle_bottom_a: { col: 3, row: 1 },
+  idle_right_a: { col: 0, row: 1 },
+  idle_right_b: { col: 1, row: 1 },
+  idle_top_a: { col: 3, row: 1 },
+  idle_top_b: { col: 4, row: 1 },
+  idle_bottom_a: { col: 2, row: 2 },
   idle_bottom_b: { col: 3, row: 2 },
-  idle_left_a: { col: 3, row: 1, mirrorX: true },
-  idle_left_b: { col: 3, row: 2, mirrorX: true },
+  idle_left_a: { col: 0, row: 1, mirrorX: true },
+  idle_left_b: { col: 1, row: 1, mirrorX: true },
 };
 
 export const Hero = ({
@@ -35,6 +35,13 @@ export const Hero = ({
   // pushing = false,
   // wondering = false,
 }) => {
-  const { col, row, mirrorX } = HERO_STATE_CELL[`idle_${direction}_a`];
-  return <CharacterSpriteSheet col={col} row={row} mirrorX={mirrorX} />;
+  const { col, row, mirrorX, mirrorY } = HERO_STATE_CELL[`idle_${direction}_a`];
+  return (
+    <CharacterSpriteSheet
+      col={col}
+      row={row}
+      mirrorX={mirrorX}
+      mirrorY={mirrorY}
+    />
+  );
 };

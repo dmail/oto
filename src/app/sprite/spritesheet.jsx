@@ -55,7 +55,14 @@ class MqlSprite extends HTMLElement {
       const transformations = {
         ...(mirrorX || mirrorY
           ? {
-              flip: { x: mirrorX, y: mirrorY },
+              flip: {
+                x: mirrorX,
+                y: mirrorY,
+              },
+              translate: {
+                x: mirrorX ? -parseInt(width) : 0,
+                y: mirrorY ? -parseInt(height) : 0,
+              },
             }
           : {}),
       };
@@ -64,6 +71,7 @@ class MqlSprite extends HTMLElement {
         context.save();
         const matrix = fromTransformations(transformations);
         context.setTransform(...matrix);
+        //  context.setTransform(-1, 0, 0, 1, parseInt(width), 0);
       }
       context.drawImage(
         source,
