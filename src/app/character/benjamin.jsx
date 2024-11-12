@@ -7,23 +7,21 @@ const characterSpritesheetUrl = new URL(
 );
 
 const HERO_STATE_CELL = {
-  idle_bottom_a: { col: 0, row: 0 },
-  idle_bottom_b: { col: 1, row: 0 },
-  idle_left_a: { col: 2, row: 1 },
-  idle_left_b: { col: 3, row: 1 },
-  idle_top_a: { col: 4, row: 1 },
-  idle_top_b: { col: 5, row: 1 },
-  idle_right_a: { col: 2, row: 1, mirrorX: true },
-  idle_right_b: { col: 3, row: 1, mirrorX: true },
+  walking_bottom_a: { x: 0 + 9, y: 0 + 17 },
+  walking_bottom_b: { x: 17 + 9, y: 0 + 17 },
+  walking_left_a: { x: 17 * 2 + 9, y: 0 + 17 },
+  walking_left_b: { x: 17 * 3 + 9, y: 0 + 17 },
+  walking_top_a: { x: 17 * 4 + 9, y: 0 + 17 },
+  walking_top_b: { x: 17 * 5 + 9, y: 0 + 17 },
+  walking_right_a: { x: 17 * 2 + 9, y: 0 + 17, mirrorX: true },
+  walking_right_b: { x: 17 * 3 + 9, y: 0 + 17, mirrorX: true },
 };
 
 export const Benjamin = ({
-  animated,
   direction = "top",
-  // jumping = false,
-  // pushing = false,
-  // wondering = false,
+  activity = "", // 'walking', 'jumping', 'pushing', 'wondering'
 }) => {
+  const animated = activity !== "";
   const [frame, frameSetter] = useState("a");
   useEffect(() => {
     if (!animated) return () => {};
@@ -31,21 +29,21 @@ export const Benjamin = ({
       frameSetter((frameCurrent) => {
         return frameCurrent === "a" ? "b" : "a";
       });
-    }, 500);
+    }, 400);
     return () => {
       clearInterval(interval);
     };
   }, [animated]);
 
-  const { col, row, mirrorX, mirrorY } =
-    HERO_STATE_CELL[`idle_${direction}_${frame}`];
+  const { x, y, mirrorX, mirrorY } =
+    HERO_STATE_CELL[`${activity}_${direction}_${frame}`];
   return (
     <SpriteSheet
       url={characterSpritesheetUrl}
-      x={col * 16 + 10}
-      y={row * 16 + 16}
-      width={16}
-      height={16}
+      x={x}
+      y={y}
+      width={17}
+      height={17}
       mirrorX={mirrorX}
       mirrorY={mirrorY}
       transparentColor={[

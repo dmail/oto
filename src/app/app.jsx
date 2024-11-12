@@ -36,11 +36,8 @@ export const App = () => {
         <Box height={100} width={100} x="center" y={26}>
           <FirstEnemy />
         </Box>
-        <Box width={30} height={30} x="center" y={140}>
-          <Benjamin
-            // animated // not animated yet
-            direction="bottom"
-          />
+        <Box width={25} height={25} x="center" y={140}>
+          <Benjamin direction="top" activity="walking" />
         </Box>
       </div>
     </div>

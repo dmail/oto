@@ -52,7 +52,6 @@ class MqlSprite extends HTMLElement {
     image.onload = () => {
       let source = image;
       if (transparentColor) {
-        console.log({ transparentColor });
         source = replaceColorWithTransparentPixels(image, transparentColor);
       }
       const transformations = {

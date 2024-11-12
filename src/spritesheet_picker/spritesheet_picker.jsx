@@ -65,11 +65,6 @@ const SpritesheetPicker = () => {
     }
     context.save();
     context.beginPath();
-    console.log(
-      "draw selection at",
-      selectionRectangle.x,
-      selectionRectangle.width,
-    );
     context.rect(
       selectionRectangle.x,
       selectionRectangle.y,
