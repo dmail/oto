@@ -4,6 +4,8 @@ import "./custom_elements_redefine.js";
 
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { FirstEnemy } from "./enemy/enemies.jsx";
+import { Hero } from "./character/characters.jsx";
+import { Box } from "./layout/layout.jsx";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -31,26 +33,12 @@ export const App = () => {
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            width: "100%",
-            justifyContent: "center",
-            flexDirection: "row",
-          }}
-        >
-          <div
-            style={{
-              top: "26px",
-              position: "relative",
-              height: "100px",
-              width: "100px",
-            }}
-          >
-            <FirstEnemy />
-          </div>
-        </div>
+        <Box height={100} width={100} x="center" y={26}>
+          <FirstEnemy />
+        </Box>
+        <Box height={24} width={24} x="center" y={140}>
+          <Hero direction="top" />
+        </Box>
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ const enemySpritesheetUrl = new URL("./enemy_spritesheet.png", import.meta.url);
 export const EnemySpriteSheet = ({ col, row }) => {
   return (
     <SpriteSheet
-      transparent-color={[0, 128, 128]}
+      transparentColor={[0, 128, 128]}
       url={enemySpritesheetUrl}
       x={col * 50 + 80}
       y={row * 50 + 10}

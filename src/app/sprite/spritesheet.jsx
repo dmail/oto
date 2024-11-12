@@ -1,3 +1,5 @@
+import { fromTransformations } from "matrix";
+
 class MqlSprite extends HTMLElement {
   static tagName = "mql-sprite";
   static observedAttributes = [
@@ -7,14 +9,20 @@ class MqlSprite extends HTMLElement {
     "width",
     "height",
     "transparent-color",
+    "mirror-x",
+    "mirror-y",
   ];
 
   connectedCallback() {
     const shadow = this.attachShadow({ mode: "open" });
     const canvas = document.createElement("canvas");
+    canvas.width = "100%";
+    canvas.height = "100%";
     canvas.style.width = "100%";
     canvas.style.height = "100%";
     shadow.appendChild(canvas);
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
     this.update();
   }
 
@@ -30,10 +38,10 @@ class MqlSprite extends HTMLElement {
     const y = this.getAttribute("y");
     const width = this.getAttribute("width");
     const height = this.getAttribute("height");
-    const transparentColor = this.getAttribute("transparent-color");
+    const transparentColor = this.getAttribute("transparentColor");
+    const mirrorX = this.getAttribute("mirrorX");
+    const mirrorY = this.getAttribute("mirrorY");
     const canvas = this.shadowRoot.querySelector("canvas");
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
     const image = new Image();
     const context = canvas.getContext("2d");
     image.onload = () => {
@@ -43,6 +51,19 @@ class MqlSprite extends HTMLElement {
           image,
           transparentColor.split(","),
         );
+      }
+      const transformations = {
+        ...(mirrorX || mirrorY
+          ? {
+              flip: { x: mirrorX, y: mirrorY },
+            }
+          : {}),
+      };
+      const hasTransformations = Object.keys(transformations).length > 0;
+      if (hasTransformations) {
+        context.save();
+        const matrix = fromTransformations(transformations);
+        context.setTransform(...matrix);
       }
       context.drawImage(
         source,
@@ -55,6 +76,9 @@ class MqlSprite extends HTMLElement {
         canvas.offsetWidth,
         canvas.offsetHeight,
       );
+      if (hasTransformations) {
+        context.restore();
+      }
     };
     image.src = url;
   }
