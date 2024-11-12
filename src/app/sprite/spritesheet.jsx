@@ -67,6 +67,7 @@ class MqlSprite extends HTMLElement {
           : {}),
       };
       const hasTransformations = Object.keys(transformations).length > 0;
+      context.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
       if (hasTransformations) {
         context.save();
         const matrix = fromTransformations(transformations);

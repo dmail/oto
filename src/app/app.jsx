@@ -4,7 +4,7 @@ import "./custom_elements_redefine.js";
 
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { FirstEnemy } from "./enemy/enemies.jsx";
-import { Hero } from "./character/characters.jsx";
+import { Benjamin } from "./character/benjamin.jsx";
 import { Box } from "./layout/layout.jsx";
 
 export const App = () => {
@@ -36,8 +36,11 @@ export const App = () => {
         <Box height={100} width={100} x="center" y={26}>
           <FirstEnemy />
         </Box>
-        <Box height={24} width={24} x="center" y={140}>
-          <Hero direction="top" />
+        <Box width={30} height={30} x="center" y={140}>
+          <Benjamin
+            // animated // not animated yet
+            direction="bottom"
+          />
         </Box>
       </div>
     </div>
