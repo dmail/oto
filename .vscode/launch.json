@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "node",
+      "type": "node",
+      "request": "launch",
+      "program": "${file}",
+      // "runtimeVersion": "14.5.0",
+      "runtimeArgs": [
+        // "--preserve-symlinks",
+        // "--preserve-symlinks-main"
+      ],
+      "console": "integratedTerminal",
+      // "args": ["--coverage"],
+      "autoAttachChildProcesses": true,
+      "sourceMaps": true,
+      "smartStep": true,
+      "skipFiles": [
+        // force-array-multiline
+        // "node_modules/**",
+        "<node_internals>/**"
+      ]
+    }
+  ]
+}

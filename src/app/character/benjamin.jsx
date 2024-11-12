@@ -42,10 +42,10 @@ export const Benjamin = ({
   return (
     <SpriteSheet
       url={characterSpritesheetUrl}
-      x={col * 18 + 10}
-      y={row * 18 + 20}
-      width={18}
-      height={18}
+      x={col * 15 + 10}
+      y={row * 15 + 18}
+      width={15}
+      height={15}
       mirrorX={mirrorX}
       mirrorY={mirrorY}
     />
