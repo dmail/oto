@@ -38,7 +38,7 @@ const SpritesheetPicker = () => {
     image.crossOrigin = "anonymous";
     image.onload = () => {
       const canvas = canvasRef.current;
-      const context = canvas.getContext("2d");
+      const context = canvas.getContext("2d", { willReadFrequently: true });
       context.drawImage(image, 0, 0);
       imageUrlFacade.set(canvas.toDataURL());
     };
@@ -106,9 +106,9 @@ const SpritesheetPicker = () => {
         }}
         onMouseDown={(e) => {
           const canvas = canvasRef.current;
-          const context = canvas.getContext("2d");
+          const context = canvas.getContext("2d", { willReadFrequently: true });
           const pixel = context.getImageData(e.offsetX, e.offsetY, 1, 1).data;
-          colorAtSetter(pixel);
+          colorAtSetter(`${pixel[0]},${pixel[1]},${pixel[2]}`);
 
           mousemoveOriginSetter({
             x: e.offsetX,
