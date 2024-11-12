@@ -8,9 +8,9 @@ class MqlSprite extends HTMLElement {
     "y",
     "width",
     "height",
-    "transparent-color",
-    "mirror-x",
-    "mirror-y",
+    "transparentColor",
+    "mirrorX",
+    "mirrorY",
   ];
 
   connectedCallback() {
@@ -32,25 +32,28 @@ class MqlSprite extends HTMLElement {
     }
   }
 
+  // eslint-disable-next-line accessor-pairs
+  set transparentColor(value) {
+    this.transparentColors = value;
+  }
+
   update() {
     const url = this.getAttribute("url");
     const x = this.getAttribute("x");
     const y = this.getAttribute("y");
     const width = this.getAttribute("width");
     const height = this.getAttribute("height");
-    const transparentColor = this.getAttribute("transparentColor");
-    const mirrorX = this.getAttribute("mirrorX");
-    const mirrorY = this.getAttribute("mirrorY");
+    const transparentColor = this.transparentColors;
+    const mirrorX = this.getAttribute("mirror-x");
+    const mirrorY = this.getAttribute("mirror-y");
     const canvas = this.shadowRoot.querySelector("canvas");
     const image = new Image();
     const context = canvas.getContext("2d");
     image.onload = () => {
       let source = image;
       if (transparentColor) {
-        source = replaceColorWithTransparentPixels(
-          image,
-          transparentColor.split(","),
-        );
+        console.log({ transparentColor });
+        source = replaceColorWithTransparentPixels(image, transparentColor);
       }
       const transformations = {
         ...(mirrorX || mirrorY
@@ -101,14 +104,28 @@ const replaceColorWithTransparentPixels = (image, color) => {
   const imageData = ctx.getImageData(0, 0, image.width, image.height);
   const pixels = imageData.data;
 
-  const rToReplace = parseInt(color[0]);
-  const gToReplace = parseInt(color[1]);
-  const bToReplace = parseInt(color[2]);
+  let shouldReplace;
+  const [first] = color;
+  if (typeof first === "object") {
+    shouldReplace = (r, g, b) => {
+      return color.some((c) => {
+        return r === c[0] && g === c[1] && b === c[2];
+      });
+    };
+  } else {
+    const rToReplace = parseInt(color[0]);
+    const gToReplace = parseInt(color[1]);
+    const bToReplace = parseInt(color[2]);
+    shouldReplace = (r, g, b) => {
+      return r === rToReplace && g === gToReplace && b === bToReplace;
+    };
+  }
+
   for (let i = 0, n = pixels.length; i < n; i += 4) {
     const r = pixels[i];
     const g = pixels[i + 1];
     const b = pixels[i + 2];
-    if (r === rToReplace && g === gToReplace && b === bToReplace) {
+    if (shouldReplace(r, g, b)) {
       pixels[i + 3] = 0;
     }
   }
@@ -116,6 +133,6 @@ const replaceColorWithTransparentPixels = (image, color) => {
   return canvas;
 };
 
-export const SpriteSheet = (props) => {
-  return <mql-sprite {...props} />;
+export const SpriteSheet = ({ transparentColor, ...props }) => {
+  return <mql-sprite transparentColor={transparentColor} {...props} />;
 };

@@ -2,7 +2,7 @@ import { SpriteSheet } from "../sprite/spritesheet.jsx";
 import { useState, useEffect } from "preact/hooks";
 
 const characterSpritesheetUrl = new URL(
-  "./character_spritesheet.gif",
+  "./character_spritesheet.png",
   import.meta.url,
 );
 
@@ -42,12 +42,16 @@ export const Benjamin = ({
   return (
     <SpriteSheet
       url={characterSpritesheetUrl}
-      x={col * 15 + 10}
-      y={row * 15 + 18}
-      width={15}
-      height={15}
+      x={col * 16 + 10}
+      y={row * 16 + 16}
+      width={16}
+      height={16}
       mirrorX={mirrorX}
       mirrorY={mirrorY}
+      transparentColor={[
+        [0, 206, 206],
+        [0, 155, 155],
+      ]}
     />
   );
 };
