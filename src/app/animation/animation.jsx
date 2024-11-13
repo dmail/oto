@@ -1,4 +1,3 @@
-// import { toChildArray } from "preact";
 import { useRef, useLayoutEffect } from "preact/hooks";
 
 export const Animation = ({ options, children }) => {
@@ -16,17 +15,24 @@ export const Animation = ({ options, children }) => {
       duration = 500,
       iterations = 1,
       fill = "forwards",
+      onStart = () => {},
       onCancel = () => {},
       onFinish = () => {},
     } = options;
     for (const child of childNodes) {
       const animation = child.animate(steps, { duration, fill, iterations });
+      onStart();
       animation.oncancel = onCancel;
       animation.onfinish = onFinish;
-      animation.finished.then(() => {
-        animation.commitStyles();
-        animation.cancel();
-      });
+      animation.finished.then(
+        () => {
+          animation.commitStyles();
+          animation.cancel();
+        },
+        () => {
+          // ignore cancellation
+        },
+      );
       cleanupCallbacks.push(() => {
         animation.cancel();
       });
@@ -39,11 +45,8 @@ export const Animation = ({ options, children }) => {
   }, [options]);
 
   return (
-    <div ref={containerRef}>
+    <div ref={containerRef} className="animation_container">
       {children}
-      {/* {toChildArray(children).map((child) => {
-        return child;
-      })} */}
     </div>
   );
 };
