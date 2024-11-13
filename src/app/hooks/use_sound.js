@@ -1,10 +1,5 @@
-import {
-  useMemo,
-  useRef,
-  useCallback,
-  useState,
-  useEffect,
-} from "preact/hooks";
+import { useRef, useCallback, useState, useEffect } from "preact/hooks";
+import { useStructuredMemo } from "./use_structured_memo.js";
 
 export const useSound = ({ url }) => {
   return useAudio({ url });
@@ -43,11 +38,4 @@ const useAudio = ({ url }) => {
     play,
     pause,
   });
-};
-
-const useStructuredMemo = (props) => {
-  return useMemo(
-    () => props,
-    Object.keys(props).map((key) => props[key]),
-  );
 };

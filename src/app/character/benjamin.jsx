@@ -20,11 +20,13 @@ const HERO_STATE_CELL = {
 export const Benjamin = ({
   direction = "top",
   activity = "", // 'walking', 'jumping', 'pushing', 'wondering'
+  animate = true,
 }) => {
-  const animated = activity !== "";
+  const hasAnimation = activity !== "";
   const [frame, frameSetter] = useState("a");
   useEffect(() => {
-    if (!animated) return () => {};
+    if (!animate || !hasAnimation) return () => {};
+
     const interval = setInterval(() => {
       frameSetter((frameCurrent) => {
         return frameCurrent === "a" ? "b" : "a";
@@ -33,7 +35,7 @@ export const Benjamin = ({
     return () => {
       clearInterval(interval);
     };
-  }, [animated]);
+  }, [animate, hasAnimation]);
 
   const { x, y, mirrorX, mirrorY } =
     HERO_STATE_CELL[`${activity}_${direction}_${frame}`];

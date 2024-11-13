@@ -8,7 +8,7 @@ import { Box } from "./layout/box.jsx";
 import { Animation, translateY } from "./animation/animation.jsx";
 import { SwordA } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
-import { useSound } from "./audio/sound.jsx";
+import { useSound } from "./hooks/use_sound.js";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -26,7 +26,6 @@ export const App = () => {
   const [moveToAttack, moveToAttackSetter] = useState(false);
   const [attack, attackSetter] = useState(false);
   const [moveBackAfterAttack, moveBackAfterAttackSetter] = useState(false);
-
   const swordSound = useSound({ url: swordASoundUrl });
 
   return (
@@ -107,7 +106,7 @@ export const App = () => {
           }
         >
           <Box width={25} height={25} x="center" y={140}>
-            <Benjamin direction="top" activity="walking" />
+            <Benjamin direction="top" activity="walking" animate={false} />
           </Box>
         </Animation>
       </div>
