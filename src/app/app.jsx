@@ -62,9 +62,11 @@ export const App = () => {
                 ],
                 duration: 200,
                 onStart: () => {
+                  swordSound.currentTime = 0.15;
                   swordSound.play();
                 },
                 onFinish: () => {
+                  // swordSound.pause();
                   attackSetter(false);
                   moveBackAfterAttackSetter(true);
                 },
