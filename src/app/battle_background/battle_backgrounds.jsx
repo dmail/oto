@@ -5,7 +5,11 @@ const battleBackgroundsSpritesheetUrl = new URL(
   import.meta.url,
 );
 
-export const BattleBackgroundSpriteSheet = ({ col, row }) => {
+export const MountainAndSkyBattleBackground = (props) => {
+  return <BattleBackgroundSpriteSheet col={1} row={0} {...props} />;
+};
+
+const BattleBackgroundSpriteSheet = ({ col, row, ...props }) => {
   return (
     <SpriteSheet
       url={battleBackgroundsSpritesheetUrl}
@@ -13,10 +17,7 @@ export const BattleBackgroundSpriteSheet = ({ col, row }) => {
       y={row * 100 + 0}
       width={255}
       height={200}
+      {...props}
     />
   );
-};
-
-export const MountainAndSkyBattleBackground = () => {
-  return <BattleBackgroundSpriteSheet col={1} row={0} />;
 };

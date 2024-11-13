@@ -11,6 +11,7 @@ export const SpriteSheet = ({
   height,
   mirrorX,
   mirrorY,
+  blink,
 }) => {
   const canvasRef = useRef();
   useLayoutEffect(() => {
@@ -27,6 +28,10 @@ export const SpriteSheet = ({
     let source = image;
     if (transparentColor) {
       source = replaceColorWithTransparentPixels(image, transparentColor);
+    }
+    if (blink) {
+      debugger;
+      source = blinkSprite(source);
     }
     const transformations = {
       ...(mirrorX || mirrorY
@@ -66,7 +71,7 @@ export const SpriteSheet = ({
     if (hasTransformations) {
       context.restore();
     }
-  }, [image, x, y, width, height]);
+  }, [image, blink, transparentColor, x, y, width, height]);
 
   return (
     <canvas
@@ -114,4 +119,52 @@ const replaceColorWithTransparentPixels = (image, color) => {
   }
   ctx.putImageData(imageData, 0, 0);
   return canvas;
+};
+
+const blinkSprite = (
+  canvas,
+  {
+    x1 = 70, // x-coordinate of first circle
+    y1 = 75, // y-coordinate of first circle
+    x2 = 145, // x-coordinate of second circle
+    y2 = y1,
+  } = {},
+) => {
+  const buffer = document.createElement("canvas");
+  buffer.width = canvas.width;
+  buffer.height = canvas.height;
+
+  const bufferContext = buffer.getContext("2d");
+  const radgrad = bufferContext.createRadialGradient(x1, y1, 50, x1, y1, 40);
+  const radgrad2 = bufferContext.createRadialGradient(x2, y2, 145, 50, y2, 40);
+
+  bufferContext.fillStyle = "rgba(0,0,0,1)";
+  bufferContext.fillRect(0, 0, canvas.width, canvas.height);
+  bufferContext.save();
+  bufferContext.globalCompositeOperation = "destination-out";
+
+  // add ellipses
+  bufferContext.beginPath();
+  bufferContext.arc(x1, y1, 50, 0, Math.PI * 2, true);
+  bufferContext.arc(x2, y2, 50, 0, Math.PI * 2, true);
+  bufferContext.shadowBlur = 20;
+  bufferContext.shadowColor = "black";
+
+  radgrad.addColorStop(0, "rgba(0,0,0,0.1)");
+  radgrad.addColorStop(0.2, `rgba(0, 0, 0, ${Math.random() + 0.2})`);
+  radgrad.addColorStop(0.8, `rgba(0,0,0,${Math.random() + 0.8})`);
+  radgrad.addColorStop(1, "rgba(0,0,0,1)");
+
+  radgrad2.addColorStop(0, "rgba(0,0,0,0.1)");
+  radgrad2.addColorStop(0.2, `rgba(0, 0, 0, ${Math.random() + 0.2})`);
+  radgrad2.addColorStop(0.8, `rgba(0,0,0,${Math.random() + 0.8})`);
+  radgrad2.addColorStop(1, "rgba(0,0,0,1)");
+
+  bufferContext.fillStyle = radgrad;
+  bufferContext.fill();
+  bufferContext.fillStyle = radgrad2;
+  bufferContext.fill();
+  bufferContext.restore();
+
+  return buffer;
 };

@@ -27,6 +27,7 @@ export const App = () => {
   const [attack, attackSetter] = useState(false);
   const [moveBackAfterAttack, moveBackAfterAttackSetter] = useState(false);
   const swordSound = useSound({ url: swordASoundUrl });
+  const [backgroundBlink, backgroundBlinkSetter] = useState(false);
 
   return (
     <div
@@ -41,7 +42,7 @@ export const App = () => {
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
-        <MountainAndSkyBattleBackground />
+        <MountainAndSkyBattleBackground blink={backgroundBlink} />
       </div>
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -61,10 +62,12 @@ export const App = () => {
                 ],
                 duration: 200,
                 onStart: () => {
+                  backgroundBlinkSetter(true);
                   swordSound.currentTime = 0.15;
                   swordSound.play();
                 },
                 onFinish: () => {
+                  // backgroundBlinkSetter(false);
                   // swordSound.pause();
                   attackSetter(false);
                   moveBackAfterAttackSetter(true);
@@ -106,7 +109,7 @@ export const App = () => {
           }
         >
           <Box width={25} height={25} x="center" y={140}>
-            <Benjamin direction="top" activity="walking" animate={false} />
+            <Benjamin direction="top" activity="walking" />
           </Box>
         </Animation>
       </div>
