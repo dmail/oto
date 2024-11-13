@@ -6,6 +6,7 @@ import { FirstEnemy } from "./enemy/enemies.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
 import { Box } from "./layout/box.jsx";
 import { Animation, translateY } from "./animation/animation.jsx";
+import { SwordA } from "./fight/sword_a.jsx";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -21,6 +22,7 @@ export const App = () => {
   }, []);
 
   const [moveToAttack, moveToAttackSetter] = useState(false);
+  const [attack, attackSetter] = useState(false);
   const [moveBackAfterAttack, moveBackAfterAttackSetter] = useState(false);
 
   return (
@@ -41,6 +43,29 @@ export const App = () => {
       >
         <Box height={100} width={100} x="center" y={26}>
           <FirstEnemy />
+          {attack && (
+            <Animation
+              options={{
+                steps: [
+                  {
+                    transform: `scaleX(-1) translateX(20px) rotate(10deg)`,
+                  },
+                  {
+                    transform: `scaleX(-1) translateX(0px) rotate(-10deg)`,
+                  },
+                ],
+                duration: 200,
+                onFinish: () => {
+                  attackSetter(false);
+                  moveBackAfterAttackSetter(true);
+                },
+              }}
+            >
+              <Box width={60} height={60}>
+                <SwordA />
+              </Box>
+            </Animation>
+          )}
         </Box>
         <Animation
           options={
@@ -53,8 +78,7 @@ export const App = () => {
                   },
                   onFinish: () => {
                     moveToAttackSetter(false);
-                    alert("do the attack");
-                    moveBackAfterAttackSetter(true);
+                    attackSetter(true);
                   },
                 }
               : moveBackAfterAttack

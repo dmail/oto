@@ -1,14 +1,22 @@
-export const Box = ({ width, height, x = 0, y = 0, children }) => {
+export const Box = ({
+  width = "100%",
+  height = "100%",
+  x = "center",
+  y = "center",
+  children,
+}) => {
   return (
     <div
+      className="box"
       style={{
         position: "absolute",
-        width: `${width}px`,
-        height: `${height}px`,
+        width: typeof width === "number" ? `${width}px` : width,
+        height: typeof height === "number" ? `${height}px` : height,
         ...(x === "center"
           ? {
               left: "50%",
-              marginLeft: `${-(width / 2)}px`,
+              marginLeft:
+                typeof width === "number" ? `${-(width / 2)}px` : `-50%`,
             }
           : {
               left: typeof x === "number" ? `${x}px` : x,
@@ -16,7 +24,8 @@ export const Box = ({ width, height, x = 0, y = 0, children }) => {
         ...(y === "center"
           ? {
               top: "50%",
-              marginTop: `${-(height / 2)}px`,
+              marginTop:
+                typeof height === "number" ? `${-(height / 2)}px` : "-50%",
             }
           : {
               top: typeof x === "number" ? `${y}px` : y,
