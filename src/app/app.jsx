@@ -5,7 +5,7 @@ import { MountainAndSkyBattleBackground } from "./battle_background/battle_backg
 import { FirstEnemy } from "./enemy/enemies.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
 import { Box } from "./layout/box.jsx";
-import { translateY } from "./animation/animation.js";
+import { Animation, translateY } from "./animation/animation.jsx";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -42,12 +42,8 @@ export const App = () => {
         <Box height={100} width={100} x="center" y={26}>
           <FirstEnemy />
         </Box>
-        <Box
-          width={25}
-          height={25}
-          x="center"
-          y={140}
-          animate={
+        <Animation
+          options={
             moveToAttack
               ? {
                   ...translateY(-20),
@@ -75,8 +71,10 @@ export const App = () => {
                 : null
           }
         >
-          <Benjamin direction="top" activity="walking" />
-        </Box>
+          <Box width={25} height={25} x="center" y={140}>
+            <Benjamin direction="top" activity="walking" />
+          </Box>
+        </Animation>
       </div>
     </div>
   );

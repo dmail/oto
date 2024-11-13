@@ -1,35 +1,6 @@
-import { useRef, useLayoutEffect } from "preact/hooks";
-
-export const Box = ({ width, height, x = 0, y = 0, children, animate }) => {
-  const nodeRef = useRef();
-  useLayoutEffect(() => {
-    if (!animate) {
-      return () => {};
-    }
-    const node = nodeRef.current;
-    const {
-      steps,
-      duration = 500,
-      iterations = 1,
-      fill = "forwards",
-      onCancel = () => {},
-      onFinish = () => {},
-    } = animate;
-    const animation = node.animate(steps, { duration, fill, iterations });
-    animation.oncancel = onCancel;
-    animation.onfinish = onFinish;
-    animation.finished.then(() => {
-      animation.commitStyles();
-      animation.cancel();
-    });
-    return () => {
-      animation.cancel();
-    };
-  }, [animate]);
-
+export const Box = ({ width, height, x = 0, y = 0, children }) => {
   return (
     <div
-      ref={nodeRef}
       style={{
         position: "absolute",
         width: `${width}px`,
