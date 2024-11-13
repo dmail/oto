@@ -29,7 +29,7 @@ export const Benjamin = ({
       frameSetter((frameCurrent) => {
         return frameCurrent === "a" ? "b" : "a";
       });
-    }, 400);
+    }, 350);
     return () => {
       clearInterval(interval);
     };

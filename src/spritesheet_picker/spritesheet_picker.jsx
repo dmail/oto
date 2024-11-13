@@ -39,6 +39,7 @@ const SpritesheetPicker = () => {
     image.onload = () => {
       const canvas = canvasRef.current;
       const context = canvas.getContext("2d", { willReadFrequently: true });
+      context.clearRect(0, 0, canvas.width, canvas.height);
       context.drawImage(image, 0, 0);
       imageUrlFacade.set(canvas.toDataURL());
     };

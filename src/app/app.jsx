@@ -1,11 +1,11 @@
-import { useLayoutEffect } from "preact/hooks";
+import { useLayoutEffect, useState } from "preact/hooks";
 import appStyleSheet from "./app.css" with { type: "css" };
 import "./custom_elements_redefine.js";
-
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { FirstEnemy } from "./enemy/enemies.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
-import { Box } from "./layout/layout.jsx";
+import { Box } from "./layout/box.jsx";
+import { translateY } from "./animation/animation.js";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -20,10 +20,16 @@ export const App = () => {
     };
   }, []);
 
+  const [moveToAttack, moveToAttackSetter] = useState(false);
+  const [moveBackAfterAttack, moveBackAfterAttackSetter] = useState(false);
+
   return (
     <div
       className="app"
       style={{ position: "relative", height: "200px", width: "300px" }}
+      onClick={() => {
+        moveToAttackSetter(true);
+      }}
     >
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -36,7 +42,39 @@ export const App = () => {
         <Box height={100} width={100} x="center" y={26}>
           <FirstEnemy />
         </Box>
-        <Box width={25} height={25} x="center" y={140}>
+        <Box
+          width={25}
+          height={25}
+          x="center"
+          y={140}
+          animate={
+            moveToAttack
+              ? {
+                  ...translateY(-20),
+                  duration: 200,
+                  onCancel: () => {
+                    moveToAttackSetter(false);
+                  },
+                  onFinish: () => {
+                    moveToAttackSetter(false);
+                    alert("do the attack");
+                    moveBackAfterAttackSetter(true);
+                  },
+                }
+              : moveBackAfterAttack
+                ? {
+                    ...translateY(0),
+                    duration: 200,
+                    onCancel: () => {
+                      moveBackAfterAttackSetter(false);
+                    },
+                    onFinish: () => {
+                      moveBackAfterAttackSetter(false);
+                    },
+                  }
+                : null
+          }
+        >
           <Benjamin direction="top" activity="walking" />
         </Box>
       </div>

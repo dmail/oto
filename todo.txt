@@ -1,3 +1,5 @@
+
+
 - Quand on attaque notre perso se fige et on le fait avancer
 (ça c'est facile on fera un translate)
 - le fond d'écran brille
@@ -9,3 +11,6 @@
   puis les dégats apparaissent
   le chiffre par du bas du perso, monte haut  (1,5 hauteur du perso)
   puis rebomdi jusqu'a revenir au bas du perso
+
+- possible de faire des sprite sheets au build avec canvas data url?
+- possible de faire de audio bundle au build avec media api ?
