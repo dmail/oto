@@ -33,6 +33,7 @@
     "@jsenv/plugin-preact": "1.6.26",
     "@jsenv/test": "3.5.25",
     "@playwright/browser-chromium": "1.48.2",
+    "prettier-plugin-organize-imports": "4.1.0",
     "eslint": "9.14.0",
     "open": "10.1.0",
     "prettier": "3.3.3"

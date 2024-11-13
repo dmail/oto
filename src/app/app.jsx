@@ -1,14 +1,15 @@
 import { useLayoutEffect, useState } from "preact/hooks";
-import appStyleSheet from "./app.css" with { type: "css" };
-import "./custom_elements_redefine.js";
-import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
-import { FirstEnemy } from "./enemy/enemies.jsx";
-import { Benjamin } from "./character/benjamin.jsx";
-import { Box } from "./layout/box.jsx";
 import { Animation, translateY } from "./animation/animation.jsx";
+import appStyleSheet from "./app.css" with { type: "css" };
+import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
+import { Benjamin } from "./character/benjamin.jsx";
+import "./custom_elements_redefine.js";
+import { FirstEnemy } from "./enemy/enemies.jsx";
 import { SwordA } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
+import { WhiteCurtain } from "./fight/white_curtain.jsx";
 import { useSound } from "./hooks/use_sound.js";
+import { Box } from "./layout/box.jsx";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -27,7 +28,7 @@ export const App = () => {
   const [attack, attackSetter] = useState(false);
   const [moveBackAfterAttack, moveBackAfterAttackSetter] = useState(false);
   const swordSound = useSound({ url: swordASoundUrl });
-  const [backgroundBlink, backgroundBlinkSetter] = useState(false);
+  const [whiteCurtain, whiteCurtainSetter] = useState(false);
 
   return (
     <div
@@ -42,7 +43,15 @@ export const App = () => {
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
-        <MountainAndSkyBattleBackground blink={backgroundBlink} />
+        <MountainAndSkyBattleBackground />
+        {whiteCurtain && (
+          <WhiteCurtain
+            style={{ position: "absolute", left: 0, top: 0 }}
+            onFinish={() => {
+              whiteCurtainSetter(false);
+            }}
+          />
+        )}
       </div>
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
@@ -62,7 +71,7 @@ export const App = () => {
                 ],
                 duration: 200,
                 onStart: () => {
-                  backgroundBlinkSetter(true);
+                  whiteCurtainSetter(true);
                   swordSound.currentTime = 0.15;
                   swordSound.play();
                 },

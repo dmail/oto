@@ -1,4 +1,4 @@
-import { SpriteSheet } from "../sprite/spritesheet.jsx";
+import { SpriteSheet } from "../canvas/spritesheet.jsx";
 import { useState, useEffect } from "preact/hooks";
 
 const characterSpritesheetUrl = new URL(

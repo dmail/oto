@@ -1,4 +1,4 @@
-import { SpriteSheet } from "../sprite/spritesheet.jsx";
+import { SpriteSheet } from "../canvas/spritesheet.jsx";
 
 const enemySpritesheetUrl = new URL("./enemy_spritesheet.png", import.meta.url);
 
