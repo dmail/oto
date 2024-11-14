@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useMemo } from "preact/hooks";
 import { Animation, translateY } from "./animation/animation.jsx";
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
@@ -8,6 +8,7 @@ import { FirstEnemy } from "./enemy/enemies.jsx";
 import { SwordA } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
 import { WhiteCurtain } from "./fight/white_curtain.jsx";
+import { useBooleanState } from "./hooks/use_boolean_state.js";
 import { useSound } from "./hooks/use_sound.js";
 import { Box } from "./layout/box.jsx";
 
@@ -24,14 +25,20 @@ export const App = () => {
     };
   }, []);
 
-  const [moveToAttack, moveToAttackSetter] = useState(false);
-  const [attack, attackSetter] = useState(false);
-  const [moveBackAfterAttack, moveBackAfterAttackSetter] = useState(false);
+  const [moveToAttack, startMovingToAttack, stopMovingToAttack] =
+    useBooleanState();
+  const [attack, startAttacking, stopAttacking] = useBooleanState();
+  const [
+    moveBackAfterAttack,
+    startMovingBackAfterAttack,
+    stopMovingBackAfterAttack,
+  ] = useBooleanState();
+
   const swordSound = useSound({ url: swordASoundUrl });
-  const [whiteCurtain, whiteCurtainSetter] = useState(false);
+  const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
 
   // TODO: instead of this split all options into their own property so they stay the same?
-  // but callback will still change...
+  // but callback will still change.../[-]
   const attackAnimationOptions = useMemo(
     () => ({
       steps: [
@@ -44,14 +51,15 @@ export const App = () => {
       ],
       duration: 200,
       onStart: () => {
-        whiteCurtainSetter(true);
+        showWhiteCurtain();
+
         swordSound.currentTime = 0.15;
         swordSound.play();
       },
       onFinish: () => {
         // swordSound.pause();
-        attackSetter(false);
-        moveBackAfterAttackSetter(true);
+        stopAttacking();
+        startMovingBackAfterAttack();
       },
     }),
     [attack],
@@ -61,11 +69,11 @@ export const App = () => {
       ...translateY(-20),
       duration: 200,
       onCancel: () => {
-        moveToAttackSetter(false);
+        stopMovingToAttack();
       },
       onFinish: () => {
-        moveToAttackSetter(false);
-        attackSetter(true);
+        stopMovingToAttack();
+        startAttacking();
       },
     }),
     [moveToAttack],
@@ -75,18 +83,16 @@ export const App = () => {
       ...translateY(0),
       duration: 200,
       onCancel: () => {
-        moveBackAfterAttackSetter(false);
+        stopMovingBackAfterAttack();
       },
       onFinish: () => {
-        moveBackAfterAttackSetter(false);
+        stopMovingBackAfterAttack();
       },
     }),
     [moveBackAfterAttack],
   );
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      whiteCurtainSetter(false);
-    }, 150);
+    const timeout = setTimeout(hideWhiteCurtain, 150);
     return () => {
       clearTimeout(timeout);
     };
@@ -98,7 +104,7 @@ export const App = () => {
       style={{ position: "relative", height: "200px", width: "300px" }}
       onClick={() => {
         if (!attack && !moveBackAfterAttack) {
-          moveToAttackSetter(true);
+          startMovingToAttack();
         }
       }}
     >
