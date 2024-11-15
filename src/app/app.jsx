@@ -51,7 +51,7 @@ export const App = () => {
   }, []);
 
   const swordSound = useSound({ url: swordASoundUrl });
-  // const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
+  const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   // useEffect(() => {
   //   const timeout = setTimeout(hideWhiteCurtain, 150);
   //   return () => {
@@ -95,9 +95,14 @@ export const App = () => {
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
         <MountainAndSkyBattleBackground />
-        {/* {whiteCurtain && (
-          <WhiteCurtain style={{ position: "absolute", left: 0, top: 0 }} />
-        )} */}
+        <WhiteCurtain
+          style={{
+            display: whiteCurtain ? "block" : "none",
+            position: "absolute",
+            left: 0,
+            top: 0,
+          }}
+        />
       </div>
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}

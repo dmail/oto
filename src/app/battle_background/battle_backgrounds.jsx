@@ -6,7 +6,14 @@ const battleBackgroundsSpritesheetUrl = new URL(
 );
 
 export const MountainAndSkyBattleBackground = (props) => {
-  return <BattleBackgroundSpriteSheet col={1} row={0} {...props} />;
+  return (
+    <BattleBackgroundSpriteSheet
+      className="mountain_and_sky"
+      col={1}
+      row={0}
+      {...props}
+    />
+  );
 };
 
 const BattleBackgroundSpriteSheet = ({ col, row, ...props }) => {
