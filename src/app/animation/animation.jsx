@@ -1,16 +1,18 @@
 import { useLayoutEffect, useRef } from "preact/hooks";
 
+const noop = () => {};
+
 export const Animation = ({
-  // id,
+  id,
   enabled = true,
   from,
   to,
   duration = 500,
   iterations = 1,
   fill = "forwards",
-  onStart = () => {},
-  onCancel = () => {},
-  onFinish = () => {},
+  onStart = noop,
+  onCancel = noop,
+  onFinish = noop,
   children,
 }) => {
   const containerRef = useRef();
@@ -58,6 +60,7 @@ export const Animation = ({
       }
     };
   }, [
+    id,
     enabled,
     fromTransform,
     toTransform,

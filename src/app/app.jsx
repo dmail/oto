@@ -2,7 +2,6 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useState,
 } from "preact/hooks";
 import { Animation } from "./animation/animation.jsx";
@@ -50,15 +49,6 @@ export const App = () => {
     characterActionStepSetter("idle");
   }, []);
 
-  const swordSound = useSound({ url: swordASoundUrl });
-  const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
-  // useEffect(() => {
-  //   const timeout = setTimeout(hideWhiteCurtain, 150);
-  //   return () => {
-  //     clearTimeout(timeout);
-  //   };
-  // }, [whiteCurtain]);
-
   const startActionAnimationProps = {
     to: {
       y: -20,
@@ -80,6 +70,15 @@ export const App = () => {
     : isMovingBackToPosition
       ? moveBackToPositionAnimationProps
       : {};
+
+  const swordSound = useSound({ url: swordASoundUrl });
+  const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
+  useEffect(() => {
+    const timeout = setTimeout(hideWhiteCurtain, 150);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [whiteCurtain]);
 
   return (
     <div
@@ -129,8 +128,7 @@ export const App = () => {
               }}
               duration={200}
               onStart={useCallback(() => {
-                console.log("start animation for sword");
-                // showWhiteCurtain();
+                showWhiteCurtain();
                 swordSound.currentTime = 0.15;
                 swordSound.play();
               }, [])}
