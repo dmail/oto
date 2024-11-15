@@ -1,40 +1,55 @@
-import { useRef, useLayoutEffect } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 
-export const Animation = ({ options, children }) => {
+export const Animation = ({
+  // id,
+  enabled = true,
+  from,
+  to,
+  duration = 500,
+  iterations = 1,
+  fill = "forwards",
+  onStart = () => {},
+  onCancel = () => {},
+  onFinish = () => {},
+  children,
+}) => {
   const containerRef = useRef();
+  const [fromTransform] = stepFromAnimationDescription(from);
+  const [toTransform] = stepFromAnimationDescription(to);
 
   useLayoutEffect(() => {
-    if (!options) {
+    if (!enabled || !toTransform) {
       return () => {};
     }
+    const steps = [];
+    if (fromTransform) {
+      steps.push({ transform: fromTransform });
+    }
+    steps.push({ transform: toTransform });
     const container = containerRef.current;
     const childNodes = container.childNodes;
     const cleanupCallbacks = [];
-    const {
-      steps,
-      duration = 500,
-      iterations = 1,
-      fill = "forwards",
-      onStart = () => {},
-      onCancel = () => {},
-      onFinish = () => {},
-    } = options;
     for (const child of childNodes) {
-      const animation = child.animate(steps, { duration, fill, iterations });
+      const animation = child.animate(steps, {
+        duration,
+        fill,
+        iterations,
+      });
       onStart();
       animation.oncancel = onCancel;
       animation.onfinish = onFinish;
       animation.finished.then(
         () => {
           animation.commitStyles();
-          animation.cancel();
         },
         () => {
           // ignore cancellation
         },
       );
       cleanupCallbacks.push(() => {
-        animation.cancel();
+        if (animation.playState !== "finished") {
+          animation.cancel();
+        }
       });
     }
     return () => {
@@ -42,21 +57,52 @@ export const Animation = ({ options, children }) => {
         cleanupCallback();
       }
     };
-  }, [options]);
+  }, [
+    enabled,
+    fromTransform,
+    toTransform,
+    duration,
+    iterations,
+    fill,
+    onStart,
+    onCancel,
+    onFinish,
+  ]);
 
   return (
-    <div ref={containerRef} className="animation_container">
+    <div
+      ref={containerRef}
+      className="animation_container"
+      style={{ width: "100%", height: "100%" }}
+    >
       {children}
     </div>
   );
 };
 
-export const translateY = (to) => {
-  return {
-    steps: [
-      {
-        transform: `translateY(${to}px)`,
-      },
-    ],
-  };
+const stepFromAnimationDescription = (animationDescription) => {
+  if (!animationDescription) {
+    return [""];
+  }
+  const transforms = [];
+  for (const animatedProp of Object.keys(animationDescription)) {
+    const animatedValue = animationDescription[animatedProp];
+    if (animatedProp === "x") {
+      transforms.push(`translateX(${animatedValue}px)`);
+      continue;
+    }
+    if (animatedProp === "y") {
+      transforms.push(`translateY(${animatedValue}px)`);
+      continue;
+    }
+    if (animatedProp === "scaleX") {
+      transforms.push(`scaleX(${animatedValue})`);
+      continue;
+    }
+    if (animatedProp === "angle") {
+      transforms.push(`rotate(${animatedValue}deg)`);
+      continue;
+    }
+  }
+  return [transforms.join(" ")];
 };

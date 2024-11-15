@@ -1,5 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo } from "preact/hooks";
-import { Animation, translateY } from "./animation/animation.jsx";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from "preact/hooks";
+import { Animation } from "./animation/animation.jsx";
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
@@ -25,86 +31,63 @@ export const App = () => {
     };
   }, []);
 
-  const [moveToAttack, startMovingToAttack, stopMovingToAttack] =
-    useBooleanState();
-  const [attack, startAttacking, stopAttacking] = useBooleanState();
-  const [
-    moveBackAfterAttack,
-    startMovingBackAfterAttack,
-    stopMovingBackAfterAttack,
-  ] = useBooleanState();
+  const [characterActionStep, characterActionStepSetter] = useState("idle");
+  const isIdle = characterActionStep === "idle";
+  const isMovingToAct = characterActionStep === "move_to_act";
+  const isActing = characterActionStep === "acting";
+  const isMovingBackToPosition =
+    characterActionStep === "move_back_to_position";
+  const startAction = useCallback(() => {
+    characterActionStepSetter("move_to_act");
+  }, []);
+  const readyToAct = useCallback(() => {
+    characterActionStepSetter("acting");
+  }, []);
+  const finishAction = useCallback(() => {
+    characterActionStepSetter("move_back_to_position");
+  }, []);
+  const goIdle = useCallback(() => {
+    characterActionStepSetter("idle");
+  }, []);
 
   const swordSound = useSound({ url: swordASoundUrl });
-  const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
+  // const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
+  // useEffect(() => {
+  //   const timeout = setTimeout(hideWhiteCurtain, 150);
+  //   return () => {
+  //     clearTimeout(timeout);
+  //   };
+  // }, [whiteCurtain]);
 
-  // TODO: instead of this split all options into their own property so they stay the same?
-  // but callback will still change.../[-]
-  const attackAnimationOptions = useMemo(
-    () => ({
-      steps: [
-        {
-          transform: `scaleX(-1) translateX(20px) rotate(10deg)`,
-        },
-        {
-          transform: `scaleX(-1) translateX(0px) rotate(-10deg)`,
-        },
-      ],
-      duration: 200,
-      onStart: () => {
-        showWhiteCurtain();
-
-        swordSound.currentTime = 0.15;
-        swordSound.play();
-      },
-      onFinish: () => {
-        // swordSound.pause();
-        stopAttacking();
-        startMovingBackAfterAttack();
-      },
-    }),
-    [attack],
-  );
-  const moveToAttackAnimationOptions = useMemo(
-    () => ({
-      ...translateY(-20),
-      duration: 200,
-      onCancel: () => {
-        stopMovingToAttack();
-      },
-      onFinish: () => {
-        stopMovingToAttack();
-        startAttacking();
-      },
-    }),
-    [moveToAttack],
-  );
-  const moveBackAfterAttackAnimationOptions = useMemo(
-    () => ({
-      ...translateY(0),
-      duration: 200,
-      onCancel: () => {
-        stopMovingBackAfterAttack();
-      },
-      onFinish: () => {
-        stopMovingBackAfterAttack();
-      },
-    }),
-    [moveBackAfterAttack],
-  );
-  useEffect(() => {
-    const timeout = setTimeout(hideWhiteCurtain, 150);
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [whiteCurtain]);
+  const startActionAnimationProps = {
+    to: {
+      y: -20,
+    },
+    duration: 200,
+    onCancel: goIdle,
+    onFinish: readyToAct,
+  };
+  const moveBackToPositionAnimationProps = {
+    to: {
+      y: 0,
+    },
+    duration: 200,
+    onCancel: goIdle,
+    onFinish: goIdle,
+  };
+  const heroAnimationProps = isMovingToAct
+    ? startActionAnimationProps
+    : isMovingBackToPosition
+      ? moveBackToPositionAnimationProps
+      : {};
 
   return (
     <div
       className="app"
       style={{ position: "relative", height: "200px", width: "300px" }}
       onClick={() => {
-        if (!attack && !moveBackAfterAttack) {
-          startMovingToAttack();
+        if (isIdle) {
+          startAction();
         }
       }}
     >
@@ -112,36 +95,52 @@ export const App = () => {
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
         <MountainAndSkyBattleBackground />
-        {whiteCurtain && (
+        {/* {whiteCurtain && (
           <WhiteCurtain style={{ position: "absolute", left: 0, top: 0 }} />
-        )}
+        )} */}
       </div>
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
         <Box height={100} width={100} x="center" y={26}>
           <FirstEnemy />
-          {attack && (
-            <Animation options={attackAnimationOptions}>
-              <Box width={60} height={60}>
-                <SwordA />
-              </Box>
+          <Box
+            style={{ display: isActing ? "block" : "none" }}
+            width={60}
+            height={60}
+          >
+            <Animation
+              id="weapon_animation"
+              enabled={isActing}
+              from={{
+                scaleX: -1,
+                x: 20,
+                angle: 10,
+              }}
+              to={{
+                scaleX: -1,
+                x: 0,
+                angle: -10,
+              }}
+              duration={200}
+              onStart={useCallback(() => {
+                console.log("start animation for sword");
+                // showWhiteCurtain();
+                swordSound.currentTime = 0.15;
+                swordSound.play();
+              }, [])}
+              onFinish={finishAction}
+            >
+              <SwordA />
             </Animation>
-          )}
-        </Box>
-        <Animation
-          options={
-            moveToAttack
-              ? moveToAttackAnimationOptions
-              : moveBackAfterAttack
-                ? moveBackAfterAttackAnimationOptions
-                : null
-          }
-        >
-          <Box width={25} height={25} x="center" y={140}>
-            <Benjamin direction="top" activity="walking" />
           </Box>
-        </Animation>
+        </Box>
+
+        <Box width={25} height={25} x="center" y={140}>
+          <Animation {...heroAnimationProps}>
+            <Benjamin direction="top" activity="walking" />
+          </Animation>
+        </Box>
       </div>
     </div>
   );

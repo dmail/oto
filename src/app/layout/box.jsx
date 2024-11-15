@@ -4,9 +4,11 @@ export const Box = ({
   x = "center",
   y = "center",
   children,
+  ...props
 }) => {
   return (
     <div
+      {...props}
       className="box"
       style={{
         position: "absolute",
@@ -30,6 +32,7 @@ export const Box = ({
           : {
               top: typeof x === "number" ? `${y}px` : y,
             }),
+        ...props.style,
       }}
     >
       {children}
