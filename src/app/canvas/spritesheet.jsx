@@ -4,6 +4,7 @@ import { useImage } from "../hooks/use_image.js";
 import { useCanvasRef } from "./use_canvas_ref.jsx";
 
 export const SpriteSheet = ({
+  name,
   className = "sprite",
   url,
   transparentColor,
@@ -65,7 +66,7 @@ export const SpriteSheet = ({
     }
   }, [image, transparentColor, x, y, width, height]);
 
-  return <canvas className={className} ref={canvasRef} />;
+  return <canvas name={name} className={className} ref={canvasRef} />;
 };
 
 const replaceColorWithTransparentPixels = (image, color) => {

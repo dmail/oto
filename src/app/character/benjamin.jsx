@@ -1,5 +1,5 @@
+import { useEffect, useState } from "preact/hooks";
 import { SpriteSheet } from "../canvas/spritesheet.jsx";
-import { useState, useEffect } from "preact/hooks";
 
 const characterSpritesheetUrl = new URL(
   "./character_spritesheet.png",
@@ -41,6 +41,7 @@ export const Benjamin = ({
     HERO_STATE_CELL[`${activity}_${direction}_${frame}`];
   return (
     <SpriteSheet
+      name="benjaming"
       url={characterSpritesheetUrl}
       x={x}
       y={y}

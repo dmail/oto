@@ -3,7 +3,7 @@ import { useLayoutEffect, useRef } from "preact/hooks";
 const noop = () => {};
 
 export const Animation = ({
-  id,
+  name,
   enabled = true,
   from,
   to,
@@ -60,7 +60,7 @@ export const Animation = ({
       }
     };
   }, [
-    id,
+    name,
     enabled,
     fromTransform,
     toTransform,
@@ -74,6 +74,7 @@ export const Animation = ({
 
   return (
     <div
+      name={name}
       ref={containerRef}
       className="animation_container"
       style={{ width: "100%", height: "100%" }}

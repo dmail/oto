@@ -10,6 +10,7 @@ export const SwordA = () => {
   const { x, y, width, height } = WEAPON_CELLS[`sword_a`];
   return (
     <SpriteSheet
+      name="sword_a"
       url={weaponSpriteSheetUrl}
       x={x}
       y={y}

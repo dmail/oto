@@ -1,4 +1,6 @@
 export const Box = ({
+  visible = true,
+  className = "box",
   width = "100%",
   height = "100%",
   x = "center",
@@ -9,9 +11,10 @@ export const Box = ({
   return (
     <div
       {...props}
-      className="box"
+      className={className}
       style={{
         position: "absolute",
+        visibility: visible ? "visible" : "hidden",
         width: typeof width === "number" ? `${width}px` : width,
         height: typeof height === "number" ? `${height}px` : height,
         ...(x === "center"

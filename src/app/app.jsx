@@ -106,15 +106,11 @@ export const App = () => {
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
-        <Box height={100} width={100} x="center" y={26}>
+        <Box name="enemy_box" height={100} width={100} x="center" y={26}>
           <FirstEnemy />
-          <Box
-            style={{ display: isActing ? "block" : "none" }}
-            width={60}
-            height={60}
-          >
+          <Box name="weapon_box" visible={isActing} width={60} height={60}>
             <Animation
-              id="weapon_animation"
+              name="weapon_animation"
               enabled={isActing}
               from={{
                 scaleX: -1,
@@ -138,9 +134,8 @@ export const App = () => {
             </Animation>
           </Box>
         </Box>
-
-        <Box width={25} height={25} x="center" y={140}>
-          <Animation {...heroAnimationProps}>
+        <Box name="hero_box" width={25} height={25} x="center" y={140}>
+          <Animation name="hero_animation" {...heroAnimationProps}>
             <Benjamin direction="top" activity="walking" />
           </Animation>
         </Box>
