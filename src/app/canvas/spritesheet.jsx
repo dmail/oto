@@ -104,3 +104,33 @@ const replaceColorWithTransparentPixels = (image, color) => {
   ctx.putImageData(imageData, 0, 0);
   return canvas;
 };
+
+// const mapPixels = (imageData, callback) => {
+//   let modified = false;
+//   const pixels = imageData.data;
+//   for (let i = 0, n = pixels.length; i < n; i += 4) {
+//     const r = pixels[i];
+//     const g = pixels[i + 1];
+//     const b = pixels[i + 2];
+//     const result = callback(r, g, b);
+//     if (!result) {
+//       continue;
+//     }
+//     const [r2, g2, b2] = result;
+//     if (r2 !== r) {
+//       modified = true;
+//       pixels[i] = r2;
+//     }
+//     if (g2 !== g) {
+//       modified = true;
+//       pixels[i + 1] = g2;
+//     }
+//     if (b2 !== b) {
+//       modified = true;
+//       pixels[i + 2] = b2;
+//     }
+//   }
+//   if (modified) {
+//     context.putImageData(imageData, 0, 0);
+//   }
+// };

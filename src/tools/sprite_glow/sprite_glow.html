@@ -9,7 +9,7 @@
   <body>
     <div id="root">
       <canvas width="80" height="80" style="width: 80px; height: 80px"></canvas>
-      <button>Animate</button>
+      <button>Attack</button>
     </div>
     <script type="module">
       const spriteUrl = import.meta.resolve("./sprite.png");
@@ -23,53 +23,134 @@
       };
       image.src = spriteUrl;
 
-      const mapPixels = (imageData, callback) => {
-        let modified = false;
-        const pixels = imageData.data;
-        for (let i = 0, n = pixels.length; i < n; i += 4) {
-          const r = pixels[i];
-          const g = pixels[i + 1];
-          const b = pixels[i + 2];
-          const result = callback(r, g, b);
-          if (!result) {
-            continue;
-          }
-          const [r2, g2, b2] = result;
-          if (r2 !== r) {
-            modified = true;
-            pixels[i] = r2;
-          }
-          if (g2 !== g) {
-            modified = true;
-            pixels[i + 1] = g2;
-          }
-          if (b2 !== b) {
-            modified = true;
-            pixels[i + 2] = b2;
-          }
-        }
-        if (modified) {
-          context.putImageData(imageData, 0, 0);
-        }
+      const button = document.querySelector("button");
+
+      const EASING = {
+        EASE_OUT_EXPO: (x) => {
+          return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
+        },
       };
 
-      const button = document.querySelector("button");
-      let isWhite = false;
-      button.onclick = () => {
+      const animateNumber = ({ from, to, duration, easing }) => {
+        let animationFrame;
+        let resolveFinished;
+        const animatedNumber = {
+          value: from,
+          progressRatio: 0,
+          onprogress: () => {},
+          onfinish: () => {},
+          oncancel: () => {},
+          cancel: () => {
+            startMs = null;
+            cancelAnimationFrame(animationFrame);
+            animatedNumber.oncancel();
+          },
+          finished: new Promise((resolve) => {
+            resolveFinished = resolve;
+          }),
+        };
+        const finish = () => {
+          animatedNumber.onfinish();
+          resolveFinished();
+        };
+        const progress = (ratio) => {
+          if (easing) {
+            ratio = easing(ratio);
+          }
+          animatedNumber.progressRatio = ratio;
+          const value = (to - from) * ratio;
+          animatedNumber.value = value;
+          animatedNumber.onprogress();
+          if (ratio === 1) {
+            finish();
+          } else {
+            animationFrame = requestAnimationFrame(next);
+          }
+        };
+        let startMs = Date.now();
+        const next = () => {
+          const msEllapsed = Date.now() - startMs;
+          if (msEllapsed >= duration) {
+            progress(1);
+            return;
+          }
+          const msBeforeFinish = duration - msEllapsed;
+          if (msBeforeFinish < 16.6) {
+            progress(1);
+            return;
+          }
+          progress(msEllapsed / duration);
+        };
+        animationFrame = requestAnimationFrame(next);
+        return animatedNumber;
+      };
+
+      const glowDuration = 300;
+      const glowStepDuration = glowDuration / 3;
+      const glow = async () => {
         const imageData = context.getImageData(0, 0, 80, 80);
-        mapPixels(imageData, (r, g, b) => {
-          if (isWhite) {
-            if (r === 255 && g === 255 && b === 255) {
-              return [0, 0, 0];
-            }
-            return null;
-          }
+        const allColors = imageData.data;
+        const pixelIndexes = [];
+        for (let i = 0, n = allColors.length; i < n; i += 4) {
+          const r = allColors[i];
+          const g = allColors[i + 1];
+          const b = allColors[i + 2];
           if (r === 0 && g === 0 && b === 0) {
-            return [255, 255, 255];
+            pixelIndexes.push(i);
           }
-          return null;
+        }
+        const setBlackPixelColor = (value) => {
+          const [r, g, b] = value;
+          for (const pixelIndex of pixelIndexes) {
+            allColors[pixelIndex] = r;
+            allColors[pixelIndex + 1] = g;
+            allColors[pixelIndex + 2] = b;
+          }
+          context.putImageData(imageData, 0, 0);
+        };
+
+        await turnIntoWhite(setBlackPixelColor);
+        await turnIntoBlack(setBlackPixelColor);
+        await turnIntoWhite(setBlackPixelColor);
+        await turnIntoBlack(setBlackPixelColor);
+      };
+
+      const turnIntoWhite = (setBlackPixelColor) => {
+        const blackToWhiteColorAnimation = animateNumber({
+          from: 0,
+          to: 255,
+          duration: glowStepDuration,
+          easing: EASING.EASE_OUT_EXPO,
         });
-        isWhite = !isWhite;
+        blackToWhiteColorAnimation.onprogress = () => {
+          setBlackPixelColor([
+            blackToWhiteColorAnimation.value,
+            blackToWhiteColorAnimation.value,
+            blackToWhiteColorAnimation.value,
+          ]);
+        };
+        blackToWhiteColorAnimation.onprogress();
+        return blackToWhiteColorAnimation.finished;
+      };
+      const turnIntoBlack = (setBlackPixelColor) => {
+        const whiteToBlackColorAnimation = animateNumber({
+          from: 255,
+          to: 0,
+          duration: glowStepDuration,
+          easing: EASING.EASE_OUT_EXPO,
+        });
+        whiteToBlackColorAnimation.onprogress = () => {
+          setBlackPixelColor([
+            whiteToBlackColorAnimation.value,
+            whiteToBlackColorAnimation.value,
+            whiteToBlackColorAnimation.value,
+          ]);
+        };
+        whiteToBlackColorAnimation.onprogress();
+        return whiteToBlackColorAnimation.finished;
+      };
+      button.onclick = () => {
+        glow();
       };
     </script>
   </body>
