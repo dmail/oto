@@ -1,3 +1,4 @@
+import { animateNumber, EASING, serieOfAnimations } from "animation";
 import { fromTransformations } from "matrix";
 import { useLayoutEffect } from "preact/hooks";
 import { useImage } from "../hooks/use_image.js";
@@ -14,6 +15,8 @@ export const SpriteSheet = ({
   height,
   mirrorX,
   mirrorY,
+  isGlowing,
+  onGlowEnd,
 }) => {
   const canvasRef = useCanvasRef();
 
@@ -66,6 +69,21 @@ export const SpriteSheet = ({
     }
   }, [image, transparentColor, x, y, width, height]);
 
+  useLayoutEffect(() => {
+    if (!image) {
+      return null;
+    }
+    if (!isGlowing) {
+      return null;
+    }
+    const canvas = canvasRef.current;
+    const glowAnimation = glow(canvas);
+    glowAnimation.onfinish = onGlowEnd;
+    return () => {
+      glowAnimation.cancel();
+    };
+  }, [image, isGlowing]);
+
   return <canvas name={name} className={className} ref={canvasRef} />;
 };
 
@@ -103,6 +121,74 @@ const replaceColorWithTransparentPixels = (image, color) => {
   }
   ctx.putImageData(imageData, 0, 0);
   return canvas;
+};
+
+const glowDuration = 300;
+const glowStepDuration = glowDuration / 3;
+const glow = async (canvas) => {
+  const context = canvas.getContext("2d");
+  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  const allColors = imageData.data;
+  const pixelIndexes = [];
+  for (let i = 0, n = allColors.length; i < n; i += 4) {
+    const r = allColors[i];
+    const g = allColors[i + 1];
+    const b = allColors[i + 2];
+    if (r === 0 && g === 0 && b === 0) {
+      pixelIndexes.push(i);
+    }
+  }
+  const setBlackPixelColor = (value) => {
+    const [r, g, b] = value;
+    for (const pixelIndex of pixelIndexes) {
+      allColors[pixelIndex] = r;
+      allColors[pixelIndex + 1] = g;
+      allColors[pixelIndex + 2] = b;
+    }
+    context.putImageData(imageData, 0, 0);
+  };
+
+  return serieOfAnimations([
+    () => turnIntoWhite(setBlackPixelColor),
+    () => turnIntoBlack(setBlackPixelColor),
+    () => turnIntoWhite(setBlackPixelColor),
+    () => turnIntoBlack(setBlackPixelColor),
+  ]);
+};
+
+const turnIntoWhite = (setBlackPixelColor) => {
+  const blackToWhiteColorAnimation = animateNumber({
+    from: 0,
+    to: 255,
+    duration: glowStepDuration,
+    easing: EASING.EASE_OUT_EXPO,
+  });
+  blackToWhiteColorAnimation.onprogress = () => {
+    setBlackPixelColor([
+      blackToWhiteColorAnimation.value,
+      blackToWhiteColorAnimation.value,
+      blackToWhiteColorAnimation.value,
+    ]);
+  };
+  blackToWhiteColorAnimation.onprogress();
+  return blackToWhiteColorAnimation;
+};
+const turnIntoBlack = (setBlackPixelColor) => {
+  const whiteToBlackColorAnimation = animateNumber({
+    from: 255,
+    to: 0,
+    duration: glowStepDuration,
+    easing: EASING.EASE_OUT_EXPO,
+  });
+  whiteToBlackColorAnimation.onprogress = () => {
+    setBlackPixelColor([
+      whiteToBlackColorAnimation.value,
+      whiteToBlackColorAnimation.value,
+      whiteToBlackColorAnimation.value,
+    ]);
+  };
+  whiteToBlackColorAnimation.onprogress();
+  return whiteToBlackColorAnimation;
 };
 
 // const mapPixels = (imageData, callback) => {

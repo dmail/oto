@@ -48,6 +48,14 @@ export const App = () => {
   const goIdle = useCallback(() => {
     characterActionStepSetter("idle");
   }, []);
+  const [enemyActionStep, enemyActionStepSetter] = useState("idle");
+  const enemyIsActing = enemyActionStep === "acting";
+  const startEnemyAction = useCallback(() => {
+    enemyActionStepSetter("acting");
+  }, []);
+  const endEnemyAction = useCallback(() => {
+    enemyActionStepSetter("idle");
+  }, []);
 
   const startActionAnimationProps = {
     to: {
@@ -63,7 +71,10 @@ export const App = () => {
     },
     duration: 200,
     onCancel: goIdle,
-    onFinish: goIdle,
+    onFinish: () => {
+      goIdle();
+      startEnemyAction();
+    },
   };
   const heroAnimationProps = isMovingToAct
     ? startActionAnimationProps
@@ -107,7 +118,7 @@ export const App = () => {
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
         <Box name="enemy_box" height={100} width={100} x="center" y={26}>
-          <FirstEnemy />
+          <FirstEnemy isGlowing={enemyIsActing} onGlowEnd={endEnemyAction} />
           <Box name="weapon_box" visible={isActing} width={60} height={60}>
             <Animation
               name="weapon_animation"
