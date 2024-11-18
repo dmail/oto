@@ -117,9 +117,6 @@ export const serieOfAnimations = (animationExecutors) => {
       return;
     }
     currentAnimation = animationExecutors[childAnimationIndex]();
-    currentAnimation.oncancel = () => {
-      animationSerie.cancel();
-    };
     currentAnimation.onfinish = () => {
       startNext();
     };

@@ -125,7 +125,7 @@ const replaceColorWithTransparentPixels = (image, color) => {
 
 const glowDuration = 300;
 const glowStepDuration = glowDuration / 3;
-const glow = async (canvas) => {
+const glow = (canvas) => {
   const context = canvas.getContext("2d");
   const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
   const allColors = imageData.data;
