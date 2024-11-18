@@ -1,20 +1,59 @@
+import { effect, signal, useSignalEffect } from "@preact/signals";
 import { render } from "preact";
-import { useRef, useLayoutEffect, useState } from "preact/hooks";
-import { signal, useSignalEffect } from "@preact/signals";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 
-const imageUrlLocalStorageKey = "image_data";
-const imageUrlFacade = {
-  localStorageKey: "image_data",
-  signal: signal(),
-  set: (url) => {
-    localStorage.setItem(imageUrlLocalStorageKey, url);
-    imageUrlFacade.signal.value = url;
-  },
-};
-const imageUrl = localStorage.getItem(imageUrlLocalStorageKey);
-if (imageUrl !== null) {
-  imageUrlFacade.signal.value = imageUrl;
+if (import.meta.hot) {
+  import.meta.hot.decline();
 }
+
+const imageSignal = signal();
+const loadImage = (url) => {
+  imageSignal.value = null;
+  localStorage.setItem("image_url", url);
+  const image = new Image();
+  image.crossOrigin = "anonymous";
+  image.onload = () => {
+    imageSignal.value = image;
+  };
+  image.src = url;
+};
+const imageUrl = localStorage.getItem("image_url");
+if (imageUrl !== null) {
+  loadImage(imageUrl);
+}
+
+const zoomSignal = signal(1);
+const initialZoom = localStorage.getItem("zoom");
+if (initialZoom !== null) {
+  zoomSignal.value = initialZoom;
+}
+const zoomIn = () => {
+  zoomSignal.value++;
+  localStorage.setItem("zoom", zoomSignal.value);
+};
+const zoomOut = () => {
+  zoomSignal.value--;
+  localStorage.setItem("zoom", zoomSignal.value);
+};
+
+const canvasXSignal = signal(0);
+const initialCanvasX = localStorage.getItem("x");
+if (initialCanvasX !== null) {
+  canvasXSignal.value = parseInt(initialCanvasX);
+}
+effect(() => {
+  const canvasX = canvasXSignal.value;
+  localStorage.setItem("x", canvasX);
+});
+const canvasYSignal = signal(0);
+const initialCanvasY = localStorage.getItem("y");
+if (initialCanvasY !== null) {
+  canvasYSignal.value = parseInt(initialCanvasY);
+}
+effect(() => {
+  const canvasY = canvasYSignal.value;
+  localStorage.setItem("y", canvasY);
+});
 
 const selectionRectangleFacade = {
   borderColor: "orange",
@@ -29,20 +68,31 @@ const SpritesheetPicker = () => {
     canvas.height = canvas.offsetHeight;
   }, []);
   useSignalEffect(() => {
-    const imageUrl = imageUrlFacade.signal.value;
-    if (!imageUrl) {
+    const image = imageSignal.value;
+    const zoom = zoomSignal.value;
+    const x = canvasXSignal.value;
+    const y = canvasYSignal.value;
+    if (!image) {
       return;
     }
-    const image = new Image();
-    image.src = imageUrl;
-    image.crossOrigin = "anonymous";
-    image.onload = () => {
-      const canvas = canvasRef.current;
-      const context = canvas.getContext("2d", { willReadFrequently: true });
-      context.clearRect(0, 0, canvas.width, canvas.height);
-      context.drawImage(image, 0, 0);
-      imageUrlFacade.set(canvas.toDataURL());
-    };
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    const imageWidth = image.naturalWidth;
+    const imageHeight = image.naturalHeight;
+    const availableWidth = canvas.width * zoom;
+    const availableHeight = canvas.height * zoom;
+    context.drawImage(
+      image,
+      x,
+      y,
+      imageWidth,
+      imageHeight,
+      0,
+      0,
+      availableWidth,
+      availableHeight,
+    );
   });
 
   const selectionRectangleCanvasRef = useRef();
@@ -81,15 +131,44 @@ const SpritesheetPicker = () => {
   });
   const [mousemoveOrigin, mousemoveOriginSetter] = useState();
   const [colorAt, colorAtSetter] = useState();
+  const [grabKeyIsDown, grabKeyIsDownSetter] = useState(false);
+
+  const startXRef = useRef(0);
+  const startYRef = useRef(0);
+
+  useEffect(() => {
+    let removekeyup = () => {};
+    const onkeydown = (keydownEvent) => {
+      if (keydownEvent.metaKey) {
+        grabKeyIsDownSetter(true);
+      }
+      removekeyup = () => {
+        document.removeEventListener("keyup", onkeyup);
+      };
+      const onkeyup = (keyupEvent) => {
+        if (!keyupEvent.metaKey) {
+          grabKeyIsDownSetter(false);
+          removekeyup();
+        }
+      };
+      document.addEventListener("keyup", onkeyup);
+    };
+    document.addEventListener("keydown", onkeydown);
+    return () => {
+      document.removeEventListener("keydown", onkeydown);
+      removekeyup();
+    };
+  }, []);
 
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
       <div
         style={{
-          width: "400px",
+          width: "700px",
           height: "400px",
           border: "1px solid black",
           position: "relative",
+          cursor: grabKeyIsDown ? "grab" : "default",
         }}
         onDragOver={(e) => {
           e.preventDefault();
@@ -98,7 +177,7 @@ const SpritesheetPicker = () => {
           e.preventDefault();
           const file = e.dataTransfer.items[0].getAsFile();
           const objectUrl = URL.createObjectURL(file);
-          imageUrlFacade.set(objectUrl);
+          loadImage(objectUrl);
         }}
         onMouseDown={(e) => {
           const canvas = canvasRef.current;
@@ -110,6 +189,8 @@ const SpritesheetPicker = () => {
             x: e.offsetX,
             y: e.offsetY,
           });
+          startXRef.current = canvasXSignal.value;
+          startYRef.current = canvasYSignal.value;
           const onmouseup = () => {
             mousemoveOriginSetter(null);
             document.removeEventListener("mouseup", onmouseup);
@@ -125,6 +206,7 @@ const SpritesheetPicker = () => {
           const mouseX = e.offsetX;
           const mouseY = e.offsetY;
           const selectionRectangle = {};
+
           if (mouseX < originX) {
             selectionRectangle.x = mouseX;
             selectionRectangle.width = originX - mouseX;
@@ -140,6 +222,13 @@ const SpritesheetPicker = () => {
             selectionRectangle.height = mouseY - originY;
           }
           selectionRectangleFacade.signal.value = selectionRectangle;
+
+          const moveX = originX - mouseX;
+          const moveY = originY - mouseY;
+          if (grabKeyIsDown) {
+            canvasXSignal.value = startXRef.current + moveX;
+            canvasYSignal.value = startYRef.current + moveY;
+          }
         }}
       >
         <canvas
@@ -159,7 +248,7 @@ const SpritesheetPicker = () => {
       <div
         style={{
           width: "400px",
-          height: "200px",
+          height: "400px",
           border: "1px solid black",
           marginLeft: "10px",
         }}
@@ -204,6 +293,30 @@ const SpritesheetPicker = () => {
             Color at {mousemoveOrigin?.x},{mousemoveOrigin?.y}
           </legend>
           {colorAt}
+        </fieldset>
+        <fieldset>
+          <legend>Zoom: {zoomSignal.value}</legend>
+          <button onClick={zoomIn}>Zoom in</button>{" "}
+          <button onClick={zoomOut}>Zoom out</button>
+        </fieldset>
+        <fieldset>
+          <legend>
+            Position: {canvasXSignal}:{canvasYSignal}
+          </legend>
+          <input
+            type="number"
+            value={canvasXSignal}
+            onChange={(e) => {
+              canvasXSignal.value = e.target.value;
+            }}
+          />
+          <input
+            type="number"
+            value={canvasYSignal}
+            onChange={(e) => {
+              canvasYSignal.value = e.target.value;
+            }}
+          />
         </fieldset>
       </div>
     </div>
