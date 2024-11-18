@@ -20,7 +20,15 @@ export const WhiteCurtain = ({ style, opacity = 0.5 }) => {
     context.restore();
   }, [opacity]);
 
-  return <canvas className="white_curtain" style={style} ref={canvasRef} />;
+  return (
+    <canvas
+      className="white_curtain"
+      // width={width}
+      // height={height}
+      style={style}
+      ref={canvasRef}
+    />
+  );
 };
 
 // const startClosingCurtain = (canvas) => {

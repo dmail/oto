@@ -1,4 +1,4 @@
-import { animateNumber, EASING, serieOfAnimations } from "animation";
+import { glow } from "animation";
 import { fromTransformations } from "matrix";
 import { useLayoutEffect } from "preact/hooks";
 import { useImage } from "../hooks/use_image.js";
@@ -19,6 +19,10 @@ export const SpriteSheet = ({
   onGlowEnd,
 }) => {
   const canvasRef = useCanvasRef();
+  x = parseInt(x);
+  y = parseInt(y);
+  width = parseInt(width);
+  height = parseInt(height);
 
   const [image] = useImage(url);
   useLayoutEffect(() => {
@@ -46,7 +50,7 @@ export const SpriteSheet = ({
     const canvas = canvasRef.current;
     const hasTransformations = Object.keys(transformations).length > 0;
     const context = canvas.getContext("2d");
-    context.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+    context.clearRect(0, 0, canvas.width, canvas.height);
     if (hasTransformations) {
       context.save();
       const matrix = fromTransformations(transformations);
@@ -61,8 +65,8 @@ export const SpriteSheet = ({
       parseInt(height),
       0,
       0,
-      canvas.offsetWidth,
-      canvas.offsetHeight,
+      canvas.width,
+      canvas.height,
     );
     if (hasTransformations) {
       context.restore();
@@ -82,9 +86,17 @@ export const SpriteSheet = ({
     return () => {
       glowAnimation.cancel();
     };
-  }, [image, isGlowing]);
+  }, [image, isGlowing, onGlowEnd]);
 
-  return <canvas name={name} className={className} ref={canvasRef} />;
+  return (
+    <canvas
+      width={width}
+      height={height}
+      name={name}
+      className={className}
+      ref={canvasRef}
+    />
+  );
 };
 
 const replaceColorWithTransparentPixels = (image, color) => {
@@ -121,74 +133,6 @@ const replaceColorWithTransparentPixels = (image, color) => {
   }
   ctx.putImageData(imageData, 0, 0);
   return canvas;
-};
-
-const glowDuration = 300;
-const glowStepDuration = glowDuration / 3;
-const glow = (canvas) => {
-  const context = canvas.getContext("2d");
-  const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-  const allColors = imageData.data;
-  const pixelIndexes = [];
-  for (let i = 0, n = allColors.length; i < n; i += 4) {
-    const r = allColors[i];
-    const g = allColors[i + 1];
-    const b = allColors[i + 2];
-    if (r === 0 && g === 0 && b === 0) {
-      pixelIndexes.push(i);
-    }
-  }
-  const setBlackPixelColor = (value) => {
-    const [r, g, b] = value;
-    for (const pixelIndex of pixelIndexes) {
-      allColors[pixelIndex] = r;
-      allColors[pixelIndex + 1] = g;
-      allColors[pixelIndex + 2] = b;
-    }
-    context.putImageData(imageData, 0, 0);
-  };
-
-  return serieOfAnimations([
-    () => turnIntoWhite(setBlackPixelColor),
-    () => turnIntoBlack(setBlackPixelColor),
-    () => turnIntoWhite(setBlackPixelColor),
-    () => turnIntoBlack(setBlackPixelColor),
-  ]);
-};
-
-const turnIntoWhite = (setBlackPixelColor) => {
-  const blackToWhiteColorAnimation = animateNumber({
-    from: 0,
-    to: 255,
-    duration: glowStepDuration,
-    easing: EASING.EASE_OUT_EXPO,
-  });
-  blackToWhiteColorAnimation.onprogress = () => {
-    setBlackPixelColor([
-      blackToWhiteColorAnimation.value,
-      blackToWhiteColorAnimation.value,
-      blackToWhiteColorAnimation.value,
-    ]);
-  };
-  blackToWhiteColorAnimation.onprogress();
-  return blackToWhiteColorAnimation;
-};
-const turnIntoBlack = (setBlackPixelColor) => {
-  const whiteToBlackColorAnimation = animateNumber({
-    from: 255,
-    to: 0,
-    duration: glowStepDuration,
-    easing: EASING.EASE_OUT_EXPO,
-  });
-  whiteToBlackColorAnimation.onprogress = () => {
-    setBlackPixelColor([
-      whiteToBlackColorAnimation.value,
-      whiteToBlackColorAnimation.value,
-      whiteToBlackColorAnimation.value,
-    ]);
-  };
-  whiteToBlackColorAnimation.onprogress();
-  return whiteToBlackColorAnimation;
 };
 
 // const mapPixels = (imageData, callback) => {
