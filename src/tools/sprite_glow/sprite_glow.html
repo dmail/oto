@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./preact_logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sprite glow</title>
+  </head>
+  <body>
+    <div id="root">
+      <canvas width="80" height="80" style="width: 80px; height: 80px"></canvas>
+      <button>Animate</button>
+    </div>
+    <script type="module">
+      const spriteUrl = import.meta.resolve("./sprite.png");
+
+      const canvas = document.querySelector("canvas");
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+
+      const image = new Image();
+      image.onload = () => {
+        context.drawImage(image, 75, 10, 80, 80, 0, 0, 80, 80);
+      };
+      image.src = spriteUrl;
+
+      const mapPixels = (imageData, callback) => {
+        let modified = false;
+        const pixels = imageData.data;
+        for (let i = 0, n = pixels.length; i < n; i += 4) {
+          const r = pixels[i];
+          const g = pixels[i + 1];
+          const b = pixels[i + 2];
+          const result = callback(r, g, b);
+          if (!result) {
+            continue;
+          }
+          const [r2, g2, b2] = result;
+          if (r2 !== r) {
+            modified = true;
+            pixels[i] = r2;
+          }
+          if (g2 !== g) {
+            modified = true;
+            pixels[i + 1] = g2;
+          }
+          if (b2 !== b) {
+            modified = true;
+            pixels[i + 2] = b2;
+          }
+        }
+        if (modified) {
+          context.putImageData(imageData, 0, 0);
+        }
+      };
+
+      const button = document.querySelector("button");
+      let isWhite = false;
+      button.onclick = () => {
+        const imageData = context.getImageData(0, 0, 80, 80);
+        mapPixels(imageData, (r, g, b) => {
+          if (isWhite) {
+            if (r === 255 && g === 255 && b === 255) {
+              return [0, 0, 0];
+            }
+            return null;
+          }
+          if (r === 0 && g === 0 && b === 0) {
+            return [255, 255, 255];
+          }
+          return null;
+        });
+        isWhite = !isWhite;
+      };
+    </script>
+  </body>
+</html>
