@@ -124,14 +124,12 @@ export const App = () => {
               name="weapon_animation"
               enabled={isActing}
               from={{
-                scaleX: -1,
-                x: 20,
-                angle: 10,
+                mirrorX: true,
+                x: 25,
               }}
               to={{
-                scaleX: -1,
-                x: 0,
-                angle: -10,
+                mirrorX: true,
+                x: -15,
               }}
               duration={200}
               onStart={useCallback(() => {

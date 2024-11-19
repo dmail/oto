@@ -89,24 +89,28 @@ const stepFromAnimationDescription = (animationDescription) => {
     return [""];
   }
   const transforms = [];
-  for (const animatedProp of Object.keys(animationDescription)) {
-    const animatedValue = animationDescription[animatedProp];
-    if (animatedProp === "x") {
-      transforms.push(`translateX(${animatedValue}px)`);
-      continue;
-    }
-    if (animatedProp === "y") {
-      transforms.push(`translateY(${animatedValue}px)`);
-      continue;
-    }
-    if (animatedProp === "scaleX") {
-      transforms.push(`scaleX(${animatedValue})`);
-      continue;
-    }
-    if (animatedProp === "angle") {
-      transforms.push(`rotate(${animatedValue}deg)`);
-      continue;
-    }
+  let x = animationDescription.x;
+  let y = animationDescription.y;
+  let angleX = animationDescription.angleX;
+  let angleY = animationDescription.angleY;
+  let scaleX = animationDescription.scaleX;
+  if (animationDescription.mirrorX) {
+    angleY = typeof angleY === "number" ? angleY + 180 : 180;
+  }
+  if (typeof x === "number") {
+    transforms.push(`translateX(${x}px)`);
+  }
+  if (typeof y === "number") {
+    transforms.push(`translateY(${y}px)`);
+  }
+  if (typeof angleX === "number") {
+    transforms.push(`rotateX(${angleX}deg)`);
+  }
+  if (typeof angleY === "number") {
+    transforms.push(`rotateY(${angleY}deg)`);
+  }
+  if (typeof scaleX === "number") {
+    transforms.push(`scaleX(${scaleX})`);
   }
   return [transforms.join(" ")];
 };
