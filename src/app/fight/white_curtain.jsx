@@ -1,11 +1,13 @@
-import { useLayoutEffect } from "preact/hooks";
-import { useCanvasRef } from "../canvas/use_canvas_ref.jsx";
+import { useLayoutEffect, useRef } from "preact/hooks";
 
-export const WhiteCurtain = ({ style, opacity = 0.5 }) => {
-  const canvasRef = useCanvasRef();
-
+export const WhiteCurtain = ({
+  visible,
+  opacity = 0.5,
+  elementRef = useRef(),
+  ...props
+}) => {
   useLayoutEffect(() => {
-    const canvas = canvasRef.current;
+    const canvas = elementRef.current;
     const context = canvas.getContext("2d");
     const width = canvas.width;
     const height = canvas.height;
@@ -22,11 +24,17 @@ export const WhiteCurtain = ({ style, opacity = 0.5 }) => {
 
   return (
     <canvas
+      {...props}
+      ref={elementRef}
       className="white_curtain"
-      // width={width}
-      // height={height}
-      style={style}
-      ref={canvasRef}
+      style={{
+        width: "100%",
+        height: "100%",
+        display: visible ? "block" : "none",
+        position: "absolute",
+        left: 0,
+        top: 0,
+      }}
     />
   );
 };

@@ -21,6 +21,7 @@ export const Benjamin = ({
   direction = "top",
   activity = "", // 'walking', 'jumping', 'pushing', 'wondering'
   animate = true,
+  ...props
 }) => {
   const hasAnimation = activity !== "";
   const [frame, frameSetter] = useState("a");
@@ -41,6 +42,7 @@ export const Benjamin = ({
     HERO_STATE_CELL[`${activity}_${direction}_${frame}`];
   return (
     <SpriteSheet
+      {...props}
       name="benjaming"
       url={characterSpritesheetUrl}
       x={x}

@@ -1,10 +1,9 @@
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { useCallback, useLayoutEffect, useMemo, useRef } from "preact/hooks";
 
 const noop = () => {};
 
-export const Animation = ({
-  name,
-  enabled = true,
+export const useElementAnimation = ({
+  elementRef,
   from,
   to,
   duration = 500,
@@ -13,75 +12,75 @@ export const Animation = ({
   onStart = noop,
   onCancel = noop,
   onFinish = noop,
-  children,
+  playWhen,
 }) => {
-  const containerRef = useRef();
   const [fromTransform] = stepFromAnimationDescription(from);
   const [toTransform] = stepFromAnimationDescription(to);
 
-  useLayoutEffect(() => {
-    if (!enabled || !toTransform) {
-      return () => {};
+  const animationRef = useRef();
+  const play = useCallback(() => {
+    const element = elementRef.current;
+    if (!element) {
+      return;
     }
     const steps = [];
     if (fromTransform) {
       steps.push({ transform: fromTransform });
     }
     steps.push({ transform: toTransform });
-    const container = containerRef.current;
-    const childNodes = container.childNodes;
-    const cleanupCallbacks = [];
-    for (const child of childNodes) {
-      const animation = child.animate(steps, {
-        duration,
-        fill,
-        iterations,
-      });
-      onStart();
-      animation.oncancel = onCancel;
-      animation.onfinish = onFinish;
-      animation.finished.then(
-        () => {
-          animation.commitStyles();
-        },
-        () => {
-          // ignore cancellation
-        },
-      );
-      cleanupCallbacks.push(() => {
-        if (animation.playState !== "finished") {
-          animation.cancel();
-        }
-      });
-    }
-    return () => {
-      for (const cleanupCallback of cleanupCallbacks) {
-        cleanupCallback();
-      }
-    };
+    const animation = element.animate(steps, {
+      duration,
+      fill,
+      iterations,
+    });
+    animationRef.current = animation;
+    animation.oncancel = onCancel;
+    animation.onfinish = onFinish;
+    animation.finished.then(
+      () => {
+        animation.commitStyles();
+      },
+      () => {
+        // ignore cancellation
+      },
+    );
+    onStart();
   }, [
-    name,
-    enabled,
     fromTransform,
     toTransform,
     duration,
-    iterations,
     fill,
+    iterations,
     onStart,
     onCancel,
     onFinish,
   ]);
+  const pause = useCallback(() => {
+    const animation = animationRef.current;
+    if (!animation) {
+      return;
+    }
+    animation.pause();
+  }, []);
+  const cancel = useCallback(() => {
+    const animation = animationRef.current;
+    if (!animation) {
+      return;
+    }
+    if (animation.playState !== "finished") {
+      animation.cancel();
+    }
+  }, []);
 
-  return (
-    <div
-      name={name}
-      ref={containerRef}
-      className="animation_container"
-      style={{ width: "100%", height: "100%" }}
-    >
-      {children}
-    </div>
-  );
+  useLayoutEffect(() => {
+    if (playWhen) {
+      play();
+    }
+  }, [play, playWhen]);
+
+  return useMemo(() => {
+    return { play, pause, cancel };
+  }, [play, pause, cancel]);
 };
 
 const stepFromAnimationDescription = (animationDescription) => {

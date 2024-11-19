@@ -1,8 +1,9 @@
-import { Animation } from "animation";
+import { useElementAnimation } from "animation";
 import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useRef,
   useState,
 } from "preact/hooks";
 import appStyleSheet from "./app.css" with { type: "css" };
@@ -29,6 +30,8 @@ export const App = () => {
       );
     };
   }, []);
+  const heroElementRef = useRef();
+  const weaponElementRef = useRef();
 
   const [characterActionStep, characterActionStepSetter] = useState("idle");
   const isIdle = characterActionStep === "idle";
@@ -57,15 +60,21 @@ export const App = () => {
     enemyActionStepSetter("idle");
   }, []);
 
-  const startActionAnimationProps = {
+  useElementAnimation({
+    id: "hero_move_to_act",
+    elementRef: heroElementRef,
+    playWhen: isMovingToAct,
     to: {
       y: -20,
     },
     duration: 200,
     onCancel: goIdle,
     onFinish: readyToAct,
-  };
-  const moveBackToPositionAnimationProps = {
+  });
+  useElementAnimation({
+    id: "hero_move_back_to_position",
+    elementRef: heroElementRef,
+    playWhen: isMovingBackToPosition,
     to: {
       y: 0,
     },
@@ -75,12 +84,7 @@ export const App = () => {
       goIdle();
       startEnemyAction();
     },
-  };
-  const heroAnimationProps = isMovingToAct
-    ? startActionAnimationProps
-    : isMovingBackToPosition
-      ? moveBackToPositionAnimationProps
-      : {};
+  });
 
   const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
@@ -90,6 +94,27 @@ export const App = () => {
       clearTimeout(timeout);
     };
   }, [whiteCurtain]);
+
+  useElementAnimation({
+    id: "weapon_translation",
+    elementRef: weaponElementRef,
+    playWhen: isActing,
+    from: {
+      mirrorX: true,
+      x: 25,
+    },
+    to: {
+      mirrorX: true,
+      x: -15,
+    },
+    duration: 200,
+    onStart: useCallback(() => {
+      showWhiteCurtain();
+      swordSound.currentTime = 0.15;
+      swordSound.play();
+    }, []),
+    onFinish: finishAction,
+  });
 
   return (
     <div
@@ -105,48 +130,26 @@ export const App = () => {
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
         <MountainAndSkyBattleBackground />
-        <WhiteCurtain
-          style={{
-            display: whiteCurtain ? "block" : "none",
-            position: "absolute",
-            left: 0,
-            top: 0,
-          }}
-        />
+        <WhiteCurtain visible={whiteCurtain} />
       </div>
       <div
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
         <Box name="enemy_box" height={100} width={100} x="center" y={26}>
+          {/* ici on pourrait donc mettre un <Animation> qui wrap le canvas
+          et pour lequel on dirait from: black, to: white
+          lávantage cést que j'hardcode pas dans le canvas quíl peut sanimer */}
           <FirstEnemy isGlowing={enemyIsActing} onGlowEnd={endEnemyAction} />
           <Box name="weapon_box" visible={isActing} width={60} height={60}>
-            <Animation
-              name="weapon_animation"
-              enabled={isActing}
-              from={{
-                mirrorX: true,
-                x: 25,
-              }}
-              to={{
-                mirrorX: true,
-                x: -15,
-              }}
-              duration={200}
-              onStart={useCallback(() => {
-                showWhiteCurtain();
-                swordSound.currentTime = 0.15;
-                swordSound.play();
-              }, [])}
-              onFinish={finishAction}
-            >
-              <SwordA />
-            </Animation>
+            <SwordA elementRef={weaponElementRef} />
           </Box>
         </Box>
         <Box name="hero_box" width={25} height={25} x="center" y={140}>
-          <Animation name="hero_animation" {...heroAnimationProps}>
-            <Benjamin direction="top" activity="walking" />
-          </Animation>
+          <Benjamin
+            elementRef={heroElementRef}
+            direction="top"
+            activity="walking"
+          />
         </Box>
       </div>
     </div>

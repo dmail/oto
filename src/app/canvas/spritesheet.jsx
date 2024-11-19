@@ -1,8 +1,7 @@
 import { glow } from "animation";
 import { fromTransformations } from "matrix";
-import { useLayoutEffect } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 import { useImage } from "../hooks/use_image.js";
-import { useCanvasRef } from "./use_canvas_ref.jsx";
 
 export const SpriteSheet = ({
   name,
@@ -17,8 +16,9 @@ export const SpriteSheet = ({
   mirrorY,
   isGlowing,
   onGlowEnd,
+  elementRef = useRef(),
+  ...props
 }) => {
-  const canvasRef = useCanvasRef();
   x = parseInt(x);
   y = parseInt(y);
   width = parseInt(width);
@@ -47,7 +47,7 @@ export const SpriteSheet = ({
           }
         : {}),
     };
-    const canvas = canvasRef.current;
+    const canvas = elementRef.current;
     const hasTransformations = Object.keys(transformations).length > 0;
     const context = canvas.getContext("2d");
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -80,7 +80,7 @@ export const SpriteSheet = ({
     if (!isGlowing) {
       return null;
     }
-    const canvas = canvasRef.current;
+    const canvas = elementRef.current;
     const glowAnimation = glow(canvas);
     glowAnimation.onfinish = onGlowEnd;
     return () => {
@@ -90,11 +90,16 @@ export const SpriteSheet = ({
 
   return (
     <canvas
+      {...props}
+      ref={elementRef}
       width={width}
       height={height}
       name={name}
       className={className}
-      ref={canvasRef}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
     />
   );
 };
