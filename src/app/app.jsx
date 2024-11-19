@@ -82,7 +82,7 @@ export const App = () => {
       ? moveBackToPositionAnimationProps
       : {};
 
-  const swordSound = useSound({ url: swordASoundUrl });
+  const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   useEffect(() => {
     const timeout = setTimeout(hideWhiteCurtain, 150);

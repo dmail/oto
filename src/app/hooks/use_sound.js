@@ -1,16 +1,17 @@
-import { useRef, useCallback, useState, useEffect } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { useStructuredMemo } from "./use_structured_memo.js";
 
-export const useSound = ({ url }) => {
-  return useAudio({ url });
+export const useSound = (props) => {
+  return useAudio(props);
 };
 
-const useAudio = ({ url }) => {
+const useAudio = ({ url, volume = 1 }) => {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
 
   if (audioRef.current === null) {
     const audio = new Audio(url);
+    audio.volume = volume;
     audioRef.current = audio;
   }
 
