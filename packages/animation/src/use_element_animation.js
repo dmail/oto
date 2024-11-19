@@ -3,6 +3,7 @@ import { useCallback, useLayoutEffect, useMemo, useRef } from "preact/hooks";
 const noop = () => {};
 
 export const useElementAnimation = ({
+  id,
   elementRef,
   from,
   to,
@@ -16,11 +17,12 @@ export const useElementAnimation = ({
 }) => {
   const [fromTransform] = stepFromAnimationDescription(from);
   const [toTransform] = stepFromAnimationDescription(to);
-
   const animationRef = useRef();
+
   const play = useCallback(() => {
     const element = elementRef.current;
     if (!element) {
+      console.log("no element");
       return;
     }
     const steps = [];
@@ -34,7 +36,10 @@ export const useElementAnimation = ({
       iterations,
     });
     animationRef.current = animation;
-    animation.oncancel = onCancel;
+    animation.oncancel = () => {
+      animationRef.current = null;
+      onCancel();
+    };
     animation.onfinish = onFinish;
     animation.finished.then(
       () => {
@@ -46,6 +51,8 @@ export const useElementAnimation = ({
     );
     onStart();
   }, [
+    id,
+    elementRef.current,
     fromTransform,
     toTransform,
     duration,
@@ -74,9 +81,14 @@ export const useElementAnimation = ({
 
   useLayoutEffect(() => {
     if (playWhen) {
-      play();
+      if (elementRef.current) {
+        play();
+      }
     }
-  }, [play, playWhen]);
+    return () => {
+      cancel();
+    };
+  }, [play, cancel, playWhen, elementRef.current]);
 
   return useMemo(() => {
     return { play, pause, cancel };
