@@ -1,3 +1,8 @@
+import {
+  animateElement,
+  stepFromAnimationDescription,
+} from "./animate_element.js";
+
 import { useCallback, useLayoutEffect, useMemo, useRef } from "preact/hooks";
 
 const noop = () => {};
@@ -13,7 +18,6 @@ export const useElementAnimation = ({
   onStart = noop,
   onCancel = noop,
   onFinish = noop,
-  playWhen,
 }) => {
   const [fromTransform] = stepFromAnimationDescription(from);
   const [toTransform] = stepFromAnimationDescription(to);
@@ -30,25 +34,20 @@ export const useElementAnimation = ({
       steps.push({ transform: fromTransform });
     }
     steps.push({ transform: toTransform });
-    const animation = element.animate(steps, {
+    const elementAnimation = animateElement({
+      element,
+      from,
+      to,
       duration,
       fill,
       iterations,
     });
-    animationRef.current = animation;
-    animation.oncancel = () => {
+    animationRef.current = elementAnimation;
+    elementAnimation.oncancel = () => {
       animationRef.current = null;
       onCancel();
     };
-    animation.onfinish = onFinish;
-    animation.finished.then(
-      () => {
-        animation.commitStyles();
-      },
-      () => {
-        // ignore cancellation
-      },
-    );
+    elementAnimation.onfinish = onFinish;
     onStart();
   }, [
     id,
@@ -80,48 +79,12 @@ export const useElementAnimation = ({
   }, []);
 
   useLayoutEffect(() => {
-    if (playWhen) {
-      if (elementRef.current) {
-        play();
-      }
-    }
     return () => {
       cancel();
     };
-  }, [play, cancel, playWhen, elementRef.current]);
+  }, [cancel]);
 
   return useMemo(() => {
     return { play, pause, cancel };
   }, [play, pause, cancel]);
-};
-
-const stepFromAnimationDescription = (animationDescription) => {
-  if (!animationDescription) {
-    return [""];
-  }
-  const transforms = [];
-  let x = animationDescription.x;
-  let y = animationDescription.y;
-  let angleX = animationDescription.angleX;
-  let angleY = animationDescription.angleY;
-  let scaleX = animationDescription.scaleX;
-  if (animationDescription.mirrorX) {
-    angleY = typeof angleY === "number" ? angleY + 180 : 180;
-  }
-  if (typeof x === "number") {
-    transforms.push(`translateX(${x}px)`);
-  }
-  if (typeof y === "number") {
-    transforms.push(`translateY(${y}px)`);
-  }
-  if (typeof angleX === "number") {
-    transforms.push(`rotateX(${angleX}deg)`);
-  }
-  if (typeof angleY === "number") {
-    transforms.push(`rotateY(${angleY}deg)`);
-  }
-  if (typeof scaleX === "number") {
-    transforms.push(`scaleX(${scaleX})`);
-  }
-  return [transforms.join(" ")];
 };

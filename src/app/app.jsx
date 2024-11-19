@@ -3,6 +3,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "preact/hooks";
@@ -61,10 +62,9 @@ export const App = () => {
     enemyActionStepSetter("idle");
   }, []);
 
-  useElementAnimation({
+  const heroMoveToActAnimation = useElementAnimation({
     id: "hero_move_to_act",
     elementRef: heroElementRef,
-    playWhen: isMovingToAct,
     to: {
       y: -20,
     },
@@ -72,10 +72,14 @@ export const App = () => {
     onCancel: goIdle,
     onFinish: readyToAct,
   });
-  useElementAnimation({
+  useLayoutEffect(() => {
+    if (isMovingToAct) {
+      heroMoveToActAnimation.play();
+    }
+  }, [isMovingToAct]);
+  const heroMoveBackToPositionAnimation = useElementAnimation({
     id: "hero_move_back_to_position",
     elementRef: heroElementRef,
-    playWhen: isMovingBackToPosition,
     to: {
       y: 0,
     },
@@ -86,13 +90,22 @@ export const App = () => {
       startEnemyAction();
     },
   });
+  useLayoutEffect(() => {
+    if (isMovingBackToPosition) {
+      heroMoveBackToPositionAnimation.play();
+    }
+  }, [isMovingBackToPosition]);
 
-  useCanvasGlowAnimation({
+  const enemyGlowAnimation = useCanvasGlowAnimation({
     id: "enemy_glow",
     canvasRef: enemyElementRef,
-    playWhen: enemyIsActing,
     onFinish: endEnemyAction,
   });
+  useLayoutEffect(() => {
+    if (enemyIsActing) {
+      enemyGlowAnimation.play();
+    }
+  }, [enemyIsActing]);
 
   const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
@@ -103,10 +116,9 @@ export const App = () => {
     };
   }, [whiteCurtain]);
 
-  useElementAnimation({
+  const weaponTranslation = useElementAnimation({
     id: "weapon_translation",
     elementRef: weaponElementRef,
-    playWhen: isActing,
     from: {
       mirrorX: true,
       x: 25,
@@ -123,6 +135,11 @@ export const App = () => {
     }, []),
     onFinish: finishAction,
   });
+  useLayoutEffect(() => {
+    if (isActing) {
+      weaponTranslation.play();
+    }
+  }, [weaponTranslation, isActing]);
 
   return (
     <div
@@ -161,15 +178,25 @@ export const App = () => {
   );
 };
 
-const useCanvasGlowAnimation = ({ canvasRef, playWhen, onFinish }) => {
-  useLayoutEffect(() => {
-    if (!playWhen) {
-      return null;
-    }
+const useCanvasGlowAnimation = ({ canvasRef, onFinish }) => {
+  const animRef = useRef();
+  const play = useCallback(() => {
     const glowAnimation = glow(canvasRef.current);
+    animRef.current = glowAnimation;
     glowAnimation.onfinish = onFinish;
-    return () => {
-      return glowAnimation.cancel();
-    };
-  }, [playWhen, onFinish]);
+  }, [onFinish]);
+
+  const cancel = useCallback(() => {
+    if (animRef.current) {
+      animRef.current.cancel();
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    return cancel;
+  }, []);
+
+  return useMemo(() => {
+    return { play, cancel };
+  }, []);
 };
