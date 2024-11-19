@@ -1,10 +1,10 @@
+import { Animation } from "animation";
 import {
   useCallback,
   useEffect,
   useLayoutEffect,
   useState,
 } from "preact/hooks";
-import { Animation } from "./animation/animation.jsx";
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
