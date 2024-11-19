@@ -9,13 +9,13 @@ export const FirstEnemy = (props) => {
 const EnemySpriteSheet = ({ col, row, ...props }) => {
   return (
     <SpriteSheet
+      {...props}
       transparentColor={[0, 128, 128]}
       url={enemySpritesheetUrl}
       x={col * 50 + 80}
       y={row * 50 + 10}
       width={70}
       height={80}
-      {...props}
     />
   );
 };

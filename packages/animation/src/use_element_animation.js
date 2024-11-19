@@ -22,7 +22,7 @@ export const useElementAnimation = ({
   const play = useCallback(() => {
     const element = elementRef.current;
     if (!element) {
-      console.log("no element");
+      console.warn("no element");
       return;
     }
     const steps = [];

@@ -1,4 +1,3 @@
-import { glow } from "animation";
 import { fromTransformations } from "matrix";
 import { useLayoutEffect, useRef } from "preact/hooks";
 import { useImage } from "../hooks/use_image.js";
@@ -14,8 +13,6 @@ export const SpriteSheet = ({
   height,
   mirrorX,
   mirrorY,
-  isGlowing,
-  onGlowEnd,
   elementRef = useRef(),
   ...props
 }) => {
@@ -72,21 +69,6 @@ export const SpriteSheet = ({
       context.restore();
     }
   }, [image, transparentColor, x, y, width, height]);
-
-  useLayoutEffect(() => {
-    if (!image) {
-      return null;
-    }
-    if (!isGlowing) {
-      return null;
-    }
-    const canvas = elementRef.current;
-    const glowAnimation = glow(canvas);
-    glowAnimation.onfinish = onGlowEnd;
-    return () => {
-      glowAnimation.cancel();
-    };
-  }, [image, isGlowing, onGlowEnd]);
 
   return (
     <canvas

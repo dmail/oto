@@ -1,4 +1,4 @@
-import { useElementAnimation } from "animation";
+import { glow, useElementAnimation } from "animation";
 import {
   useCallback,
   useEffect,
@@ -32,6 +32,7 @@ export const App = () => {
   }, []);
   const heroElementRef = useRef();
   const weaponElementRef = useRef();
+  const enemyElementRef = useRef();
 
   const [characterActionStep, characterActionStepSetter] = useState("idle");
   const isIdle = characterActionStep === "idle";
@@ -86,6 +87,13 @@ export const App = () => {
     },
   });
 
+  useCanvasGlowAnimation({
+    id: "enemy_glow",
+    canvasRef: enemyElementRef,
+    playWhen: enemyIsActing,
+    onFinish: endEnemyAction,
+  });
+
   const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   useEffect(() => {
@@ -136,10 +144,7 @@ export const App = () => {
         style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
       >
         <Box name="enemy_box" height={100} width={100} x="center" y={26}>
-          {/* ici on pourrait donc mettre un <Animation> qui wrap le canvas
-          et pour lequel on dirait from: black, to: white
-          lávantage cést que j'hardcode pas dans le canvas quíl peut sanimer */}
-          <FirstEnemy isGlowing={enemyIsActing} onGlowEnd={endEnemyAction} />
+          <FirstEnemy elementRef={enemyElementRef} />
           <Box name="weapon_box" visible={isActing} width={60} height={60}>
             <SwordA elementRef={weaponElementRef} />
           </Box>
@@ -154,4 +159,17 @@ export const App = () => {
       </div>
     </div>
   );
+};
+
+const useCanvasGlowAnimation = ({ canvasRef, playWhen, onFinish }) => {
+  useLayoutEffect(() => {
+    if (!playWhen) {
+      return null;
+    }
+    const glowAnimation = glow(canvasRef.current);
+    glowAnimation.onfinish = onFinish;
+    return () => {
+      return glowAnimation.cancel();
+    };
+  }, [playWhen, onFinish]);
 };
