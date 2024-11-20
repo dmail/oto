@@ -13,14 +13,19 @@ export const useAnimate = ({
   const animationRef = useRef();
 
   const play = useCallback(() => {
-    const animation = animate();
-    animationRef.current = animation;
-    animation.oncancel = () => {
-      animationRef.current = null;
-      onCancel();
-    };
-    animation.onfinish = onFinish;
-    onStart();
+    if (animationRef.current) {
+      animationRef.current.play();
+      onStart();
+    } else {
+      const animation = animate();
+      animationRef.current = animation;
+      animation.oncancel = () => {
+        animationRef.current = null;
+        onCancel();
+      };
+      animation.onfinish = onFinish;
+      onStart();
+    }
   }, [animate, onStart, onCancel, onFinish]);
   const pause = useCallback(() => {
     const animation = animationRef.current;
@@ -47,11 +52,13 @@ export const useAnimate = ({
 
   useSignalEffect(() => {
     const paused = pausedSignal.value;
+    if (!animationRef.current) {
+      return;
+    }
     if (paused) {
-      console.log("pausing");
       pause();
     } else {
-      // play();
+      play();
     }
   });
 
