@@ -1,9 +1,8 @@
-import { glow, useElementAnimation } from "animation";
+import { useCanvasGlowAnimation, useElementAnimation } from "animation";
 import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState,
 } from "preact/hooks";
@@ -62,7 +61,7 @@ export const App = () => {
     enemyActionStepSetter("idle");
   }, []);
 
-  const heroMoveToActAnimation = useElementAnimation({
+  const [playHeroMoveToAct] = useElementAnimation({
     id: "hero_move_to_act",
     elementRef: heroElementRef,
     to: {
@@ -74,10 +73,10 @@ export const App = () => {
   });
   useLayoutEffect(() => {
     if (isMovingToAct) {
-      heroMoveToActAnimation.play();
+      playHeroMoveToAct();
     }
-  }, [isMovingToAct]);
-  const heroMoveBackToPositionAnimation = useElementAnimation({
+  }, [isMovingToAct, playHeroMoveToAct]);
+  const [playHeroMoveBackToPosition] = useElementAnimation({
     id: "hero_move_back_to_position",
     elementRef: heroElementRef,
     to: {
@@ -92,20 +91,22 @@ export const App = () => {
   });
   useLayoutEffect(() => {
     if (isMovingBackToPosition) {
-      heroMoveBackToPositionAnimation.play();
+      playHeroMoveBackToPosition();
     }
-  }, [isMovingBackToPosition]);
+  }, [isMovingBackToPosition, playHeroMoveBackToPosition]);
 
-  const enemyGlowAnimation = useCanvasGlowAnimation({
+  const [playEnemyGlow] = useCanvasGlowAnimation({
     id: "enemy_glow",
-    canvasRef: enemyElementRef,
+    elementRef: enemyElementRef,
+    from: "black",
+    to: "white",
     onFinish: endEnemyAction,
   });
   useLayoutEffect(() => {
     if (enemyIsActing) {
-      enemyGlowAnimation.play();
+      playEnemyGlow();
     }
-  }, [enemyIsActing]);
+  }, [enemyIsActing, playEnemyGlow]);
 
   const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
@@ -116,7 +117,7 @@ export const App = () => {
     };
   }, [whiteCurtain]);
 
-  const weaponTranslation = useElementAnimation({
+  const [playWeaponTranslation] = useElementAnimation({
     id: "weapon_translation",
     elementRef: weaponElementRef,
     from: {
@@ -137,9 +138,9 @@ export const App = () => {
   });
   useLayoutEffect(() => {
     if (isActing) {
-      weaponTranslation.play();
+      playWeaponTranslation();
     }
-  }, [weaponTranslation, isActing]);
+  }, [isActing, playWeaponTranslation]);
 
   return (
     <div
@@ -176,27 +177,4 @@ export const App = () => {
       </div>
     </div>
   );
-};
-
-const useCanvasGlowAnimation = ({ canvasRef, onFinish }) => {
-  const animRef = useRef();
-  const play = useCallback(() => {
-    const glowAnimation = glow(canvasRef.current);
-    animRef.current = glowAnimation;
-    glowAnimation.onfinish = onFinish;
-  }, [onFinish]);
-
-  const cancel = useCallback(() => {
-    if (animRef.current) {
-      animRef.current.cancel();
-    }
-  }, []);
-
-  useLayoutEffect(() => {
-    return cancel;
-  }, []);
-
-  return useMemo(() => {
-    return { play, cancel };
-  }, []);
 };

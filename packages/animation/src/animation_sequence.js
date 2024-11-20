@@ -1,4 +1,4 @@
-export const serieOfAnimations = (animationExecutors) => {
+export const animationSequence = (animationExecutors) => {
   let resolveFinished;
   const animationSerie = {
     oncancel: () => {},

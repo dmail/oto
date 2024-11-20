@@ -1,5 +1,5 @@
 import { animate } from "./animate.js";
-import { serieOfAnimations } from "./animation_sequence.js";
+import { animationSequence } from "./animation_sequence.js";
 import { EASING } from "./easing.js";
 
 const COLORS = {
@@ -7,13 +7,12 @@ const COLORS = {
   white: [255, 255, 255],
 };
 
-const glowDuration = 300;
-const glowStepDuration = glowDuration / 3;
 export const glow = (
   canvas,
   {
     fromColor = "black",
     toColor = "white",
+    duration = 300,
     iterations = 2,
     x = 0,
     y = 0,
@@ -47,28 +46,30 @@ export const glow = (
     context.putImageData(imageData, 0, 0);
   };
 
+  const glowStepDuration = duration / (iterations * 2);
+  const turnInto = (fromColor, toColor) => {
+    const [rFrom, gFrom, bFrom] = fromColor;
+    const [rTo, gTo, bTo] = toColor;
+    const colorAnimation = animate({
+      onprogress: () => {
+        const r = (rTo - rFrom) * colorAnimation.progressRatio;
+        const g = (gTo - gFrom) * colorAnimation.progressRatio;
+        const b = (bTo - bFrom) * colorAnimation.progressRatio;
+        setPixelsColor([r, g, b]);
+      },
+      duration: glowStepDuration,
+      easing: EASING.EASE_OUT_EXPO,
+    });
+    colorAnimation.onprogress();
+    return colorAnimation;
+  };
+
   const animationExecutors = [];
   let i = 0;
   while (i < iterations) {
     i++;
-    animationExecutors.push(() => turnInto(setPixelsColor, fromColor, toColor));
-    animationExecutors.push(() => turnInto(setPixelsColor, toColor, fromColor));
+    animationExecutors.push(() => turnInto(fromColor, toColor));
+    animationExecutors.push(() => turnInto(toColor, fromColor));
   }
-  return serieOfAnimations(animationExecutors);
-};
-const turnInto = (setPixelsColor, fromColor, toColor) => {
-  const [rFrom, gFrom, bFrom] = fromColor;
-  const [rTo, gTo, bTo] = toColor;
-  const colorAnimation = animate({
-    onprogress: () => {
-      const r = (rTo - rFrom) * colorAnimation.progressRatio;
-      const g = (gTo - gFrom) * colorAnimation.progressRatio;
-      const b = (bTo - bFrom) * colorAnimation.progressRatio;
-      setPixelsColor([r, g, b]);
-    },
-    duration: glowStepDuration,
-    easing: EASING.EASE_OUT_EXPO,
-  });
-  colorAnimation.onprogress();
-  return colorAnimation;
+  return animationSequence(animationExecutors);
 };
