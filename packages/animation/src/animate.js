@@ -1,5 +1,6 @@
 export const animate = ({
-  duration,
+  duration = 300,
+  fps,
   easing,
   onprogress = () => {},
   onfinish = () => {},
@@ -8,6 +9,7 @@ export const animate = ({
   let animationFrame;
   let resolveFinished;
   let startMs;
+  let previousStepMs;
   const animation = {
     playState: "idle",
     progressRatio: 0,
@@ -18,10 +20,10 @@ export const animate = ({
       if (animation.playState === "running") return;
       if (animation.playState === "paused") {
         animation.playState = "running";
-        startMs = Date.now();
+        startMs = previousStepMs = Date.now();
       } else {
         animation.playState = "running";
-        startMs = Date.now();
+        startMs = previousStepMs = Date.now();
         animation.progressRatio = 0;
       }
       animationFrame = requestAnimationFrame(next);
@@ -61,8 +63,10 @@ export const animate = ({
       animationFrame = requestAnimationFrame(next);
     }
   };
+  const stepMinDuration = fps ? 1000 / fps : Infinity;
   const next = () => {
-    const msEllapsed = Date.now() - startMs;
+    const stepMs = Date.now();
+    const msEllapsed = stepMs - startMs;
     if (msEllapsed >= duration) {
       progress(1);
       return;
@@ -72,6 +76,11 @@ export const animate = ({
       progress(1);
       return;
     }
+    if (stepMs - previousStepMs < stepMinDuration) {
+      animationFrame = requestAnimationFrame(next);
+      return;
+    }
+    previousStepMs = stepMs;
     progress(msEllapsed / duration);
   };
   animation.play();
