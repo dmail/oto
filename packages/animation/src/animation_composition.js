@@ -1,7 +1,45 @@
 export const composeAnimations = (animations) => {
   let resolveFinished;
+  let animationFinishedCounter;
   const composedAnimation = {
+    playState: "idle",
     oncancel: () => {},
+    play: () => {
+      if (composedAnimation.playState === "running") return;
+      if (
+        composedAnimation.playState === "paused" ||
+        composedAnimation.playState === "finished"
+      ) {
+        for (const animation of animations) {
+          animation.play();
+        }
+        composedAnimation.playState = "running";
+        return;
+      }
+      animationFinishedCounter = 0;
+      for (const animation of animations) {
+        // eslint-disable-next-line no-loop-func
+        animation.onfinish = () => {
+          animationFinishedCounter++;
+          if (animationFinishedCounter === animations.length) {
+            composedAnimation.onfinish();
+            resolveFinished();
+          }
+        };
+      }
+    },
+    pause: () => {
+      for (const animation of animations) {
+        animation.pause();
+      }
+      composedAnimation.playState = "paused";
+    },
+    finish: () => {
+      for (const animation of animations) {
+        animation.finish();
+      }
+      composedAnimation.playState = "finished";
+    },
     cancel: () => {
       for (const animation of animations) {
         animation.cancel();
@@ -13,24 +51,6 @@ export const composeAnimations = (animations) => {
       resolveFinished = resolve;
     }),
   };
-  let animationCancelCounter = 0;
-  let animationFinishedCounter = 0;
-  for (const animation of animations) {
-    // eslint-disable-next-line no-loop-func
-    animation.oncancel = () => {
-      animationCancelCounter++;
-      if (animationCancelCounter === animations.length) {
-        composedAnimation.cancel();
-      }
-    };
-    // eslint-disable-next-line no-loop-func
-    animation.onfinish = () => {
-      animationFinishedCounter++;
-      if (animationFinishedCounter === animations.length) {
-        composedAnimation.onfinish();
-        resolveFinished();
-      }
-    };
-  }
+  composedAnimation.play();
   return composedAnimation;
 };

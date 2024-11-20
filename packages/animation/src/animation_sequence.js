@@ -1,29 +1,55 @@
 export const animationSequence = (animationExecutors) => {
   let resolveFinished;
-  const animationSerie = {
-    oncancel: () => {},
+  let childAnimationIndex;
+  let currentAnimation;
+  const animationSequence = {
+    playState: "idle",
+    play: () => {
+      if (animationSequence.playState === "running") return;
+      if (animationSequence.playState === "paused") {
+        currentAnimation.play();
+      } else {
+        childAnimationIndex = -1;
+        currentAnimation = null;
+        startNext();
+      }
+      animationSequence.playState = "running";
+    },
+    pause: () => {
+      if (currentAnimation) {
+        currentAnimation.pause();
+      }
+      animationSequence.playState = "paused";
+    },
+    finish: () => {
+      animationSequence.playState = "finished";
+      if (currentAnimation) {
+        currentAnimation.finish();
+      }
+    },
     cancel: () => {
       currentAnimation.cancel();
     },
     onfinish: () => {},
+    oncancel: () => {},
     finished: new Promise((resolve) => {
       resolveFinished = resolve;
     }),
   };
-  let childAnimationIndex = -1;
-  let currentAnimation = null;
   const startNext = () => {
     childAnimationIndex++;
     if (childAnimationIndex >= animationExecutors.length) {
       resolveFinished();
-      animationSerie.onfinish();
+      animationSequence.onfinish();
       return;
     }
     currentAnimation = animationExecutors[childAnimationIndex]();
     currentAnimation.onfinish = () => {
-      startNext();
+      if (animationSequence.playState === "running") {
+        startNext();
+      }
     };
   };
-  startNext();
-  return animationSerie;
+  animationSequence.play();
+  return animationSequence;
 };
