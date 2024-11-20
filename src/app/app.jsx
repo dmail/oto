@@ -1,4 +1,3 @@
-import { useCanvasGlowAnimation, useElementAnimation } from "animation";
 import {
   useCallback,
   useEffect,
@@ -6,6 +5,8 @@ import {
   useRef,
   useState,
 } from "preact/hooks";
+import { useCanvasGlowAnimation } from "./animations/use_canvas_glow_animation.js";
+import { useElementAnimation } from "./animations/use_element_animation.js";
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
@@ -17,6 +18,7 @@ import { WhiteCurtain } from "./fight/white_curtain.jsx";
 import { useBooleanState } from "./hooks/use_boolean_state.js";
 import { useSound } from "./hooks/use_sound.js";
 import { Box } from "./layout/box.jsx";
+import { pause, pausedSignal, play } from "./signals.js";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -143,37 +145,52 @@ export const App = () => {
   }, [isActing, playWeaponTranslation]);
 
   return (
-    <div
-      className="app"
-      style={{ position: "relative", height: "200px", width: "300px" }}
-      onClick={() => {
-        if (isIdle) {
-          startAction();
-        }
-      }}
-    >
+    <div>
       <div
-        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+        className="app"
+        style={{ position: "relative", height: "200px", width: "300px" }}
+        onClick={() => {
+          if (isIdle) {
+            startAction();
+          }
+        }}
       >
-        <MountainAndSkyBattleBackground />
-        <WhiteCurtain visible={whiteCurtain} />
-      </div>
-      <div
-        style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-      >
-        <Box name="enemy_box" height={100} width={100} x="center" y={26}>
-          <FirstEnemy elementRef={enemyElementRef} />
-          <Box name="weapon_box" visible={isActing} width={60} height={60}>
-            <SwordA elementRef={weaponElementRef} />
+        <div
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+        >
+          <MountainAndSkyBattleBackground />
+          <WhiteCurtain visible={whiteCurtain} />
+        </div>
+        <div
+          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+        >
+          <Box name="enemy_box" height={100} width={100} x="center" y={26}>
+            <FirstEnemy elementRef={enemyElementRef} />
+            <Box name="weapon_box" visible={isActing} width={60} height={60}>
+              <SwordA elementRef={weaponElementRef} />
+            </Box>
           </Box>
-        </Box>
-        <Box name="hero_box" width={25} height={25} x="center" y={140}>
-          <Benjamin
-            elementRef={heroElementRef}
-            direction="top"
-            activity="walking"
-          />
-        </Box>
+          <Box name="hero_box" width={25} height={25} x="center" y={140}>
+            <Benjamin
+              elementRef={heroElementRef}
+              direction="top"
+              activity="walking"
+            />
+          </Box>
+        </div>
+      </div>
+      <div>
+        <button
+          onClick={() => {
+            if (pausedSignal.value) {
+              play();
+            } else {
+              pause();
+            }
+          }}
+        >
+          {pausedSignal.value ? "play" : "pause"}
+        </button>
       </div>
     </div>
   );
