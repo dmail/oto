@@ -13,17 +13,22 @@ export const useAnimate = ({
   const animationRef = useRef();
 
   const play = useCallback(() => {
-    const animation = animate();
-    animationRef.current = animation;
-    animation.oncancel = () => {
-      animationRef.current = null;
-      onCancel();
-    };
-    animation.onfinish = () => {
-      animationRef.current = null;
-      onFinish();
-    };
-    onStart();
+    if (animationRef.current) {
+      animationRef.current.play();
+      onStart();
+    } else {
+      const animation = animate();
+      animationRef.current = animation;
+      animation.oncancel = () => {
+        animationRef.current = null;
+        onCancel();
+      };
+      animation.onfinish = () => {
+        animationRef.current = null;
+        onFinish();
+      };
+      onStart();
+    }
   }, [animate, onStart, onCancel, onFinish]);
   const pause = useCallback(() => {
     const animation = animationRef.current;
@@ -54,9 +59,9 @@ export const useAnimate = ({
       return;
     }
     if (paused) {
-      animationRef.current.pause();
+      pause();
     } else {
-      animationRef.current.play();
+      play();
     }
   });
 
