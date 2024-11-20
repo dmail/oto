@@ -20,23 +20,25 @@ export const glow = (
     height = canvas.height,
   } = {},
 ) => {
-  const context = canvas.getContext("2d");
+  if (typeof fromColor === "string") fromColor = COLORS[fromColor];
+  if (typeof toColor === "string") toColor = COLORS[toColor];
+  const [rFrom, gFrom, bFrom] = fromColor;
+  let r = rFrom;
+  let g = gFrom;
+  let b = bFrom;
+  const context = canvas.getContext("2d", { willReadFrequently: true });
   const imageData = context.getImageData(x, y, width, height);
   const allColors = imageData.data;
   const pixelIndexes = [];
-  if (typeof fromColor === "string") fromColor = COLORS[fromColor];
-  if (typeof toColor === "string") toColor = COLORS[toColor];
-  const [rToReplace, gToReplace, bToReplace] = fromColor;
   for (let i = 0, n = allColors.length; i < n; i += 4) {
-    const r = allColors[i];
-    const g = allColors[i + 1];
-    const b = allColors[i + 2];
-    if (r === rToReplace && g === gToReplace && b === bToReplace) {
+    const rCandidate = allColors[i];
+    const gCandidate = allColors[i + 1];
+    const bCandidate = allColors[i + 2];
+    if (rCandidate === rFrom && gCandidate === gFrom && bCandidate === bFrom) {
       pixelIndexes.push(i);
     }
   }
-  const setPixelsColor = (value) => {
-    const [r, g, b] = value;
+  const updateColor = () => {
     for (const pixelIndex of pixelIndexes) {
       allColors[pixelIndex] = r;
       allColors[pixelIndex + 1] = g;
@@ -47,20 +49,18 @@ export const glow = (
   };
 
   const glowStepDuration = duration / (iterations * 2);
-  const turnInto = (fromColor, toColor) => {
-    const [rFrom, gFrom, bFrom] = fromColor;
+  const animateColor = (toColor) => {
     const [rTo, gTo, bTo] = toColor;
     const colorAnimation = animate({
       onprogress: () => {
-        const r = (rTo - rFrom) * colorAnimation.progressRatio;
-        const g = (gTo - gFrom) * colorAnimation.progressRatio;
-        const b = (bTo - bFrom) * colorAnimation.progressRatio;
-        setPixelsColor([r, g, b]);
+        r = (rTo - rFrom) * colorAnimation.progressRatio;
+        g = (gTo - gFrom) * colorAnimation.progressRatio;
+        b = (bTo - bFrom) * colorAnimation.progressRatio;
+        updateColor();
       },
       duration: glowStepDuration,
       easing: EASING.EASE_OUT_EXPO,
     });
-    colorAnimation.onprogress();
     return colorAnimation;
   };
 
@@ -68,8 +68,8 @@ export const glow = (
   let i = 0;
   while (i < iterations) {
     i++;
-    animationExecutors.push(() => turnInto(fromColor, toColor));
-    animationExecutors.push(() => turnInto(toColor, fromColor));
+    animationExecutors.push(() => animateColor(toColor));
+    animationExecutors.push(() => animateColor(fromColor));
   }
   return animationSequence(animationExecutors);
 };
