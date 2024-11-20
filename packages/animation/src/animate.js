@@ -8,11 +8,12 @@ export const animate = ({
 }) => {
   let animationFrame;
   let resolveFinished;
-  let startMs;
   let previousStepMs;
+  let msRemaining;
   const animation = {
     playState: "idle",
     progressRatio: 0,
+    ratio: 0,
     onprogress,
     onfinish,
     oncancel,
@@ -20,11 +21,12 @@ export const animate = ({
       if (animation.playState === "running") return;
       if (animation.playState === "paused") {
         animation.playState = "running";
-        startMs = previousStepMs = Date.now();
+        previousStepMs = Date.now();
       } else {
         animation.playState = "running";
-        startMs = previousStepMs = Date.now();
+        previousStepMs = Date.now();
         animation.progressRatio = 0;
+        msRemaining = duration;
       }
       animationFrame = requestAnimationFrame(next);
     },
@@ -36,52 +38,49 @@ export const animate = ({
     finish: () => {
       if (animation.playState === "finished") return;
       cancelAnimationFrame(animationFrame);
-      animation.progressRatio = 1;
-      animation.onprogress();
+      setProgress(1);
       animation.playState = "finished";
-      animation.onfinish();
       resolveFinished();
+      animation.onfinish();
     },
     cancel: () => {
-      startMs = null;
       cancelAnimationFrame(animationFrame);
+      previousStepMs = null;
       animation.oncancel();
     },
     finished: new Promise((resolve) => {
       resolveFinished = resolve;
     }),
   };
-  const progress = (ratio) => {
-    if (easing) {
-      ratio = easing(ratio);
-    }
-    if (ratio === 1) {
-      animation.finish();
-    } else {
-      animation.progressRatio = ratio;
-      animation.onprogress();
-      animationFrame = requestAnimationFrame(next);
-    }
+  const setProgress = (progressRatio) => {
+    animation.progressRatio = progressRatio;
+    animation.ratio = easing ? easing(progressRatio) : progressRatio;
+    animation.onprogress();
   };
   const stepMinDuration = fps ? 1000 / fps : Infinity;
   const next = () => {
     const stepMs = Date.now();
-    const msEllapsed = stepMs - startMs;
-    if (msEllapsed >= duration) {
-      progress(1);
+    const msEllapsedSincePreviousStep = stepMs - previousStepMs;
+    const msRemainingAfterThisStep = msRemaining - msEllapsedSincePreviousStep;
+    if (
+      // we reach the end, round progress to 1
+      msRemainingAfterThisStep <= 0 ||
+      // we are very close from the end, round progress to 1
+      msRemainingAfterThisStep <= 16.6
+    ) {
+      animation.finish();
       return;
     }
-    const msBeforeFinish = duration - msEllapsed;
-    if (msBeforeFinish < 16.6) {
-      progress(1);
-      return;
-    }
-    if (stepMs - previousStepMs < stepMinDuration) {
+    if (msEllapsedSincePreviousStep < stepMinDuration) {
       animationFrame = requestAnimationFrame(next);
       return;
     }
     previousStepMs = stepMs;
-    progress(msEllapsed / duration);
+    msRemaining = msRemainingAfterThisStep;
+    setProgress(
+      animation.progressRatio + msEllapsedSincePreviousStep / duration,
+    );
+    animationFrame = requestAnimationFrame(next);
   };
   animation.play();
   return animation;

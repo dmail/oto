@@ -4,8 +4,8 @@ export const animateNumber = ({ from, to, onprogress, ...props }) => {
   const numberAnimation = animate({
     ...props,
     onprogress: () => {
-      const progressRatio = numberAnimation.progressRatio;
-      const value = progressRatio === 0 ? from : (to - from) * progressRatio;
+      const ratio = numberAnimation.ratio;
+      const value = ratio === 0 ? from : (to - from) * ratio;
       numberAnimation.value = value;
       if (onprogress) {
         onprogress();
