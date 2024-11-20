@@ -26,10 +26,19 @@ export const animationSequence = (animationExecutors) => {
       animationSequence.playState = "finished";
       if (currentAnimation) {
         currentAnimation.finish();
+        while (childAnimationIndex < animationExecutors.length) {
+          const nextAnimation = animationExecutors[childAnimationIndex]();
+          childAnimationIndex++;
+          nextAnimation.finish();
+        }
+        currentAnimation = null;
       }
+      resolveFinished();
+      animationSequence.onfinish();
     },
     cancel: () => {
       currentAnimation.cancel();
+      animationSequence.oncancel();
     },
     onfinish: () => {},
     oncancel: () => {},
@@ -40,8 +49,8 @@ export const animationSequence = (animationExecutors) => {
   const startNext = () => {
     childAnimationIndex++;
     if (childAnimationIndex >= animationExecutors.length) {
-      resolveFinished();
-      animationSequence.onfinish();
+      currentAnimation = null;
+      animationSequence.finish();
       return;
     }
     currentAnimation = animationExecutors[childAnimationIndex]();
