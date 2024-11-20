@@ -1,6 +1,7 @@
 const noop = () => {};
 
 export const animateElement = ({
+  // id,
   element,
   from,
   to,
@@ -32,7 +33,9 @@ export const animateElement = ({
   };
   animation.finished.then(
     () => {
+      // console.log("commit styles on ", id);
       animation.commitStyles();
+      // animation.cancel();
     },
     () => {
       // ignore cancellation

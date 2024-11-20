@@ -7,19 +7,20 @@ export const animationSequence = (animationExecutors) => {
     play: () => {
       if (animationSequence.playState === "running") return;
       if (animationSequence.playState === "paused") {
+        animationSequence.playState = "running";
         currentAnimation.play();
       } else {
         childAnimationIndex = -1;
         currentAnimation = null;
+        animationSequence.playState = "running";
         startNext();
       }
-      animationSequence.playState = "running";
     },
     pause: () => {
+      animationSequence.playState = "paused";
       if (currentAnimation) {
         currentAnimation.pause();
       }
-      animationSequence.playState = "paused";
     },
     finish: () => {
       animationSequence.playState = "finished";

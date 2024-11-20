@@ -1,21 +1,18 @@
-- implement flash effect on canvas
--> easy c'est juste un fond blanc légerement transparent qui part de bas en haut
+- looks like glow cannot be paused
 
-- Quand l'ennemi attaque il "brille" (une sorte d'effet de glow)
-il brille deux fois avant d'attaquer
-j'ai aucune idée de comment faire ça MAIS
-j'ai bien l'impression qu'il s'agit juste de prendre tous les pixels noir
-et de les amener progressivement vers du blanc 2 fois
-a priori easy en fait je fait varier 255 vers 0 sur les trois couleurs, non?
-sinon regarde "grayscale"
+- Faire une page a part pour tester et obtenir le comportement suivant:
 
+- on a une animation de gauche vers la droite (1s)
+- un boutton permet de démarrer l'animation (reprendre si en pause)
+- un bouton peut la mettre en pause
+- un rectangle dans la UI affiche les events (onStart, onFinish, onCancel)
 
+il faut que l'anim s'arrete bien en cours de translation
+et reprenne d'ou elle en est
 
-  - le mieux c'est que je me fasse un page html avec 3 canvas
-  - celui de gauche c'est l'image originelle
-  - celui de droite je dessine un truc dedans
-  - enfin le dernier je fais un composite operation + draw image du truc pour voir le résultat
-
+lorsque tout cela marchera
+- un bouton peut la finish
+- un bouton peut la cancel
 
 - les dégats partent de la ligne centrale (du monstre) en hauteur puis rebondissent
   le haut du texte est au niveau du centre du monstre

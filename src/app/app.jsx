@@ -150,7 +150,7 @@ export const App = () => {
         className="app"
         style={{ position: "relative", height: "200px", width: "300px" }}
         onClick={() => {
-          if (isIdle) {
+          if (isIdle && !pausedSignal.value) {
             startAction();
           }
         }}

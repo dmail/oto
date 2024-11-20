@@ -32,6 +32,7 @@ export const useElementAnimation = ({
     }
     steps.push({ transform: toTransform });
     return animateElement({
+      id,
       element,
       from,
       to,
