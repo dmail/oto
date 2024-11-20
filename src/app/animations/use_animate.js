@@ -65,5 +65,5 @@ export const useAnimate = ({
     }
   });
 
-  return [play, cancel, pause];
+  return [play, pause, cancel];
 };
