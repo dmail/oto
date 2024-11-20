@@ -7,11 +7,39 @@ export const animate = ({
 }) => {
   let animationFrame;
   let resolveFinished;
+  let startMs;
   const animation = {
+    playState: "idle",
     progressRatio: 0,
     onprogress,
     onfinish,
     oncancel,
+    play: () => {
+      if (animation.playState === "running") return;
+      if (animation.playState === "paused") {
+        animation.playState = "running";
+        startMs = Date.now();
+      } else {
+        animation.playState = "running";
+        startMs = Date.now();
+        animation.progressRatio = 0;
+      }
+      animationFrame = requestAnimationFrame(next);
+    },
+    pause: () => {
+      if (animation.playState === "paused") return;
+      cancelAnimationFrame(animationFrame);
+      animation.playState = "paused";
+    },
+    finish: () => {
+      if (animation.playState === "finished") return;
+      cancelAnimationFrame(animationFrame);
+      animation.progressRatio = 1;
+      animation.onprogress();
+      animation.playState = "finished";
+      animation.onfinish();
+      resolveFinished();
+    },
     cancel: () => {
       startMs = null;
       cancelAnimationFrame(animationFrame);
@@ -21,23 +49,18 @@ export const animate = ({
       resolveFinished = resolve;
     }),
   };
-  const finish = () => {
-    animation.onfinish();
-    resolveFinished();
-  };
   const progress = (ratio) => {
     if (easing) {
       ratio = easing(ratio);
     }
-    animation.progressRatio = ratio;
-    animation.onprogress();
     if (ratio === 1) {
-      finish();
+      animation.finish();
     } else {
+      animation.progressRatio = ratio;
+      animation.onprogress();
       animationFrame = requestAnimationFrame(next);
     }
   };
-  let startMs = Date.now();
   const next = () => {
     const msEllapsed = Date.now() - startMs;
     if (msEllapsed >= duration) {
@@ -51,6 +74,6 @@ export const animate = ({
     }
     progress(msEllapsed / duration);
   };
-  animationFrame = requestAnimationFrame(next);
+  animation.play();
   return animation;
 };

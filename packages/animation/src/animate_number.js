@@ -5,11 +5,10 @@ export const animateNumber = ({ from, to, onprogress, ...props }) => {
     ...props,
     onprogress: () => {
       const progressRatio = numberAnimation.progressRatio;
-      const value = (to - from) * progressRatio;
+      const value = progressRatio === 0 ? from : (to - from) * progressRatio;
       numberAnimation.value = value;
       onprogress();
     },
   });
-  numberAnimation.value = from;
   return numberAnimation;
 };

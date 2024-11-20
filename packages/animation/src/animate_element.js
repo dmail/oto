@@ -42,6 +42,15 @@ export const animateElement = ({
     onprogress,
     onfinish,
     oncancel,
+    play: () => {
+      animation.play();
+    },
+    pause: () => {
+      animation.pause();
+    },
+    finish: () => {
+      animation.finish();
+    },
     cancel: () => {
       if (animation.playState !== "finished") {
         animation.cancel();
