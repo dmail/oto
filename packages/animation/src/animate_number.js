@@ -1,12 +1,11 @@
 import { animate } from "./animate.js";
+import { applyRatioToDiff } from "./apply_ratio_to_diff.js";
 
 export const animateNumber = ({ from, to, onprogress, ...props }) => {
   const numberAnimation = animate({
     ...props,
     onprogress: () => {
-      const ratio = numberAnimation.ratio;
-      const value = ratio === 0 ? from : (to - from) * ratio;
-      numberAnimation.value = value;
+      numberAnimation.value = applyRatioToDiff(from, to, numberAnimation.ratio);
       if (onprogress) {
         onprogress();
       }

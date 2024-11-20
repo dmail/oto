@@ -24,18 +24,18 @@
     <script type="module">
       import { animateNumber } from "animation";
 
-      let from = 0;
+      let from = 10;
       const fromInput = document.querySelector('[name="from"]');
       fromInput.value = from;
       fromInput.oninput = () => {
-        from = fromInput.value;
+        from = parseInt(fromInput.value);
         update();
       };
-      let to = 10;
+      let to = 0;
       const toInput = document.querySelector('[name="to"]');
       toInput.value = to;
       toInput.oninput = () => {
-        to = toInput.value;
+        to = parseInt(toInput.value);
         update();
       };
 

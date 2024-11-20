@@ -1,5 +1,6 @@
 import { animate } from "./animate.js";
 import { animationSequence } from "./animation_sequence.js";
+import { applyRatioToDiff } from "./apply_ratio_to_diff.js";
 import { EASING } from "./easing.js";
 
 const COLORS = {
@@ -44,12 +45,15 @@ export const glow = (
 
   const glowStepDuration = duration / (iterations * 2);
   const animateColor = (nextColor) => {
+    const rFrom = r;
+    const gFrom = g;
+    const bFrom = b;
     const [rTo, gTo, bTo] = nextColor;
     const colorAnimation = animate({
       onprogress: () => {
-        r = (rTo - rFrom) * colorAnimation.ratio;
-        g = (gTo - gFrom) * colorAnimation.ratio;
-        b = (bTo - bFrom) * colorAnimation.ratio;
+        r = applyRatioToDiff(rFrom, rTo, colorAnimation.ratio);
+        g = applyRatioToDiff(gFrom, gTo, colorAnimation.ratio);
+        b = applyRatioToDiff(bFrom, bTo, colorAnimation.ratio);
         for (const pixelIndex of pixelIndexes) {
           allColors[pixelIndex] = r;
           allColors[pixelIndex + 1] = g;
