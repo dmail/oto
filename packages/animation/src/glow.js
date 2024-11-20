@@ -5,6 +5,8 @@ import { EASING } from "./easing.js";
 const COLORS = {
   black: [0, 0, 0],
   white: [255, 255, 255],
+  red: [255, 0, 0],
+  green: [0, 255, 0],
 };
 
 export const glow = (
@@ -38,25 +40,22 @@ export const glow = (
       pixelIndexes.push(i);
     }
   }
-  const updateColor = () => {
-    for (const pixelIndex of pixelIndexes) {
-      allColors[pixelIndex] = r;
-      allColors[pixelIndex + 1] = g;
-      allColors[pixelIndex + 2] = b;
-    }
-    // context.clearRect(0, 0, width, height);
-    context.putImageData(imageData, 0, 0);
-  };
 
   const glowStepDuration = duration / (iterations * 2);
-  const animateColor = (toColor) => {
-    const [rTo, gTo, bTo] = toColor;
+  const animateColor = (nextColor) => {
+    const [rTo, gTo, bTo] = nextColor;
     const colorAnimation = animate({
       onprogress: () => {
-        r = (rTo - rFrom) * colorAnimation.progressRatio;
-        g = (gTo - gFrom) * colorAnimation.progressRatio;
-        b = (bTo - bFrom) * colorAnimation.progressRatio;
-        updateColor();
+        r = (rTo - rFrom) * colorAnimation.ratio;
+        g = (gTo - gFrom) * colorAnimation.ratio;
+        b = (bTo - bFrom) * colorAnimation.ratio;
+        for (const pixelIndex of pixelIndexes) {
+          allColors[pixelIndex] = r;
+          allColors[pixelIndex + 1] = g;
+          allColors[pixelIndex + 2] = b;
+        }
+        // context.clearRect(0, 0, width, height);
+        context.putImageData(imageData, 0, 0);
       },
       duration: glowStepDuration,
       easing: EASING.EASE_OUT_EXPO,

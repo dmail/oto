@@ -57,7 +57,7 @@ export const animate = ({
     animation.ratio = easing ? easing(progressRatio) : progressRatio;
     animation.onprogress();
   };
-  const stepMinDuration = fps ? 1000 / fps : Infinity;
+  const stepMinDuration = fps ? 1000 / fps : 0;
   const next = () => {
     const stepMs = Date.now();
     const msEllapsedSincePreviousStep = stepMs - previousStepMs;
