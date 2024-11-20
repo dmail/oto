@@ -20,6 +20,7 @@ export const glow = (
     y = 0,
     width = canvas.width,
     height = canvas.height,
+    onprogress,
   } = {},
 ) => {
   if (typeof fromColor === "string") fromColor = COLORS[fromColor];
@@ -56,6 +57,10 @@ export const glow = (
         }
         // context.clearRect(0, 0, width, height);
         context.putImageData(imageData, 0, 0);
+        glowAnimation.color = [r, g, b];
+        if (onprogress) {
+          onprogress();
+        }
       },
       duration: glowStepDuration,
       easing: EASING.EASE_OUT_EXPO,
@@ -70,5 +75,6 @@ export const glow = (
     animationExecutors.push(() => animateColor(toColor));
     animationExecutors.push(() => animateColor(fromColor));
   }
-  return animationSequence(animationExecutors);
+  const glowAnimation = animationSequence(animationExecutors);
+  return glowAnimation;
 };

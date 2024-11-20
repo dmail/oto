@@ -18,6 +18,7 @@
       </fieldset>
       <div>
         <canvas id="output"></canvas>
+        <div id="steps"></div>
       </div>
     </div>
     <script type="module">
@@ -55,8 +56,8 @@
             iterations: 1,
             fps: 10,
             onprogress: () => {
-              document.querySelector("#output").innerHTML +=
-                `${Math.round(animation.value)}<br />`;
+              document.querySelector("#steps").innerHTML +=
+                `${animation.color.join(",")}<br />`;
             },
           });
           animation.onfinish = () => {
