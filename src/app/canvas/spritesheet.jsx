@@ -1,5 +1,5 @@
 import { fromTransformations } from "matrix";
-import { useCallback, useLayoutEffect, useRef } from "preact/hooks";
+import { useLayoutEffect, useMemo, useRef } from "preact/hooks";
 import { useImage } from "../hooks/use_image.js";
 
 export const SpriteSheet = ({
@@ -20,18 +20,26 @@ export const SpriteSheet = ({
   y = parseInt(y);
   width = parseInt(width);
   height = parseInt(height);
+  if (transparentColor) {
+    if (typeof transparentColor[0] === "number") {
+      transparentColor = [transparentColor];
+    }
+  } else {
+    transparentColor = [];
+  }
 
   const [image] = useImage(url);
+  const shouldReplace = useMemo(
+    () => createShouldReplace(transparentColor),
+    transparentColor.map((color) => `${color[0]}${color[1]}${color[2]}`),
+  );
   useLayoutEffect(() => {
     if (!image) {
       return;
     }
     let source = image;
-    if (transparentColor) {
-      source = replaceColorWithTransparentPixels(
-        image,
-        createShouldReplace(transparentColor),
-      );
+    if (shouldReplace) {
+      source = replaceColorWithTransparentPixels(image, shouldReplace);
     }
     const transformations = {
       ...(mirrorX || mirrorY
@@ -55,14 +63,14 @@ export const SpriteSheet = ({
       context.save();
       const matrix = fromTransformations(transformations);
       context.setTransform(...matrix);
-      //  context.setTransform(-1, 0, 0, 1, parseInt(width), 0);
+      // context.setTransform(-1, 0, 0, 1, parseInt(width), 0);
     }
     context.drawImage(
       source,
-      parseInt(x),
-      parseInt(y),
-      parseInt(width),
-      parseInt(height),
+      x,
+      y,
+      width,
+      height,
       0,
       0,
       canvas.width,
@@ -71,7 +79,7 @@ export const SpriteSheet = ({
     if (hasTransformations) {
       context.restore();
     }
-  }, [image, transparentColor, x, y, width, height]);
+  }, [image, shouldReplace, x, y, width, height]);
 
   return (
     <canvas
@@ -89,23 +97,23 @@ export const SpriteSheet = ({
   );
 };
 
-const createShouldReplace = (colorToReplace) => {
-  if (!colorToReplace) {
+const createShouldReplace = (colorsToReplace) => {
+  if (colorsToReplace.length === 0) {
     return null;
   }
-  const [first] = colorToReplace;
-  if (typeof first === "object") {
+  if (colorsToReplace.length === 1) {
+    const colorToReplace = colorsToReplace[0];
+    const rToReplace = parseInt(colorToReplace[0]);
+    const gToReplace = parseInt(colorToReplace[1]);
+    const bToReplace = parseInt(colorToReplace[2]);
     return (r, g, b) => {
-      return colorToReplace.some((c) => {
-        return r === c[0] && g === c[1] && b === c[2];
-      });
+      return r === rToReplace && g === gToReplace && b === bToReplace;
     };
   }
-  const rToReplace = parseInt(colorToReplace[0]);
-  const gToReplace = parseInt(colorToReplace[1]);
-  const bToReplace = parseInt(colorToReplace[2]);
   return (r, g, b) => {
-    return r === rToReplace && g === gToReplace && b === bToReplace;
+    return colorsToReplace.some((c) => {
+      return r === c[0] && g === c[1] && b === c[2];
+    });
   };
 };
 
