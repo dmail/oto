@@ -1,3 +1,15 @@
+/*
+ * - Usage
+ * useEffect(() => {
+ *   // here you want to know what has changed, causing useEffect to be called
+ * }, [name, value])
+ *
+ * const diff = useDependenciesDiff({ name, value })
+ * useEffect(() => {
+ *   console.log('useEffect called because', diff)
+ * }, [name, value])
+ */
+
 import { useMemo, useRef } from "preact/hooks";
 
 export const useDependenciesDiff = (inputs) => {

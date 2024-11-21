@@ -103,6 +103,7 @@ export const App = () => {
     from: "black",
     to: "white",
     onFinish: endEnemyAction,
+    duration: 3000,
   });
   useLayoutEffect(() => {
     if (enemyIsActing) {

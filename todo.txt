@@ -1,11 +1,6 @@
 
-
-- Faire une page a part pour tester et obtenir le comportement suivant:
-
-- on a une animation de glow de 1s, black vers white
-- un boutton permet de démarrer l'animation (reprendre si en pause)
-- un bouton peut la mettre en pause
-- un rectangle dans la UI affiche les events (onStart, onFinish, onCancel)
+- appui sur espace: pause/resume
+- mettre anim glow a 2s duration puis tester qu'on arrive bien a la pause
 
 il faut que l'anim s'arrete bien en cours de translation
 et reprenne d'ou elle en est

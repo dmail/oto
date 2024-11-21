@@ -1,5 +1,5 @@
 import { fromTransformations } from "matrix";
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { useCallback, useLayoutEffect, useRef } from "preact/hooks";
 import { useImage } from "../hooks/use_image.js";
 
 export const SpriteSheet = ({
@@ -28,7 +28,10 @@ export const SpriteSheet = ({
     }
     let source = image;
     if (transparentColor) {
-      source = replaceColorWithTransparentPixels(image, transparentColor);
+      source = replaceColorWithTransparentPixels(
+        image,
+        createShouldReplace(transparentColor),
+      );
     }
     const transformations = {
       ...(mirrorX || mirrorY
@@ -86,29 +89,32 @@ export const SpriteSheet = ({
   );
 };
 
-const replaceColorWithTransparentPixels = (image, color) => {
+const createShouldReplace = (colorToReplace) => {
+  if (!colorToReplace) {
+    return null;
+  }
+  const [first] = colorToReplace;
+  if (typeof first === "object") {
+    return (r, g, b) => {
+      return colorToReplace.some((c) => {
+        return r === c[0] && g === c[1] && b === c[2];
+      });
+    };
+  }
+  const rToReplace = parseInt(colorToReplace[0]);
+  const gToReplace = parseInt(colorToReplace[1]);
+  const bToReplace = parseInt(colorToReplace[2]);
+  return (r, g, b) => {
+    return r === rToReplace && g === gToReplace && b === bToReplace;
+  };
+};
+
+const replaceColorWithTransparentPixels = (image, shouldReplace) => {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
   ctx.drawImage(image, 0, 0);
   const imageData = ctx.getImageData(0, 0, image.width, image.height);
   const pixels = imageData.data;
-
-  let shouldReplace;
-  const [first] = color;
-  if (typeof first === "object") {
-    shouldReplace = (r, g, b) => {
-      return color.some((c) => {
-        return r === c[0] && g === c[1] && b === c[2];
-      });
-    };
-  } else {
-    const rToReplace = parseInt(color[0]);
-    const gToReplace = parseInt(color[1]);
-    const bToReplace = parseInt(color[2]);
-    shouldReplace = (r, g, b) => {
-      return r === rToReplace && g === gToReplace && b === bToReplace;
-    };
-  }
 
   for (let i = 0, n = pixels.length; i < n; i += 4) {
     const r = pixels[i];
