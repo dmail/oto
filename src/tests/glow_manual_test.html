@@ -15,6 +15,7 @@
         <br />
         <button name="play">Play</button>
         <button name="pause">Pause</button>
+        <button name="finish">Finish</button>
       </fieldset>
       <div>
         <canvas id="output"></canvas>
@@ -52,8 +53,8 @@
           animation = glow(canvas, {
             fromColor: from,
             toColor: to,
-            duration: 1000,
-            iterations: 1,
+            duration: 3000,
+            iterations: 4,
             fps: 10,
             onprogress: () => {
               document.querySelector("#steps").innerHTML +=
@@ -73,29 +74,39 @@
         animation.pause();
         update();
       };
+      const finishButton = document.querySelector('[name="finish"]');
+      finishButton.onclick = () => {
+        animation.finish();
+        update();
+      };
 
       const update = () => {
         if (!animation) {
           playButton.disabled = false;
           pauseButton.disabled = true;
+          finishButton.disabled = true;
           return;
         }
         if (animation.playState === "running") {
           playButton.disabled = true;
           pauseButton.disabled = false;
+          finishButton.disabled = false;
           return;
         }
         if (animation.playState === "paused") {
           playButton.disabled = false;
           pauseButton.disabled = true;
+          finishButton.disabled = false;
           return;
         }
         if (animation.playState === "finished") {
           playButton.disabled = false;
           pauseButton.disabled = true;
+          finishButton.disabled = true;
           return;
         }
       };
+      update();
     </script>
   </body>
 </html>
