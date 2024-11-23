@@ -150,6 +150,7 @@ export const App = () => {
   }, [partyMemberIsActing, playWeaponTranslation]);
 
   const [playHeroReceiveDamage] = useHeroReceiveDamageAnimation({
+    elementRef: heroElementRef,
     onFinish: () => {
       endEnemyTurn();
     },

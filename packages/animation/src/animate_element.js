@@ -1,3 +1,5 @@
+import { EASING } from "./easing";
+
 const noop = () => {};
 
 export const animateElement = ({
@@ -11,6 +13,7 @@ export const animateElement = ({
   onprogress = noop,
   onfinish = noop,
   oncancel = noop,
+  easing,
 }) => {
   const [fromTransform] = stepFromAnimationDescription(from);
   const [toTransform] = stepFromAnimationDescription(to);
@@ -20,6 +23,12 @@ export const animateElement = ({
     steps.push({ transform: fromTransform });
   }
   steps.push({ transform: toTransform });
+  if (easing) {
+    element.style.animationTimingFunction =
+      createAnimationTimingFunction(easing);
+  } else {
+    element.style.animationTimingFunction = "";
+  }
   const animation = element.animate(steps, {
     duration,
     fill,
@@ -93,4 +102,24 @@ export const stepFromAnimationDescription = (animationDescription) => {
     transforms.push(`scaleX(${scaleX})`);
   }
   return [transforms.join(" ")];
+};
+
+const createAnimationTimingFunction = (easing, steps = 10) => {
+  if (easing === EASING.linear) {
+    return "linear";
+  }
+  if (easing === EASING.EASE) {
+    return "ease";
+  }
+  let i = 0;
+  const values = [];
+  const stepRatio = 1 / steps;
+  let progress = 0;
+  while (i < steps) {
+    i++;
+    const value = easing(progress);
+    values.push(value);
+    progress += stepRatio;
+  }
+  return `linear(${values.join(", ")});`;
 };
