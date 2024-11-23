@@ -1,4 +1,6 @@
+import { useSignalEffect } from "@preact/signals";
 import { useCallback, useRef, useState } from "preact/hooks";
+import { pausedSignal } from "../signals.js";
 
 export const useFrame = (frames, { msBetweenFrames = 350, loop } = {}) => {
   const intervalRef = useRef();
@@ -14,6 +16,7 @@ export const useFrame = (frames, { msBetweenFrames = 350, loop } = {}) => {
       frameIndexRef.current = 0;
     }
     playStateRef.current = "running";
+    frameSetter(frames[frameIndexRef.current]);
     intervalRef.current = setInterval(() => {
       const frameIndex = frameIndexRef.current;
       if (frameIndex === frames.length - 1) {
@@ -34,6 +37,15 @@ export const useFrame = (frames, { msBetweenFrames = 350, loop } = {}) => {
     playStateRef.current = "paused";
     clearInterval(intervalRef.current);
   }, []);
+
+  useSignalEffect(() => {
+    const paused = pausedSignal.value;
+    if (paused) {
+      pause();
+    } else {
+      play();
+    }
+  });
 
   return [frame, play, pause];
 };

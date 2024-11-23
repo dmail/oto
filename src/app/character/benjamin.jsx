@@ -1,9 +1,7 @@
-import { useSignalEffect } from "@preact/signals";
-import { useEffect, useRef } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 import { useFrame } from "../animations/use_frame.js";
 import { useDrawImage } from "../hooks/use_draw_image.js";
 import { useSprite } from "../hooks/use_sprite.js";
-import { pausedSignal } from "../signals.js";
 
 const characterSpritesheetUrl = new URL(
   "./character_spritesheet.png",
@@ -33,16 +31,7 @@ export const Benjamin = ({
     ["a", "b"],
     { loop: true },
   );
-
-  useSignalEffect(() => {
-    const paused = pausedSignal.value;
-    if (paused) {
-      pauseFrameAnimation();
-    } else {
-      playFrameAnimation();
-    }
-  });
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!animate || !hasAnimation) return () => {};
     playFrameAnimation();
     return pauseFrameAnimation;
