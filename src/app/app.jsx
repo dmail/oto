@@ -1,4 +1,3 @@
-import { EASING } from "animation";
 import {
   useCallback,
   useEffect,
@@ -18,6 +17,7 @@ import { swordASoundUrl } from "./fight/sword_sound_url.js";
 import { WhiteCurtain } from "./fight/white_curtain.jsx";
 import { useBooleanState } from "./hooks/use_boolean_state.js";
 import { useSound } from "./hooks/use_sound.js";
+import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 
@@ -157,7 +157,7 @@ export const App = () => {
   return (
     <div>
       <div
-        className="app"
+        name="screen"
         style={{ position: "relative", height: "200px", width: "300px" }}
         onClick={() => {
           if (partyMemberIsIdle && !pausedSignal.value) {
@@ -166,12 +166,14 @@ export const App = () => {
         }}
       >
         <div
+          name="background"
           style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         >
           <MountainAndSkyBattleBackground />
           <WhiteCurtain visible={whiteCurtain} />
         </div>
         <div
+          name="front"
           style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
         >
           <Box name="enemy_box" height={100} width={100} x="center" y={26}>
@@ -193,6 +195,7 @@ export const App = () => {
             />
           </Box>
         </div>
+        <PauseDialog visible={pausedSignal.value} />
       </div>
       <div>
         <button
