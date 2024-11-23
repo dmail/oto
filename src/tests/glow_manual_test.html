@@ -23,7 +23,7 @@
       </div>
     </div>
     <script type="module">
-      import { glow } from "animation";
+      import { glow, EASING } from "animation";
 
       const canvas = document.querySelector("canvas");
       const context = canvas.getContext("2d");
@@ -60,6 +60,7 @@
               document.querySelector("#steps").innerHTML +=
                 `${animation.color.join(",")}<br />`;
             },
+            easing: EASING.LINEAR,
           });
           animation.onfinish = () => {
             update();

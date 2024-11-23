@@ -22,6 +22,7 @@ export const glow = (
     width = canvas.width,
     height = canvas.height,
     onprogress,
+    easing = EASING.EASE_OUT_EXPO,
   } = {},
 ) => {
   if (typeof fromColor === "string") fromColor = COLORS[fromColor];
@@ -67,7 +68,7 @@ export const glow = (
         }
       },
       duration: glowStepDuration,
-      easing: EASING.EASE_OUT_EXPO,
+      easing,
     });
     return colorAnimation;
   };

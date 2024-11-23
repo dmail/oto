@@ -3,7 +3,7 @@
 export const EASING = {
   LINEAR: (x) => x,
   EASE: (x) => {
-    return cubicBezier(x, 0.25, 0.1, 0.25, 1.0);
+    return bezier(x, 0.25, 0.1, 0.25, 1.0);
   },
   EASE_OUT_EXPO: (x) => {
     return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
@@ -21,7 +21,8 @@ export const EASING = {
 };
 
 // https://github.com/pouyamer/cubic-bezier-in-js/tree/master
-const cubicBezier = (t, x0, y0, x1, y1) => {
+// BEWARE DOES NOT WORK
+export const cubicBezier = (t, x0, y0, x1, y1) => {
   if (!(x0 >= 0 && x0 <= 1 && x1 >= 0 && x1 <= 1)) {
     throw new Error(
       `CubicBezier x1 & x2 values must be { 0 < x < 1 }, got { x1 : ${x0}, x2: ${x1} }`,

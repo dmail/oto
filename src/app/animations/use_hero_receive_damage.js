@@ -16,9 +16,9 @@ export const useHeroReceiveDamageAnimation = ({ elementRef, onFinish }) => {
 const animateHeroReceivedDamage = (element) => {
   const verticalMoves = [
     { y: 10, duration: 20 },
-    { y: 7, duration: 10 },
-    { y: 5, duration: 10 },
-    { y: 2, duration: 5 },
+    { y: 6, duration: 10 },
+    { y: 3, duration: 10 },
+    { y: 2, duration: 10 },
   ];
   const steps = [];
   for (const { y, duration } of verticalMoves) {
