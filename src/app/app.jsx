@@ -114,18 +114,11 @@ export const App = () => {
     }
   }, [enemyIsActing, playEnemyGlow]);
 
-  const [playHeroReceiveDamage] = useElementAnimation({
-    id: "hero_receive_damage",
-    elementRef: heroElementRef,
-    to: {
-      y: -20,
-    },
-    duration: 3000,
-    easing: EASING.EASE_OUT_ELASTIC,
-    onFinish: () => {
+  const playHeroReceiveDamage = () => {
+    setTimeout(() => {
       endEnemyTurn();
-    },
-  });
+    });
+  };
 
   const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();

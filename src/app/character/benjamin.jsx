@@ -1,5 +1,6 @@
 import { useSignalEffect } from "@preact/signals";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef } from "preact/hooks";
+import { useFrame } from "../animations/use_frame.js";
 import { useDrawImage } from "../hooks/use_draw_image.js";
 import { useSprite } from "../hooks/use_sprite.js";
 import { pausedSignal } from "../signals.js";
@@ -28,38 +29,24 @@ export const Benjamin = ({
   ...props
 }) => {
   const hasAnimation = activity !== "";
-  const [frame, frameSetter] = useState("a");
-
-  const intervalRef = useRef();
-  const playAnimation = useCallback(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-    intervalRef.current = setInterval(() => {
-      frameSetter((frameCurrent) => {
-        return frameCurrent === "a" ? "b" : "a";
-      });
-    }, 350);
-    return pauseAnimation;
-  }, [frameSetter]);
-  const pauseAnimation = useCallback(() => {
-    clearInterval(intervalRef.current);
-  }, []);
+  const [frame, playFrameAnimation, pauseFrameAnimation] = useFrame(
+    ["a", "b"],
+    { loop: true },
+  );
 
   useSignalEffect(() => {
     const paused = pausedSignal.value;
     if (paused) {
-      pauseAnimation();
+      pauseFrameAnimation();
     } else {
-      playAnimation();
+      playFrameAnimation();
     }
   });
-
   useEffect(() => {
     if (!animate || !hasAnimation) return () => {};
-    playAnimation();
-    return pauseAnimation;
-  }, [animate, hasAnimation, playAnimation, pauseAnimation]);
+    playFrameAnimation();
+    return pauseFrameAnimation;
+  }, [animate, hasAnimation, playFrameAnimation, pauseFrameAnimation]);
 
   const { x, y, mirrorX, mirrorY } =
     HERO_STATE_CELL[`${activity}_${direction}_${frame}`];
