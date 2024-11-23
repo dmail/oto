@@ -7,6 +7,7 @@ import {
 } from "preact/hooks";
 import { useCanvasGlowAnimation } from "./animations/use_canvas_glow_animation.js";
 import { useElementAnimation } from "./animations/use_element_animation.js";
+import { useHeroReceiveDamageAnimation } from "./animations/use_hero_receive_damage.js";
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
@@ -114,12 +115,6 @@ export const App = () => {
     }
   }, [enemyIsActing, playEnemyGlow]);
 
-  const playHeroReceiveDamage = () => {
-    setTimeout(() => {
-      endEnemyTurn();
-    });
-  };
-
   const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   useEffect(() => {
@@ -153,6 +148,12 @@ export const App = () => {
       playWeaponTranslation();
     }
   }, [partyMemberIsActing, playWeaponTranslation]);
+
+  const [playHeroReceiveDamage] = useHeroReceiveDamageAnimation({
+    onFinish: () => {
+      endEnemyTurn();
+    },
+  });
 
   return (
     <div>

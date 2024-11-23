@@ -1,4 +1,4 @@
-export const animateSequence = (animationExecutors) => {
+export const animateSequence = (animationExecutors, { onfinish } = {}) => {
   let resolveFinished;
   let childAnimationIndex;
   let currentAnimation;
@@ -40,7 +40,7 @@ export const animateSequence = (animationExecutors) => {
       currentAnimation.cancel();
       animationSequence.oncancel();
     },
-    onfinish: () => {},
+    onfinish,
     oncancel: () => {},
     finished: new Promise((resolve) => {
       resolveFinished = resolve;
