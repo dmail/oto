@@ -1,4 +1,4 @@
-export const animationSequence = (animationExecutors) => {
+export const animateSequence = (animationExecutors) => {
   let resolveFinished;
   let childAnimationIndex;
   let currentAnimation;

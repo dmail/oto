@@ -1,3 +1,14 @@
+- pour les animations: se faire un outil
+et ouais...
+l'outil en gros il permet de drag and drop un truc et de lui appliquer des étapes
+idéalement il fait partie du moteur de jeu (mais ca on pourra le faire plus tard
+en mettant le jeu en pause et en activant l'outil sur le jeu mis en pause)
+
+ensuite il faut une maniere de rendre cette animation
+et pour avoir le full controle on va le faire en js 
+avec animate number en gros hein
+mais un tru cplus complet qui prends des étapes et passe d'une étape a l'autre avec une durée
++ une easing function, linear par défaut
 
 - faire que le keyframe soit une animation
   (a priori un animate number from 0, 1 mais avec des steps de 1 en mode boucle infinie)

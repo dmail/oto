@@ -1,5 +1,5 @@
 import { animate } from "./animate.js";
-import { animationSequence } from "./animation_sequence.js";
+import { animateSequence } from "./animate_sequence.js";
 import { applyRatioToDiff } from "./apply_ratio_to_diff.js";
 import { EASING } from "./easing.js";
 
@@ -79,6 +79,6 @@ export const glow = (
     animationExecutors.push(() => animateColor(toColor));
     animationExecutors.push(() => animateColor(fromColor));
   }
-  const glowAnimation = animationSequence(animationExecutors);
+  const glowAnimation = animateSequence(animationExecutors);
   return glowAnimation;
 };
