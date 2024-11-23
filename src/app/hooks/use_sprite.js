@@ -32,10 +32,10 @@ export const useSprite = ({
     if (!image) {
       return null;
     }
-    let source = image;
-    if (shouldReplace) {
-      source = replaceColorWithTransparentPixels(image, shouldReplace);
-    }
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
     const transformations = {
       ...(mirrorX || mirrorY
         ? {
@@ -50,24 +50,33 @@ export const useSprite = ({
           }
         : {}),
     };
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
     const hasTransformations = Object.keys(transformations).length > 0;
-    const context = canvas.getContext("2d");
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.clearRect(0, 0, width, height);
     if (hasTransformations) {
       context.save();
       const matrix = fromTransformations(transformations);
       context.setTransform(...matrix);
       // context.setTransform(-1, 0, 0, 1, parseInt(width), 0);
     }
-    context.drawImage(source, x, y, width, height, 0, 0, width, height);
+    context.drawImage(image, x, y, width, height, 0, 0, width, height);
     if (hasTransformations) {
       context.restore();
     }
-    source = canvas;
-    return source;
+    if (shouldReplace) {
+      const imageData = context.getImageData(0, 0, width, height);
+      const pixels = imageData.data;
+
+      for (let i = 0, n = pixels.length; i < n; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        if (shouldReplace(r, g, b)) {
+          pixels[i + 3] = 0;
+        }
+      }
+      context.putImageData(imageData, 0, 0);
+    }
+    return canvas;
   }, [image, mirrorX, mirrorY, shouldReplace, x, y, width, height]);
 
   return imageTransformed;
@@ -91,23 +100,4 @@ const createShouldReplace = (colorsToReplace) => {
       return r === c[0] && g === c[1] && b === c[2];
     });
   };
-};
-
-const replaceColorWithTransparentPixels = (image, shouldReplace) => {
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(image, 0, 0);
-  const imageData = ctx.getImageData(0, 0, image.width, image.height);
-  const pixels = imageData.data;
-
-  for (let i = 0, n = pixels.length; i < n; i += 4) {
-    const r = pixels[i];
-    const g = pixels[i + 1];
-    const b = pixels[i + 2];
-    if (shouldReplace(r, g, b)) {
-      pixels[i + 3] = 0;
-    }
-  }
-  ctx.putImageData(imageData, 0, 0);
-  return canvas;
 };
