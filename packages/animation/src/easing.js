@@ -5,6 +5,9 @@ export const EASING = {
   EASE: (x) => {
     return bezier(x, 0.25, 0.1, 0.25, 1.0);
   },
+  EASE_IN_OUT_CUBIC: (x) => {
+    return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+  },
   EASE_OUT_EXPO: (x) => {
     return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
   },
