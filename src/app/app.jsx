@@ -36,30 +36,30 @@ export const App = () => {
   const weaponElementRef = useRef();
   const enemyElementRef = useRef();
 
-  const [characterActionStep, characterActionStepSetter] = useState("idle");
-  const isIdle = characterActionStep === "idle";
-  const isMovingToAct = characterActionStep === "move_to_act";
-  const isActing = characterActionStep === "acting";
-  const isMovingBackToPosition =
-    characterActionStep === "move_back_to_position";
-  const startAction = useCallback(() => {
-    characterActionStepSetter("move_to_act");
+  const [partyMemberActionStep, partyMemberActionStepSetter] = useState("idle");
+  const partyMemberIsIdle = partyMemberActionStep === "idle";
+  const partyMemberIsMovingToAct = partyMemberActionStep === "move_to_act";
+  const partyMemberIsActing = partyMemberActionStep === "acting";
+  const partyMemberIsMovingBackToPosition =
+    partyMemberActionStep === "move_back_to_position";
+  const startPartyMemberTurn = useCallback(() => {
+    partyMemberActionStepSetter("move_to_act");
   }, []);
-  const readyToAct = useCallback(() => {
-    characterActionStepSetter("acting");
+  const startPartyMemberAction = useCallback(() => {
+    partyMemberActionStepSetter("acting");
   }, []);
-  const finishAction = useCallback(() => {
-    characterActionStepSetter("move_back_to_position");
+  const endPartyMemberAction = useCallback(() => {
+    partyMemberActionStepSetter("move_back_to_position");
   }, []);
-  const goIdle = useCallback(() => {
-    characterActionStepSetter("idle");
+  const endPartyMemberTurn = useCallback(() => {
+    partyMemberActionStepSetter("idle");
   }, []);
   const [enemyActionStep, enemyActionStepSetter] = useState("idle");
   const enemyIsActing = enemyActionStep === "acting";
-  const startEnemyAction = useCallback(() => {
+  const startEnemyTurn = useCallback(() => {
     enemyActionStepSetter("acting");
   }, []);
-  const endEnemyAction = useCallback(() => {
+  const endEnemyTurn = useCallback(() => {
     enemyActionStepSetter("idle");
   }, []);
 
@@ -70,14 +70,14 @@ export const App = () => {
       y: -20,
     },
     duration: 200,
-    onCancel: goIdle,
-    onFinish: readyToAct,
+    onCancel: endPartyMemberTurn,
+    onFinish: startPartyMemberAction,
   });
   useLayoutEffect(() => {
-    if (isMovingToAct) {
+    if (partyMemberIsMovingToAct) {
       playHeroMoveToAct();
     }
-  }, [isMovingToAct, playHeroMoveToAct]);
+  }, [partyMemberIsMovingToAct, playHeroMoveToAct]);
   const [playHeroMoveBackToPosition] = useElementAnimation({
     id: "hero_move_back_to_position",
     elementRef: heroElementRef,
@@ -85,25 +85,25 @@ export const App = () => {
       y: 0,
     },
     duration: 200,
-    onCancel: goIdle,
+    onCancel: endPartyMemberTurn,
     onFinish: () => {
-      goIdle();
-      startEnemyAction();
+      endPartyMemberTurn();
+      startEnemyTurn();
     },
   });
   useLayoutEffect(() => {
-    if (isMovingBackToPosition) {
+    if (partyMemberIsMovingBackToPosition) {
       playHeroMoveBackToPosition();
     }
-  }, [isMovingBackToPosition, playHeroMoveBackToPosition]);
+  }, [partyMemberIsMovingBackToPosition, playHeroMoveBackToPosition]);
 
   const [playEnemyGlow] = useCanvasGlowAnimation({
     id: "enemy_glow",
     elementRef: enemyElementRef,
     from: "black",
     to: "white",
-    onFinish: endEnemyAction,
-    duration: 3000,
+    onFinish: endEnemyTurn,
+    duration: 300,
   });
   useLayoutEffect(() => {
     if (enemyIsActing) {
@@ -137,13 +137,13 @@ export const App = () => {
       swordSound.currentTime = 0.15;
       swordSound.play();
     }, []),
-    onFinish: finishAction,
+    onFinish: endPartyMemberAction,
   });
   useLayoutEffect(() => {
-    if (isActing) {
+    if (partyMemberIsActing) {
       playWeaponTranslation();
     }
-  }, [isActing, playWeaponTranslation]);
+  }, [partyMemberIsActing, playWeaponTranslation]);
 
   return (
     <div>
@@ -151,8 +151,8 @@ export const App = () => {
         className="app"
         style={{ position: "relative", height: "200px", width: "300px" }}
         onClick={() => {
-          if (isIdle && !pausedSignal.value) {
-            startAction();
+          if (partyMemberIsIdle && !pausedSignal.value) {
+            startPartyMemberTurn();
           }
         }}
       >
@@ -167,7 +167,12 @@ export const App = () => {
         >
           <Box name="enemy_box" height={100} width={100} x="center" y={26}>
             <FirstEnemy elementRef={enemyElementRef} />
-            <Box name="weapon_box" visible={isActing} width={60} height={60}>
+            <Box
+              name="weapon_box"
+              visible={partyMemberIsActing}
+              width={60}
+              height={60}
+            >
               <SwordA elementRef={weaponElementRef} />
             </Box>
           </Box>
