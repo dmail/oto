@@ -1,6 +1,7 @@
 import { useSignalEffect } from "@preact/signals";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-import { SpriteSheet } from "../canvas/spritesheet.jsx";
+import { useDrawImage } from "../hooks/use_draw_image.js";
+import { useSprite } from "../hooks/use_sprite.js";
 import { pausedSignal } from "../signals.js";
 
 const characterSpritesheetUrl = new URL(
@@ -20,6 +21,7 @@ const HERO_STATE_CELL = {
 };
 
 export const Benjamin = ({
+  elementRef = useRef(),
   direction = "top",
   activity = "", // 'walking', 'jumping', 'pushing', 'wondering'
   animate = true,
@@ -61,21 +63,32 @@ export const Benjamin = ({
 
   const { x, y, mirrorX, mirrorY } =
     HERO_STATE_CELL[`${activity}_${direction}_${frame}`];
+  const sprite = useSprite({
+    url: characterSpritesheetUrl,
+    x,
+    y,
+    width: 17,
+    height: 17,
+    mirrorX,
+    mirrorY,
+    transparentColor: [
+      [0, 206, 206],
+      [0, 155, 155],
+    ],
+  });
+  useDrawImage(elementRef, sprite);
+
   return (
-    <SpriteSheet
+    <canvas
       {...props}
-      name="benjaming"
-      url={characterSpritesheetUrl}
-      x={x}
-      y={y}
+      name="benjamin"
+      ref={elementRef}
       width={17}
       height={17}
-      mirrorX={mirrorX}
-      mirrorY={mirrorY}
-      transparentColor={[
-        [0, 206, 206],
-        [0, 155, 155],
-      ]}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
     />
   );
 };

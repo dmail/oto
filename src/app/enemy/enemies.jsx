@@ -1,21 +1,31 @@
-import { SpriteSheet } from "../canvas/spritesheet.jsx";
+import { useRef } from "preact/hooks";
+import { useDrawImage } from "../hooks/use_draw_image.js";
+import { useSprite } from "../hooks/use_sprite.js";
 
 const enemySpritesheetUrl = new URL("./enemy_spritesheet.png", import.meta.url);
 
-export const FirstEnemy = (props) => {
-  return <EnemySpriteSheet name="taurus" col={0} row={0} {...props} />;
-};
+export const FirstEnemy = ({ elementRef = useRef(), ...props }) => {
+  const sprite = useSprite({
+    url: enemySpritesheetUrl,
+    x: 80,
+    y: 10,
+    width: 70,
+    height: 80,
+    transparentColor: [0, 128, 128],
+  });
+  useDrawImage(elementRef, sprite);
 
-const EnemySpriteSheet = ({ col, row, ...props }) => {
   return (
-    <SpriteSheet
+    <canvas
       {...props}
-      transparentColor={[0, 128, 128]}
-      url={enemySpritesheetUrl}
-      x={col * 50 + 80}
-      y={row * 50 + 10}
+      name="taurus"
+      ref={elementRef}
       width={70}
       height={80}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
     />
   );
 };

@@ -1,30 +1,36 @@
-import { SpriteSheet } from "../canvas/spritesheet.jsx";
+import { useRef } from "preact/hooks";
+import { useDrawImage } from "../hooks/use_draw_image.js";
+import { useSprite } from "../hooks/use_sprite.js";
 
 const battleBackgroundsSpritesheetUrl = new URL(
   "./battle_background_spritesheet.png",
   import.meta.url,
 );
 
-export const MountainAndSkyBattleBackground = (props) => {
-  return (
-    <BattleBackgroundSpriteSheet
-      name="mountain_and_sky"
-      col={1}
-      row={0}
-      {...props}
-    />
-  );
-};
+export const MountainAndSkyBattleBackground = ({
+  elementRef = useRef(),
+  ...props
+}) => {
+  const sprite = useSprite({
+    url: battleBackgroundsSpritesheetUrl,
+    x: 260 * 1 + 5,
+    y: 100 * 0 + 0,
+    width: 255,
+    height: 200,
+  });
+  useDrawImage(elementRef, sprite);
 
-const BattleBackgroundSpriteSheet = ({ col, row, ...props }) => {
   return (
-    <SpriteSheet
-      url={battleBackgroundsSpritesheetUrl}
-      x={col * 260 + 5}
-      y={row * 100 + 0}
+    <canvas
+      {...props}
+      name="mountain_and_sky"
+      ref={elementRef}
       width={255}
       height={200}
-      {...props}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
     />
   );
 };

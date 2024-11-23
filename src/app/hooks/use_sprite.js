@@ -1,20 +1,16 @@
 import { fromTransformations } from "matrix";
-import { useLayoutEffect, useMemo, useRef } from "preact/hooks";
-import { useImage } from "../hooks/use_image.js";
+import { useMemo } from "preact/hooks";
+import { useImage } from "./use_image.js";
 
-export const SpriteSheet = ({
-  name,
-  className = "sprite",
+export const useSprite = ({
   url,
-  transparentColor,
   x,
   y,
   width,
   height,
   mirrorX,
   mirrorY,
-  elementRef = useRef(),
-  ...props
+  transparentColor,
 }) => {
   x = parseInt(x);
   y = parseInt(y);
@@ -27,15 +23,14 @@ export const SpriteSheet = ({
   } else {
     transparentColor = [];
   }
-
   const [image] = useImage(url);
   const shouldReplace = useMemo(
     () => createShouldReplace(transparentColor),
     transparentColor.map((color) => `${color[0]}${color[1]}${color[2]}`),
   );
-  useLayoutEffect(() => {
+  const imageTransformed = useMemo(() => {
     if (!image) {
-      return;
+      return null;
     }
     let source = image;
     if (shouldReplace) {
@@ -55,7 +50,9 @@ export const SpriteSheet = ({
           }
         : {}),
     };
-    const canvas = elementRef.current;
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
     const hasTransformations = Object.keys(transformations).length > 0;
     const context = canvas.getContext("2d");
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -65,36 +62,15 @@ export const SpriteSheet = ({
       context.setTransform(...matrix);
       // context.setTransform(-1, 0, 0, 1, parseInt(width), 0);
     }
-    context.drawImage(
-      source,
-      x,
-      y,
-      width,
-      height,
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
+    context.drawImage(source, x, y, width, height, 0, 0, width, height);
     if (hasTransformations) {
       context.restore();
     }
-  }, [image, shouldReplace, x, y, width, height]);
+    source = canvas;
+    return source;
+  }, [image, mirrorX, mirrorY, shouldReplace, x, y, width, height]);
 
-  return (
-    <canvas
-      {...props}
-      ref={elementRef}
-      width={width}
-      height={height}
-      name={name}
-      className={className}
-      style={{
-        width: "100%",
-        height: "100%",
-      }}
-    />
-  );
+  return imageTransformed;
 };
 
 const createShouldReplace = (colorsToReplace) => {
@@ -135,33 +111,3 @@ const replaceColorWithTransparentPixels = (image, shouldReplace) => {
   ctx.putImageData(imageData, 0, 0);
   return canvas;
 };
-
-// const mapPixels = (imageData, callback) => {
-//   let modified = false;
-//   const pixels = imageData.data;
-//   for (let i = 0, n = pixels.length; i < n; i += 4) {
-//     const r = pixels[i];
-//     const g = pixels[i + 1];
-//     const b = pixels[i + 2];
-//     const result = callback(r, g, b);
-//     if (!result) {
-//       continue;
-//     }
-//     const [r2, g2, b2] = result;
-//     if (r2 !== r) {
-//       modified = true;
-//       pixels[i] = r2;
-//     }
-//     if (g2 !== g) {
-//       modified = true;
-//       pixels[i + 1] = g2;
-//     }
-//     if (b2 !== b) {
-//       modified = true;
-//       pixels[i + 2] = b2;
-//     }
-//   }
-//   if (modified) {
-//     context.putImageData(imageData, 0, 0);
-//   }
-// };
