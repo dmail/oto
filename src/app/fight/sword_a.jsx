@@ -24,8 +24,8 @@ export const SwordA = ({ elementRef = useRef(), ...props }) => {
       {...props}
       name="sword_a"
       ref={elementRef}
-      width={255}
-      height={200}
+      width={width}
+      height={height}
       style={{
         width: "100%",
         height: "100%",
