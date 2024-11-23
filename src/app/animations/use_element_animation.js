@@ -13,7 +13,11 @@ export const useElementAnimation = ({
   onStart,
   onCancel,
   onFinish,
+  easing,
 }) => {
+  const animationTimingFunction = easing
+    ? createAnimationTimingFunction(easing)
+    : "";
   const [fromTransform] = stepFromAnimationDescription(from);
   const [toTransform] = stepFromAnimationDescription(to);
 
@@ -28,6 +32,7 @@ export const useElementAnimation = ({
       steps.push({ transform: fromTransform });
     }
     steps.push({ transform: toTransform });
+    element.style.animationTimingFunction = animationTimingFunction;
     return animateElement({
       id,
       element,
@@ -45,7 +50,22 @@ export const useElementAnimation = ({
     duration,
     fill,
     iterations,
+    animationTimingFunction,
   ]);
 
   return useAnimate({ animate, onStart, onCancel, onFinish });
+};
+
+const createAnimationTimingFunction = (easing, steps = 10) => {
+  let i = 0;
+  const values = [];
+  const stepRatio = 1 / steps;
+  let progress = 0;
+  while (i < steps) {
+    i++;
+    const value = easing(progress);
+    values.push(value);
+    progress += stepRatio;
+  }
+  return `linear(${values.join(", ")});`;
 };

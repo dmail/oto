@@ -1,13 +1,7 @@
 
+- faire que le keyframe soit une animation
+  (a priori un animate number from 0, 1 mais avec des steps de 1 en mode boucle infinie)
 - appui sur espace: pause/resume
-- mettre anim glow a 2s duration puis tester qu'on arrive bien a la pause
-
-il faut que l'anim s'arrete bien en cours de translation
-et reprenne d'ou elle en est
-
-lorsque tout cela marchera
-- un bouton peut la finish
-- un bouton peut la cancel
 
 - les dégats partent de la ligne centrale (du monstre) en hauteur puis rebondissent
   le haut du texte est au niveau du centre du monstre

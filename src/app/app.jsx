@@ -1,3 +1,4 @@
+import { EASING } from "animation";
 import {
   useCallback,
   useEffect,
@@ -102,14 +103,29 @@ export const App = () => {
     elementRef: enemyElementRef,
     from: "black",
     to: "white",
-    onFinish: endEnemyTurn,
     duration: 300,
+    onFinish: () => {
+      playHeroReceiveDamage();
+    },
   });
   useLayoutEffect(() => {
     if (enemyIsActing) {
       playEnemyGlow();
     }
   }, [enemyIsActing, playEnemyGlow]);
+
+  const [playHeroReceiveDamage] = useElementAnimation({
+    id: "hero_receive_damage",
+    elementRef: heroElementRef,
+    to: {
+      y: -20,
+    },
+    duration: 3000,
+    easing: EASING.EASE_OUT_ELASTIC,
+    onFinish: () => {
+      endEnemyTurn();
+    },
+  });
 
   const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
