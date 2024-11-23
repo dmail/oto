@@ -5,6 +5,7 @@ export const animate = ({
   onprogress = () => {},
   onfinish = () => {},
   oncancel = () => {},
+  loop = false,
 }) => {
   let animationFrame;
   let resolveFinished;
@@ -68,6 +69,12 @@ export const animate = ({
       // we are very close from the end, round progress to 1
       msRemainingAfterThisStep <= 16.6
     ) {
+      if (loop) {
+        setProgress(1);
+        animation.playState = "finished";
+        animation.play();
+        return;
+      }
       animation.finish();
       return;
     }
