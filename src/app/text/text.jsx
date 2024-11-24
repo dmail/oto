@@ -8,7 +8,7 @@ const charUrls = {
   1: oneSvgUrl,
 };
 
-export const Text = ({ children }) => {
+export const Text = ({ size = 16, children }) => {
   children = toChildArray(children);
 
   const chars = [];
@@ -38,10 +38,10 @@ export const Text = ({ children }) => {
             <use
               key={id}
               href={`${url}#layer_1`}
-              x={column * 16}
-              y={line * 16}
-              width="16"
-              height="16"
+              x={column * size}
+              y={line * size}
+              width={size}
+              height={size}
             />
           );
         }

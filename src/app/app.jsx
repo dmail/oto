@@ -196,7 +196,7 @@ export const App = () => {
               direction="top"
               activity="walking"
             />
-            <Text>01</Text>
+            <Text size={12}>01</Text>
           </Box>
         </div>
         <PauseDialog visible={pausedSignal.value} />
