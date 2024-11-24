@@ -1,3 +1,5 @@
+import { toChildArray } from "preact";
+
 const zeroSvgUrl = import.meta.resolve("./font/numbers/0.svg");
 const oneSvgUrl = import.meta.resolve("./font/numbers/1.svg");
 
@@ -7,14 +9,43 @@ const charUrls = {
 };
 
 export const Text = ({ children }) => {
+  children = toChildArray(children);
+
+  const chars = [];
+  let column = 0;
+  let line = 0;
+  for (const char of children[0].split("")) {
+    if (char === "\n") {
+      line++;
+      column = 0;
+      continue;
+    }
+    const url = charUrls[char];
+    chars.push({
+      id: chars.length,
+      url,
+      column,
+      line,
+    });
+    column++;
+  }
+
   return (
-    <svg>
-      {children.map((child, index) => {
-        const url = charUrls[child];
+    <svg xmlns="http://www.w3.org/2000/svg">
+      {chars.map(({ id, url, column, line }) => {
         if (url) {
-          return <use key={index} href={`${url}#layer_1`} alt={child} />;
+          return (
+            <use
+              key={id}
+              href={`${url}#layer_1`}
+              x={column * 16}
+              y={line * 16}
+              width="16"
+              height="16"
+            />
+          );
         }
-        return <rect key={index} />;
+        return <rect key={id} />;
       })}
     </svg>
   );
