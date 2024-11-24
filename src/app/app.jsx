@@ -21,6 +21,7 @@ import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
+import { Text } from "./text/text.jsx";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -195,6 +196,7 @@ export const App = () => {
               direction="top"
               activity="walking"
             />
+            <Text>01</Text>
           </Box>
         </div>
         <PauseDialog visible={pausedSignal.value} />
