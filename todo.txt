@@ -1,3 +1,5 @@
+- it would likely be better to have svg as react elements
+
 - pour les animations: se faire un outil
 et ouais...
 l'outil en gros il permet de drag and drop un truc et de lui appliquer des étapes

@@ -8,7 +8,7 @@ const charUrls = {
   1: oneSvgUrl,
 };
 
-export const Text = ({ size = 16, children }) => {
+export const Text = ({ size = 16, color = "inherit", children }) => {
   children = toChildArray(children);
 
   const chars = [];
@@ -31,7 +31,7 @@ export const Text = ({ size = 16, children }) => {
   }
 
   return (
-    <svg xmlns="http://www.w3.org/2000/svg">
+    <svg xmlns="http://www.w3.org/2000/svg" style={{ fill: color }}>
       {chars.map(({ id, url, column, line }) => {
         if (url) {
           return (
