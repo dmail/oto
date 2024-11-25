@@ -2,10 +2,21 @@ import { toChildArray } from "preact";
 
 const goblinFontUrl = import.meta.resolve("./AGoblinAppears-o2aV.ttf");
 const legendFontUrl = import.meta.resolve("./SuperLegendBoy-4w8Y.ttf");
+const pixelFontUrl = import.meta.resolve("./pixel-font.ttf");
+
+const useFontFace = ({ url, family, weight = "normal" }) => {
+  return `@font-face{
+        font-family: "${family}";
+        src:url("${url}") format("woff");
+        font-weight: ${weight};
+        font-style: ${weight};
+    }`;
+};
 
 export const Text = ({
   x,
   y,
+  fontFamily = "goblin",
   size = 10,
   weight,
   children,
@@ -44,6 +55,19 @@ export const Text = ({
     );
   }
 
+  const goblinFont = useFontFace({
+    url: goblinFontUrl,
+    family: "goblin",
+  });
+  const legendFont = useFontFace({
+    url: legendFontUrl,
+    family: "legend",
+  });
+  const pixelFont = useFontFace({
+    url: pixelFontUrl,
+    family: "pixel",
+  });
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -54,18 +78,9 @@ export const Text = ({
     >
       <defs>
         <style>
-          {`@font-face{
-                font-family: "Goblin";
-                src:url("${goblinFontUrl}") format("woff");
-                font-weight: normal;
-                font-style: normal;
-            }`}
-          {`@font-face{
-                font-family: "Legend";
-                src:url("${legendFontUrl}") format("woff");
-                font-weight: normal;
-                font-style: normal;
-            }`}
+          {goblinFont}
+          {legendFont}
+          {pixelFont}
         </style>
       </defs>
       {outlineColor && (
@@ -73,7 +88,7 @@ export const Text = ({
           fill="none"
           x={x}
           y={y}
-          font-family="Legend"
+          font-family={fontFamily}
           font-size={size}
           font-weight={weight}
           stroke={outlineColor}
@@ -86,7 +101,7 @@ export const Text = ({
         fill={color}
         x={x}
         y={y}
-        font-family="Legend"
+        font-family={fontFamily}
         font-size={size}
         font-weight={weight}
       >

@@ -198,10 +198,9 @@ export const App = () => {
               direction="top"
               activity="walking"
             />
-            {/* <Digits>01</Digits> */}
-
-            <Text color="white" outlineColor="black">
-              Hello world 0<Bold>0</Bold>0
+            <Digits>198</Digits>
+            <Text color="white" y={20}>
+              Hello <Bold>world</Bold>
             </Text>
           </Box>
         </div>
