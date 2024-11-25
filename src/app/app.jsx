@@ -21,9 +21,7 @@ import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
-import { Bold } from "./text/bold.jsx";
 import { Digits } from "./text/digits.jsx";
-import { Text } from "./text/text.jsx";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -60,6 +58,7 @@ export const App = () => {
     partyMemberActionStepSetter("idle");
   }, []);
   const [enemyActionStep, enemyActionStepSetter] = useState("idle");
+  const enemyIsIdle = enemyActionStep === "idle";
   const enemyIsActing = enemyActionStep === "acting";
   const startEnemyTurn = useCallback(() => {
     enemyActionStepSetter("acting");
@@ -165,7 +164,7 @@ export const App = () => {
         name="screen"
         style={{ position: "relative", height: "200px", width: "300px" }}
         onClick={() => {
-          if (partyMemberIsIdle && !pausedSignal.value) {
+          if (partyMemberIsIdle && enemyIsIdle && !pausedSignal.value) {
             startPartyMemberTurn();
           }
         }}

@@ -120,6 +120,7 @@ export const Text = ({
           font-size={size}
           stroke={outlineColor}
           stroke-width={thickness + 3}
+          // eslint-disable-next-line react/no-unknown-property
           letter-spacing={letterSpacing}
         >
           {textChildren}
@@ -132,6 +133,7 @@ export const Text = ({
         font-size={size}
         stroke={color}
         stroke-width={thickness}
+        // eslint-disable-next-line react/no-unknown-property
         letter-spacing={letterSpacing}
       >
         {textChildren}
