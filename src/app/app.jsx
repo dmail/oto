@@ -199,8 +199,9 @@ export const App = () => {
               activity="walking"
             />
             {/* <Digits>01</Digits> */}
-            <Text color="white">
-              0<Bold>0</Bold>0
+
+            <Text color="white" outlineColor="black">
+              Hello world 0<Bold>0</Bold>0
             </Text>
           </Box>
         </div>
