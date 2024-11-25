@@ -21,6 +21,8 @@ import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
+import { Bold } from "./text/bold.jsx";
+import { Digits } from "./text/digits.jsx";
 import { Text } from "./text/text.jsx";
 
 export const App = () => {
@@ -196,8 +198,9 @@ export const App = () => {
               direction="top"
               activity="walking"
             />
-            <Text size={12} color="red">
-              01
+            {/* <Digits>01</Digits> */}
+            <Text color="white">
+              0<Bold>0</Bold>0
             </Text>
           </Box>
         </div>

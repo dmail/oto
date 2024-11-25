@@ -1,52 +1,82 @@
 import { toChildArray } from "preact";
 
-const zeroSvgUrl = import.meta.resolve("./font/numbers/0.svg");
-const oneSvgUrl = import.meta.resolve("./font/numbers/1.svg");
+import { A } from "./font/letters/a.jsx";
+import { Zero } from "./font/numbers/0.jsx";
+import { One } from "./font/numbers/1.jsx";
 
-const charUrls = {
-  0: zeroSvgUrl,
-  1: oneSvgUrl,
+const charComponents = {
+  0: Zero,
+  1: One,
+  A,
 };
 
-export const Text = ({ size = 16, color = "inherit", children }) => {
+const outlineSizes = {
+  md: 100,
+};
+const weightSizes = {
+  md: 50,
+  lg: 100,
+};
+
+export const Text = ({
+  size = 16,
+  color = "inherit",
+  weight = "md",
+  outlineColor,
+  outlineSize = "md",
+  letterSpacing = 0,
+  children,
+}) => {
   children = toChildArray(children);
 
-  const chars = [];
   let column = 0;
   let line = 0;
-  for (const char of children[0].split("")) {
-    if (char === "\n") {
-      line++;
-      column = 0;
-      continue;
-    }
-    const url = charUrls[char];
-    chars.push({
-      id: chars.length,
-      url,
-      column,
-      line,
-    });
-    column++;
-  }
-
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" style={{ fill: color }}>
-      {chars.map(({ id, url, column, line }) => {
-        if (url) {
-          return (
-            <use
-              key={id}
-              href={`${url}#layer_1`}
-              x={column * size}
+  const finalChildren = [];
+  const strokeWidth = weightSizes[weight];
+  outlineSize = strokeWidth + outlineSizes[outlineSize];
+  for (const child of children) {
+    if (typeof child === "string") {
+      for (const char of child.split("")) {
+        if (char === "\n") {
+          line++;
+          column = 0;
+          continue;
+        }
+        const CharComponent = charComponents[char];
+        if (CharComponent) {
+          finalChildren.push(
+            <CharComponent
+              key={finalChildren.length}
+              x={column === 0 ? 0 : column * size + letterSpacing}
               y={line * size}
               width={size}
               height={size}
-            />
+              strokeWidth={strokeWidth}
+              outlineColor={outlineColor}
+              outlineSize={outlineSize}
+            />,
           );
+        } else {
+          finalChildren.push(<rect key={finalChildren.length} />);
         }
-        return <rect key={id} />;
-      })}
+        column++;
+      }
+    } else {
+      debugger;
+      finalChildren.push(child);
+    }
+  }
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      style={{
+        position: "absolute",
+        overflow: "visible",
+        fill: color,
+      }}
+    >
+      {finalChildren}
     </svg>
   );
 };
