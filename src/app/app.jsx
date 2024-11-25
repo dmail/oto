@@ -11,7 +11,6 @@ import { useHeroReceiveDamageAnimation } from "./animations/use_hero_receive_dam
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
-import "./custom_elements_redefine.js";
 import { FirstEnemy } from "./enemy/enemies.jsx";
 import { SwordA } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
