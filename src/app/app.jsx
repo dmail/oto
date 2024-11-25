@@ -191,6 +191,9 @@ export const App = () => {
             >
               <SwordA elementRef={weaponElementRef} />
             </Box>
+            <Digits x="center" y="center">
+              14000
+            </Digits>
           </Box>
           <Box name="hero_box" width={25} height={25} x="center" y={140}>
             <Benjamin
@@ -198,10 +201,9 @@ export const App = () => {
               direction="top"
               activity="walking"
             />
-            <Digits>198</Digits>
-            <Text color="white" y={20}>
-              Hello <Bold>world</Bold>
-            </Text>
+            <Digits x="center" y="end">
+              198001
+            </Digits>
           </Box>
         </div>
         <PauseDialog visible={pausedSignal.value} />

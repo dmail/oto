@@ -1,27 +1,19 @@
 import { toChildArray } from "preact";
-
-const goblinFontUrl = import.meta.resolve("./AGoblinAppears-o2aV.ttf");
-const legendFontUrl = import.meta.resolve("./SuperLegendBoy-4w8Y.ttf");
-const pixelFontUrl = import.meta.resolve("./pixel-font.ttf");
-
-const useFontFace = ({ url, family, weight = "normal" }) => {
-  return `@font-face{
-        font-family: "${family}";
-        src:url("${url}") format("woff");
-        font-weight: ${weight};
-        font-style: ${weight};
-    }`;
-};
+import { useLayoutEffect, useRef } from "preact/hooks";
 
 export const Text = ({
+  elementRef = useRef(),
   x,
   y,
+  dx = 0,
+  dy = 0,
   fontFamily = "goblin",
   size = 10,
   weight,
   children,
   color,
   outlineColor,
+  letterSpacing,
 }) => {
   children = toChildArray(children);
   const lines = [];
@@ -47,63 +39,100 @@ export const Text = ({
     lines.push(currentLineChildren);
   }
   const textChildren = [];
+  let lineIndex = 0;
   for (const lineChildren of lines) {
     textChildren.push(
-      <tspan x="0" dy="1.2em">
+      <tspan x="0" dy={lineIndex === 0 ? "0" : "1.2em"}>
         {lineChildren}
       </tspan>,
     );
+    lineIndex++;
   }
 
-  const goblinFont = useFontFace({
-    url: goblinFontUrl,
-    family: "goblin",
-  });
-  const legendFont = useFontFace({
-    url: legendFontUrl,
-    family: "legend",
-  });
-  const pixelFont = useFontFace({
-    url: pixelFontUrl,
-    family: "pixel",
-  });
+  const textRef = useRef();
+
+  useLayoutEffect(() => {
+    const svgRef = elementRef.current;
+    const text = textRef.current;
+    const textBBox = text.getBBox();
+
+    let left;
+    let marginLeft;
+    if (x === "center") {
+      left = "50%";
+      marginLeft = dx - textBBox.width / 2;
+    } else if (x === "start") {
+      left = 0;
+      marginLeft = dx;
+    } else if (x === "end") {
+      left = "100%";
+      marginLeft = dx;
+    } else {
+      left = x ? `${x}px` : 0;
+      marginLeft = dx;
+    }
+    svgRef.style.left = left;
+    svgRef.style.marginLeft = `${marginLeft}px`;
+
+    let top;
+    let marginTop;
+    if (y === "center") {
+      top = "50%";
+      marginTop = dy - textBBox.height / 2;
+    } else if (y === "start") {
+      top = 0;
+      marginTop = dy;
+    } else if (y === "end") {
+      top = `100%`;
+      marginTop = dy;
+    } else {
+      top = y ? `${y}px` : 0;
+      marginTop = dy;
+    }
+    svgRef.style.top = top;
+    svgRef.style.marginTop = `${marginTop}px`;
+  }, [x, dx, y, dy]);
+
+  const thickness = weight === "bold" ? 1 : 0;
+  if (weight === "bold") {
+    letterSpacing += thickness;
+  }
 
   return (
     <svg
+      ref={elementRef}
       xmlns="http://www.w3.org/2000/svg"
       style={{
         position: "absolute",
         overflow: "visible",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: "100%",
+        height: "100%",
       }}
     >
-      <defs>
-        <style>
-          {goblinFont}
-          {legendFont}
-          {pixelFont}
-        </style>
-      </defs>
       {outlineColor && (
         <text
           fill="none"
-          x={x}
-          y={y}
           font-family={fontFamily}
           font-size={size}
-          font-weight={weight}
           stroke={outlineColor}
-          stroke-width={4}
+          stroke-width={thickness + 3}
+          letter-spacing={letterSpacing}
         >
           {textChildren}
         </text>
       )}
       <text
+        ref={textRef}
         fill={color}
-        x={x}
-        y={y}
         font-family={fontFamily}
         font-size={size}
-        font-weight={weight}
+        stroke={color}
+        stroke-width={thickness}
+        letter-spacing={letterSpacing}
       >
         {textChildren}
       </text>
