@@ -9,6 +9,7 @@ export const Digits = ({ children, ...props }) => {
       // weight="bold"
       outlineColor="black"
       letterSpacing={1}
+      lineHeight={1.4}
       {...props}
     >
       {children}

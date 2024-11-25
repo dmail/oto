@@ -1,5 +1,5 @@
 import { toChildArray } from "preact";
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { useRef } from "preact/hooks";
 
 export const Text = ({
   elementRef = useRef(),
@@ -14,6 +14,7 @@ export const Text = ({
   color,
   outlineColor,
   letterSpacing,
+  lineHeight = 1.4,
 }) => {
   children = toChildArray(children);
   const lines = [];
@@ -40,9 +41,34 @@ export const Text = ({
   }
   const textChildren = [];
   let lineIndex = 0;
+  const tspanAttributes = {};
+  if (x === "start") {
+    tspanAttributes["text-anchor"] = "start";
+    tspanAttributes.x = "0";
+  } else if (x === "center") {
+    tspanAttributes["text-anchor"] = "middle";
+    tspanAttributes.x = "50%";
+  } else if (x === "end") {
+    tspanAttributes["text-anchor"] = "end";
+    tspanAttributes.x = "100%";
+  }
+
+  if (y === "start") {
+    tspanAttributes.y = "0";
+  } else if (y === "center") {
+    tspanAttributes.y = "50%";
+    dy -= 0.5 * size;
+  } else if (y === "end") {
+    tspanAttributes.y = "100%";
+    dy -= size;
+  }
   for (const lineChildren of lines) {
     textChildren.push(
-      <tspan x="0" dy={lineIndex === 0 ? "0" : "1.2em"}>
+      <tspan
+        {...tspanAttributes}
+        dx={dx}
+        dy={dy + lineHeight * size * lineIndex}
+      >
         {lineChildren}
       </tspan>,
     );
@@ -50,48 +76,6 @@ export const Text = ({
   }
 
   const textRef = useRef();
-
-  useLayoutEffect(() => {
-    const svgRef = elementRef.current;
-    const text = textRef.current;
-    const textBBox = text.getBBox();
-
-    let left;
-    let marginLeft;
-    if (x === "center") {
-      left = "50%";
-      marginLeft = dx - textBBox.width / 2;
-    } else if (x === "start") {
-      left = 0;
-      marginLeft = dx;
-    } else if (x === "end") {
-      left = "100%";
-      marginLeft = dx;
-    } else {
-      left = x ? `${x}px` : 0;
-      marginLeft = dx;
-    }
-    svgRef.style.left = left;
-    svgRef.style.marginLeft = `${marginLeft}px`;
-
-    let top;
-    let marginTop;
-    if (y === "center") {
-      top = "50%";
-      marginTop = dy - textBBox.height / 2;
-    } else if (y === "start") {
-      top = 0;
-      marginTop = dy;
-    } else if (y === "end") {
-      top = `100%`;
-      marginTop = dy;
-    } else {
-      top = y ? `${y}px` : 0;
-      marginTop = dy;
-    }
-    svgRef.style.top = top;
-    svgRef.style.marginTop = `${marginTop}px`;
-  }, [x, dx, y, dy]);
 
   const thickness = weight === "bold" ? 1 : 0;
   if (weight === "bold") {
@@ -102,7 +86,10 @@ export const Text = ({
     <svg
       ref={elementRef}
       xmlns="http://www.w3.org/2000/svg"
+      width="100%"
+      height="100%"
       style={{
+        dominantBaseline: "central",
         position: "absolute",
         overflow: "visible",
         top: 0,
@@ -111,13 +98,14 @@ export const Text = ({
         bottom: 0,
         width: "100%",
         height: "100%",
+        fontSize: size,
+        fontFamily,
       }}
     >
       {outlineColor && (
         <text
           fill="none"
           font-family={fontFamily}
-          font-size={size}
           stroke={outlineColor}
           stroke-width={thickness + 3}
           // eslint-disable-next-line react/no-unknown-property
@@ -129,8 +117,6 @@ export const Text = ({
       <text
         ref={textRef}
         fill={color}
-        font-family={fontFamily}
-        font-size={size}
         stroke={color}
         stroke-width={thickness}
         // eslint-disable-next-line react/no-unknown-property

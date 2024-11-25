@@ -199,8 +199,13 @@ export const App = () => {
               direction="top"
               activity="walking"
             />
-            <Digits x="center" y="end">
-              198001
+            <Digits
+              x="center"
+              y="end"
+              // for some reason it's better centered with that
+              dx={2}
+            >
+              26
             </Digits>
           </Box>
         </div>
