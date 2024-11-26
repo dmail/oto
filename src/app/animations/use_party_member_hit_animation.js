@@ -2,10 +2,14 @@ import { animateElement, animateSequence, EASING } from "animation";
 import { useCallback } from "preact/hooks";
 import { useAnimate } from "./use_animate.js";
 
-export const usePartyMemberHitAnimation = ({ elementRef, ...props }) => {
+export const usePartyMemberHitAnimation = ({
+  elementRef,
+  duration,
+  ...props
+}) => {
   const animate = useCallback(() => {
-    return animatePartyMemberHit(elementRef.current);
-  }, []);
+    return animatePartyMemberHit(elementRef.current, { duration });
+  }, [duration]);
 
   return useAnimate({
     animate,
@@ -13,12 +17,21 @@ export const usePartyMemberHitAnimation = ({ elementRef, ...props }) => {
   });
 };
 
-const animatePartyMemberHit = (element) => {
+const animatePartyMemberHit = (element, { duration }) => {
+  let from = 0;
+  const interval = (to) => {
+    const stepDuration = (to - from) * duration;
+    from = to;
+    return stepDuration;
+  };
+  const relativeToElementHeight = (ratio) => {
+    return element.clientHeight * ratio;
+  };
   const verticalMoves = [
-    { y: 10, duration: 20 },
-    { y: 6, duration: 10 },
-    { y: 3, duration: 10 },
-    { y: 2, duration: 10 },
+    { y: relativeToElementHeight(0.5), duration: interval(0.4) },
+    { y: relativeToElementHeight(0.3), duration: interval(0.6) },
+    { y: relativeToElementHeight(0.2), duration: interval(0.8) },
+    { y: relativeToElementHeight(0.1), duration: interval(1) },
   ];
   const steps = [];
   for (const { y, duration } of verticalMoves) {
@@ -26,7 +39,7 @@ const animatePartyMemberHit = (element) => {
       return animateElement({
         element,
         to: { y },
-        duration,
+        duration: duration / 2,
         easing: EASING.EASE,
       });
     });
@@ -34,7 +47,7 @@ const animatePartyMemberHit = (element) => {
       return animateElement({
         element,
         to: { y: 0 },
-        duration,
+        duration: duration / 2,
         easing: EASING.EASE,
       });
     });

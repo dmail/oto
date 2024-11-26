@@ -66,7 +66,7 @@ export const App = () => {
       mirrorX: true,
       x: -15,
     },
-    duration: 2000,
+    duration: 200,
   });
   const [playPartyMemberMoveBackToPosition] = useElementAnimation({
     id: "party_member_move_back_to_position",
@@ -91,9 +91,14 @@ export const App = () => {
   const [weaponIsVisible, weaponIsVisibleSetter] = useState(false);
   const [enemyDigitsVisible, enemyDigitsVisibleSetter] = useState(false);
   const [heroDigitsVisible, heroDigitsVisibleSetter] = useState(false);
-  const [playEnemyHit] = useDigitsDisplayAnimation({
+  const [playEnemyDamage] = useDigitsDisplayAnimation({
     elementRef: enemyDigitsElementRef,
-    duration: 500,
+    duration: 400,
+  });
+  const [playPartyMemberDamage] = useDigitsDisplayAnimation({
+    elementRef: heroDigitsElementRef,
+    duration: 400,
+    toY: -1.2,
   });
   const [playPartyMemberHit] = usePartyMemberHitAnimation({
     elementRef: heroElementRef,
@@ -114,13 +119,15 @@ export const App = () => {
     const moveBackToPositionPromise = playPartyMemberMoveBackToPosition();
     await new Promise((resolve) => setTimeout(resolve, 200));
     enemyDigitsVisibleSetter(true);
-    await Promise.all([playEnemyHit(), moveBackToPositionPromise]);
+    await Promise.all([playEnemyDamage(), moveBackToPositionPromise]);
     enemyDigitsVisibleSetter(false);
     // here we could display a message saying what attack enemy performs
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 150));
     await playEnemyGlow();
-    heroDigitsVisibleSetter(true);
     await playPartyMemberHit();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    heroDigitsVisibleSetter(true);
+    await playPartyMemberDamage();
     heroDigitsVisibleSetter(false);
     turnStateRef.current = "idle";
   };
@@ -175,7 +182,7 @@ export const App = () => {
             />
             <Digits
               name="party_member_digits"
-              ref={heroDigitsElementRef}
+              elementRef={heroDigitsElementRef}
               visible={heroDigitsVisible}
               x="center"
               y="end"

@@ -10,6 +10,7 @@ export const animateElement = ({
   duration = 500,
   iterations = 1,
   fill = "forwards",
+  playbackRate = 1,
   onprogress = noop,
   onfinish = noop,
   oncancel = noop,
@@ -34,6 +35,7 @@ export const animateElement = ({
     fill,
     iterations,
   });
+  animation.playbackRate = playbackRate;
   animation.oncancel = () => {
     elementAnimation.oncancel();
   };
