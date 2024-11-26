@@ -2,23 +2,23 @@ import { animateElement, animateSequence, EASING } from "animation";
 import { useCallback } from "preact/hooks";
 import { useAnimate } from "./use_animate.js";
 
-export const useHeroReceiveDamageAnimation = ({ elementRef, onFinish }) => {
+export const useDigitsDisplayAnimation = ({ elementRef, ...props }) => {
   const animate = useCallback(() => {
-    return animateHeroReceivedDamage(elementRef.current);
-  }, [onFinish]);
+    return animateDigitsDisplay(elementRef.current);
+  }, []);
 
   return useAnimate({
     animate,
-    onFinish,
+    ...props,
   });
 };
 
-const animateHeroReceivedDamage = (element) => {
+const animateDigitsDisplay = (element) => {
   const verticalMoves = [
-    { y: 10, duration: 20 },
-    { y: 6, duration: 10 },
-    { y: 3, duration: 10 },
-    { y: 2, duration: 10 },
+    { y: 10, duration: 200 },
+    { y: 6, duration: 100 },
+    { y: 3, duration: 100 },
+    { y: 2, duration: 100 },
   ];
   const steps = [];
   for (const { y, duration } of verticalMoves) {

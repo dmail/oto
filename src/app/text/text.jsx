@@ -15,6 +15,8 @@ export const Text = ({
   outlineColor,
   letterSpacing,
   lineHeight = 1.4,
+  visible = true,
+  ...props
 }) => {
   children = toChildArray(children);
   const lines = [];
@@ -84,11 +86,14 @@ export const Text = ({
 
   return (
     <svg
+      {...props}
       ref={elementRef}
       xmlns="http://www.w3.org/2000/svg"
       width="100%"
       height="100%"
       style={{
+        visibility: visible ? "visible" : "hidden",
+        pointerEvents: visible ? "auto" : "none",
         dominantBaseline: "central",
         position: "absolute",
         overflow: "visible",

@@ -6,8 +6,9 @@ import {
   useState,
 } from "preact/hooks";
 import { useCanvasGlowAnimation } from "./animations/use_canvas_glow_animation.js";
+import { useDigitsDisplayAnimation } from "./animations/use_digits_display_animation.js";
 import { useElementAnimation } from "./animations/use_element_animation.js";
-import { useHeroReceiveDamageAnimation } from "./animations/use_hero_receive_damage.js";
+import { usePartyMemberHitAnimation } from "./animations/use_party_member_hit_animation.js";
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
@@ -81,24 +82,24 @@ export const App = () => {
       playHeroMoveToAct();
     }
   }, [partyMemberIsMovingToAct, playHeroMoveToAct]);
-  const [playHeroMoveBackToPosition] = useElementAnimation({
-    id: "hero_move_back_to_position",
+  const [playPartyMemberMoveBackToPosition] = useElementAnimation({
+    id: "party_member_move_back_to_position",
     elementRef: heroElementRef,
     to: {
       y: 0,
     },
     duration: 200,
     onCancel: endPartyMemberTurn,
-    onFinish: () => {
+    onFinish: useCallback(() => {
       endPartyMemberTurn();
       startEnemyTurn();
-    },
+    }, []),
   });
   useLayoutEffect(() => {
     if (partyMemberIsMovingBackToPosition) {
-      playHeroMoveBackToPosition();
+      playPartyMemberMoveBackToPosition();
     }
-  }, [partyMemberIsMovingBackToPosition, playHeroMoveBackToPosition]);
+  }, [partyMemberIsMovingBackToPosition, playPartyMemberMoveBackToPosition]);
 
   const [playEnemyGlow] = useCanvasGlowAnimation({
     id: "enemy_glow",
@@ -106,9 +107,9 @@ export const App = () => {
     from: "black",
     to: "white",
     duration: 300,
-    onFinish: () => {
-      playHeroReceiveDamage();
-    },
+    onFinish: useCallback(() => {
+      playPartyMemberHit();
+    }, []),
   });
   useLayoutEffect(() => {
     if (enemyIsActing) {
@@ -124,6 +125,20 @@ export const App = () => {
       clearTimeout(timeout);
     };
   }, [whiteCurtain]);
+
+  const enemyDigitsElementRef = useRef();
+  const heroDigitsElementRef = useRef();
+  const [enemyDigitsVisible, enemyDigitsVisibleSetter] = useState(false);
+  const [playEnemyHit] = useDigitsDisplayAnimation({
+    elementRef: enemyDigitsElementRef,
+    onStart: useCallback(() => {
+      enemyDigitsVisibleSetter(true);
+    }, []),
+    onFinish: useCallback(() => {
+      enemyDigitsVisibleSetter(false);
+      endPartyMemberAction();
+    }, []),
+  });
 
   const [playWeaponTranslation] = useElementAnimation({
     id: "weapon_translation",
@@ -142,7 +157,7 @@ export const App = () => {
       swordSound.currentTime = 0.15;
       swordSound.play();
     }, []),
-    onFinish: endPartyMemberAction,
+    onFinish: playEnemyHit,
   });
   useLayoutEffect(() => {
     if (partyMemberIsActing) {
@@ -150,11 +165,11 @@ export const App = () => {
     }
   }, [partyMemberIsActing, playWeaponTranslation]);
 
-  const [playHeroReceiveDamage] = useHeroReceiveDamageAnimation({
+  const [playPartyMemberHit] = usePartyMemberHitAnimation({
     elementRef: heroElementRef,
-    onFinish: () => {
+    onFinish: useCallback(() => {
       endEnemyTurn();
-    },
+    }, []),
   });
 
   return (
@@ -189,7 +204,13 @@ export const App = () => {
             >
               <SwordA elementRef={weaponElementRef} />
             </Box>
-            <Digits x="center" y="center">
+            <Digits
+              name="enemy_digits"
+              elementRef={enemyDigitsElementRef}
+              visible={enemyDigitsVisible}
+              x="center"
+              y="center"
+            >
               14000
             </Digits>
           </Box>
@@ -200,6 +221,8 @@ export const App = () => {
               activity="walking"
             />
             <Digits
+              name="party_member_digits"
+              ref={heroDigitsElementRef}
               x="center"
               y="end"
               // for some reason it's better centered with that
