@@ -56,6 +56,7 @@ export const animateElement = ({
     oncancel,
     play: () => {
       animation.play();
+      elementAnimation.finished = animation.finished;
     },
     pause: () => {
       animation.pause();

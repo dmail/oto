@@ -39,34 +39,6 @@ export const App = () => {
   const weaponElementRef = useRef();
   const enemyElementRef = useRef();
 
-  const [partyMemberActionStep, partyMemberActionStepSetter] = useState("idle");
-  const partyMemberIsIdle = partyMemberActionStep === "idle";
-  const partyMemberIsMovingToAct = partyMemberActionStep === "move_to_act";
-  const partyMemberIsActing = partyMemberActionStep === "acting";
-  const partyMemberIsMovingBackToPosition =
-    partyMemberActionStep === "move_back_to_position";
-  const startPartyMemberTurn = useCallback(() => {
-    partyMemberActionStepSetter("move_to_act");
-  }, []);
-  const startPartyMemberAction = useCallback(() => {
-    partyMemberActionStepSetter("acting");
-  }, []);
-  const endPartyMemberAction = useCallback(() => {
-    partyMemberActionStepSetter("move_back_to_position");
-  }, []);
-  const endPartyMemberTurn = useCallback(() => {
-    partyMemberActionStepSetter("idle");
-  }, []);
-  const [enemyActionStep, enemyActionStepSetter] = useState("idle");
-  const enemyIsIdle = enemyActionStep === "idle";
-  const enemyIsActing = enemyActionStep === "acting";
-  const startEnemyTurn = useCallback(() => {
-    enemyActionStepSetter("acting");
-  }, []);
-  const endEnemyTurn = useCallback(() => {
-    enemyActionStepSetter("idle");
-  }, []);
-
   const [playHeroMoveToAct] = useElementAnimation({
     id: "hero_move_to_act",
     elementRef: heroElementRef,
@@ -74,49 +46,7 @@ export const App = () => {
       y: -20,
     },
     duration: 200,
-    onCancel: endPartyMemberTurn,
-    onFinish: startPartyMemberAction,
   });
-  useLayoutEffect(() => {
-    if (partyMemberIsMovingToAct) {
-      playHeroMoveToAct();
-    }
-  }, [partyMemberIsMovingToAct, playHeroMoveToAct]);
-  const [playPartyMemberMoveBackToPosition] = useElementAnimation({
-    id: "party_member_move_back_to_position",
-    elementRef: heroElementRef,
-    to: {
-      y: 0,
-    },
-    duration: 200,
-    onCancel: endPartyMemberTurn,
-    onFinish: useCallback(() => {
-      endPartyMemberTurn();
-      startEnemyTurn();
-    }, []),
-  });
-  useLayoutEffect(() => {
-    if (partyMemberIsMovingBackToPosition) {
-      playPartyMemberMoveBackToPosition();
-    }
-  }, [partyMemberIsMovingBackToPosition, playPartyMemberMoveBackToPosition]);
-
-  const [playEnemyGlow] = useCanvasGlowAnimation({
-    id: "enemy_glow",
-    elementRef: enemyElementRef,
-    from: "black",
-    to: "white",
-    duration: 300,
-    onFinish: useCallback(() => {
-      playPartyMemberHit();
-    }, []),
-  });
-  useLayoutEffect(() => {
-    if (enemyIsActing) {
-      playEnemyGlow();
-    }
-  }, [enemyIsActing, playEnemyGlow]);
-
   const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   useEffect(() => {
@@ -125,21 +55,6 @@ export const App = () => {
       clearTimeout(timeout);
     };
   }, [whiteCurtain]);
-
-  const enemyDigitsElementRef = useRef();
-  const heroDigitsElementRef = useRef();
-  const [enemyDigitsVisible, enemyDigitsVisibleSetter] = useState(false);
-  const [playEnemyHit] = useDigitsDisplayAnimation({
-    elementRef: enemyDigitsElementRef,
-    onStart: useCallback(() => {
-      enemyDigitsVisibleSetter(true);
-    }, []),
-    onFinish: useCallback(() => {
-      enemyDigitsVisibleSetter(false);
-      endPartyMemberAction();
-    }, []),
-  });
-
   const [playWeaponTranslation] = useElementAnimation({
     id: "weapon_translation",
     elementRef: weaponElementRef,
@@ -151,26 +66,64 @@ export const App = () => {
       mirrorX: true,
       x: -15,
     },
-    duration: 200,
-    onStart: useCallback(() => {
-      showWhiteCurtain();
-      swordSound.currentTime = 0.15;
-      swordSound.play();
-    }, []),
-    onFinish: playEnemyHit,
+    duration: 2000,
   });
-  useLayoutEffect(() => {
-    if (partyMemberIsActing) {
-      playWeaponTranslation();
-    }
-  }, [partyMemberIsActing, playWeaponTranslation]);
-
+  const [playPartyMemberMoveBackToPosition] = useElementAnimation({
+    id: "party_member_move_back_to_position",
+    elementRef: heroElementRef,
+    to: {
+      y: 0,
+    },
+    duration: 200,
+  });
+  const [playEnemyGlow] = useCanvasGlowAnimation({
+    id: "enemy_glow",
+    elementRef: enemyElementRef,
+    from: "black",
+    to: "white",
+    duration: 300,
+    onFinish: useCallback(() => {
+      playPartyMemberHit();
+    }, []),
+  });
+  const enemyDigitsElementRef = useRef();
+  const heroDigitsElementRef = useRef();
+  const [weaponIsVisible, weaponIsVisibleSetter] = useState(false);
+  const [enemyDigitsVisible, enemyDigitsVisibleSetter] = useState(false);
+  const [heroDigitsVisible, heroDigitsVisibleSetter] = useState(false);
+  const [playEnemyHit] = useDigitsDisplayAnimation({
+    elementRef: enemyDigitsElementRef,
+    duration: 500,
+  });
   const [playPartyMemberHit] = usePartyMemberHitAnimation({
     elementRef: heroElementRef,
-    onFinish: useCallback(() => {
-      endEnemyTurn();
-    }, []),
+    duration: 500,
   });
+
+  const turnStateRef = useRef("idle");
+  const startTurn = async () => {
+    turnStateRef.current = "running";
+    // here we could display a message saying what attack hero performs
+    await playHeroMoveToAct();
+    showWhiteCurtain();
+    swordSound.currentTime = 0.15;
+    swordSound.play();
+    weaponIsVisibleSetter(true);
+    await playWeaponTranslation();
+    weaponIsVisibleSetter(false);
+    const moveBackToPositionPromise = playPartyMemberMoveBackToPosition();
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    enemyDigitsVisibleSetter(true);
+    await Promise.all([playEnemyHit(), moveBackToPositionPromise]);
+    enemyDigitsVisibleSetter(false);
+    // here we could display a message saying what attack enemy performs
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    await playEnemyGlow();
+    heroDigitsVisibleSetter(true);
+    await playPartyMemberHit();
+    heroDigitsVisibleSetter(false);
+    turnStateRef.current = "idle";
+  };
 
   return (
     <div>
@@ -178,8 +131,8 @@ export const App = () => {
         name="screen"
         style={{ position: "relative", height: "200px", width: "300px" }}
         onClick={() => {
-          if (partyMemberIsIdle && enemyIsIdle && !pausedSignal.value) {
-            startPartyMemberTurn();
+          if (turnStateRef.current === "idle" && !pausedSignal.value) {
+            startTurn();
           }
         }}
       >
@@ -198,7 +151,7 @@ export const App = () => {
             <FirstEnemy elementRef={enemyElementRef} />
             <Box
               name="weapon_box"
-              visible={partyMemberIsActing}
+              visible={weaponIsVisible}
               width={60}
               height={60}
             >
@@ -223,6 +176,7 @@ export const App = () => {
             <Digits
               name="party_member_digits"
               ref={heroDigitsElementRef}
+              visible={heroDigitsVisible}
               x="center"
               y="end"
               // for some reason it's better centered with that

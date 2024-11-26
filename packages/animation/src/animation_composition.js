@@ -3,9 +3,12 @@ export const composeAnimations = (animations) => {
   let animationFinishedCounter;
   const composedAnimation = {
     playState: "idle",
+    finished: null,
     oncancel: () => {},
     play: () => {
-      if (composedAnimation.playState === "running") return;
+      if (composedAnimation.playState === "running") {
+        return;
+      }
       if (
         composedAnimation.playState === "paused" ||
         composedAnimation.playState === "finished"
@@ -16,6 +19,9 @@ export const composeAnimations = (animations) => {
         composedAnimation.playState = "running";
         return;
       }
+      composedAnimation.finished = new Promise((resolve) => {
+        resolveFinished = resolve;
+      });
       animationFinishedCounter = 0;
       for (const animation of animations) {
         // eslint-disable-next-line no-loop-func
@@ -47,9 +53,6 @@ export const composeAnimations = (animations) => {
       composedAnimation.oncancel();
     },
     onfinish: () => {},
-    finished: new Promise((resolve) => {
-      resolveFinished = resolve;
-    }),
   };
   composedAnimation.play();
   return composedAnimation;

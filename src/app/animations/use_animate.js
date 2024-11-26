@@ -16,19 +16,20 @@ export const useAnimate = ({
     if (animationRef.current) {
       animationRef.current.play();
       onStart();
-    } else {
-      const animation = animate();
-      animationRef.current = animation;
-      animation.oncancel = () => {
-        animationRef.current = null;
-        onCancel();
-      };
-      animation.onfinish = () => {
-        animationRef.current = null;
-        onFinish();
-      };
-      onStart();
+      return animationRef.current.finished;
     }
+    const animation = animate();
+    animationRef.current = animation;
+    animation.oncancel = () => {
+      animationRef.current = null;
+      onCancel();
+    };
+    animation.onfinish = () => {
+      animationRef.current = null;
+      onFinish();
+    };
+    onStart();
+    return animation.finished;
   }, [animate, onStart, onCancel, onFinish]);
   const pause = useCallback(() => {
     const animation = animationRef.current;

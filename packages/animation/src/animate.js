@@ -18,6 +18,7 @@ export const animate = ({
     onprogress,
     onfinish,
     oncancel,
+    finished: null,
     play: () => {
       if (animation.playState === "running") return;
       if (animation.playState === "paused") {
@@ -28,6 +29,9 @@ export const animate = ({
         previousStepMs = Date.now();
         animation.progressRatio = 0;
         msRemaining = duration;
+        animation.finished = new Promise((resolve) => {
+          resolveFinished = resolve;
+        });
       }
       animationFrame = requestAnimationFrame(next);
     },
@@ -49,9 +53,6 @@ export const animate = ({
       previousStepMs = null;
       animation.oncancel();
     },
-    finished: new Promise((resolve) => {
-      resolveFinished = resolve;
-    }),
   };
   const setProgress = (progressRatio) => {
     animation.progressRatio = progressRatio;

@@ -1,9 +1,13 @@
-export const animateSequence = (animationExecutors, { onfinish } = {}) => {
+export const animateSequence = (
+  animationExecutors,
+  { onfinish = () => {}, oncancel = () => {} } = {},
+) => {
   let resolveFinished;
   let childAnimationIndex;
   let currentAnimation;
   const animationSequence = {
     playState: "idle",
+    finished: null,
     play: () => {
       if (animationSequence.playState === "running") return;
       if (animationSequence.playState === "paused") {
@@ -13,6 +17,9 @@ export const animateSequence = (animationExecutors, { onfinish } = {}) => {
         childAnimationIndex = -1;
         currentAnimation = null;
         animationSequence.playState = "running";
+        animationSequence.finished = new Promise((resolve) => {
+          resolveFinished = resolve;
+        });
         startNext();
       }
     },
@@ -41,10 +48,7 @@ export const animateSequence = (animationExecutors, { onfinish } = {}) => {
       animationSequence.oncancel();
     },
     onfinish,
-    oncancel: () => {},
-    finished: new Promise((resolve) => {
-      resolveFinished = resolve;
-    }),
+    oncancel,
   };
   const startNext = () => {
     childAnimationIndex++;
