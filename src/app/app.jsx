@@ -93,16 +93,16 @@ export const App = () => {
   const [heroDigitsVisible, heroDigitsVisibleSetter] = useState(false);
   const [playEnemyDamage] = useDigitsDisplayAnimation({
     elementRef: enemyDigitsElementRef,
-    duration: 400,
-  });
-  const [playPartyMemberDamage] = useDigitsDisplayAnimation({
-    elementRef: heroDigitsElementRef,
-    duration: 400,
-    toY: -1.2,
+    duration: 300,
   });
   const [playPartyMemberHit] = usePartyMemberHitAnimation({
     elementRef: heroElementRef,
     duration: 500,
+  });
+  const [playPartyMemberDamage] = useDigitsDisplayAnimation({
+    elementRef: heroDigitsElementRef,
+    duration: 300,
+    toY: -1.2,
   });
 
   const turnStateRef = useRef("idle");
