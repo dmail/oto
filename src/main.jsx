@@ -1,13 +1,21 @@
 import { render } from "preact";
-import { useErrorBoundary } from "preact/hooks";
+import { useEffect, useErrorBoundary } from "preact/hooks";
 import { App } from "./app/app.jsx";
 import { goblinFontUrl, useFontFace } from "./app/text/use_font_face.js";
 
 const AppWithErrorBoundary = () => {
-  const [error] = useErrorBoundary();
+  const [error, resetError] = useErrorBoundary();
   const goblinFont = useFontFace("goblin", {
     url: goblinFontUrl,
   });
+  useEffect(() => {
+    if (!import.meta.hot) {
+      return null;
+    }
+    return import.meta.hot.events.beforePartialReload.addCallback(() => {
+      resetError();
+    });
+  }, []);
   if (error) {
     return `An error occurred: ${error.message}`;
   }
