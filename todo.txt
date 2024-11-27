@@ -1,11 +1,4 @@
-- les dégats partent de la ligne centrale (du monstre) en hauteur puis rebondissent
-  le haut du texte est au niveau du centre du monstre
-
-- Quand on prends des dégats notre perso tremble (bas, haut x3)
-  il y a un truc css dans le genre qui simule un rebond dont l'intensité diminue
-  puis les dégats apparaissent
-  le chiffre par du bas du perso, monte haut  (1,5 hauteur du perso)
-  puis rebomdi jusqu'a revenir au bas du perso
-
-- possible de faire des sprite sheets au build avec canvas data url?
-- possible de faire de audio bundle au build avec media api ?
+- le personne doit avoir des caracs (atq/def/pv)
+- le monstre doit avoir de caracs (atq/def/pv)
+- afficher barre de vie du personnage
+- le monstre doit changer de sprite lorsque sa vie baisse

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lifebar</title>
+  </head>
+  <body>
+    <div id="root" style="position: relative"></div>
+    <script type="module" jsenv-type="module/jsx">
+      /* eslint-disable no-unused-vars */
+      import { render } from "preact";
+
+      const App = () => {
+        return (
+          <div style="width: 200px; height: 100px;">
+            <Lifebar />
+          </div>
+        );
+      };
+
+      const Lifebar = () => {
+        return "Lifebar";
+      };
+
+      render(<App />, document.querySelector("#root"));
+    </script>
+  </body>
+</html>
