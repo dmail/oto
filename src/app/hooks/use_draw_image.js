@@ -2,18 +2,20 @@ import { useLayoutEffect } from "preact/hooks";
 
 export const useDrawImage = (
   canvasRef,
-  image,
+  source,
   { x = 0, y = 0, width, height, onDraw, debug } = {},
 ) => {
   useLayoutEffect(() => {
-    if (!image) return;
+    if (!source) return;
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
     if (width === undefined) width = canvas.width;
     if (height === undefined) height = canvas.height;
     context.clearRect(0, 0, width, height);
-    const imageWidth = image.naturalWidth;
-    const imageHeight = image.naturalHeight;
+    const imageWidth =
+      source.nodeName === "IMG" ? source.naturalWidth : source.width;
+    const imageHeight =
+      source.nodeName === "IMG" ? source.naturalHeight : source.height;
     if (debug) {
       console.log("draw image", {
         sx: x,
@@ -27,7 +29,7 @@ export const useDrawImage = (
       });
     }
     context.drawImage(
-      image,
+      source,
       x,
       y,
       imageWidth,
@@ -40,5 +42,5 @@ export const useDrawImage = (
     if (onDraw) {
       onDraw();
     }
-  }, [image, x, y, width, height, onDraw]);
+  }, [source, x, y, width, height, onDraw]);
 };
