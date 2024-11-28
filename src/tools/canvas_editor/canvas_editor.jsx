@@ -171,7 +171,7 @@ const selectionRectangleFacade = {
   signal: signal(),
 };
 
-const SpritesheetPicker = () => {
+const CanvasEditor = () => {
   const [mousemoveOrigin, mousemoveOriginSetter] = useState();
   const [colorPickerEnabled, colorPickerEnabledSetter] = useState(false);
   const [colorPicked, colorPickedSetter] = useState();
@@ -533,4 +533,4 @@ const Drawing = ({ image, url, x, y, isActive, drawing }) => {
   );
 };
 
-render(<SpritesheetPicker />, document.querySelector("#root"));
+render(<CanvasEditor />, document.querySelector("#root"));
