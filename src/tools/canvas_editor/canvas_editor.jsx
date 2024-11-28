@@ -96,11 +96,17 @@ const getHighestZIndex = () => {
   }
   return highestZIndex;
 };
+const setDrawingZIndex = (drawing, zIndex) => {
+  if (drawing.zIndex === zIndex) {
+    return;
+  }
+  drawing.zIndex = zIndex;
+  drawingsSignal.value = [...drawingsSignal.value];
+};
 const moveToTheFront = (drawing) => {
   const highestZIndex = getHighestZIndex();
   if (drawing.zIndex !== highestZIndex) {
-    drawing.zIndex = highestZIndex + 1;
-    drawingsSignal.value = [...drawingsSignal.value];
+    setDrawingZIndex(drawing, highestZIndex + 1);
   }
 };
 const moveToTheBack = (drawing) => {
@@ -113,11 +119,10 @@ const moveToTheBack = (drawing) => {
     }
   }
   if (drawing.zIndex !== lowestZIndex) {
-    drawing.zIndex = lowestZIndex - 1;
-    drawingsSignal.value = [...drawings];
+    setDrawingZIndex(drawing, lowestZIndex - 1);
   }
 };
-const moveActiveDrawingAbsolute = (x = 0, y = 0) => {
+const moveActiveDrawingAbsolute = (x, y) => {
   const activeDrawing = activeDrawingSignal.value;
   if (activeDrawing) {
     if (x !== undefined) {
@@ -283,8 +288,8 @@ const CanvasEditor = () => {
             startYRef.current = drawing.y;
           }
           mousemoveOriginSetter({
-            x: e.offsetX,
-            y: e.offsetY,
+            x: e.clientX,
+            y: e.clientY,
           });
           const onmouseup = () => {
             mousemoveOriginSetter(null);
@@ -298,8 +303,8 @@ const CanvasEditor = () => {
           }
           const originX = mousemoveOrigin.x;
           const originY = mousemoveOrigin.y;
-          const mouseX = e.offsetX;
-          const mouseY = e.offsetY;
+          const mouseX = e.clientX;
+          const mouseY = e.clientY;
           const moveX = mouseX - originX;
           const moveY = mouseY - originY;
           const activeDrawing = activeDrawingSignal.value;
@@ -341,7 +346,16 @@ const CanvasEditor = () => {
             >
               Color picker
             </button>
-            Color: {colorPicked}
+            Color:{" "}
+            <span
+              style={{
+                display: "inline-block",
+                width: "1em",
+                height: "1em",
+                backgroundColor: `rgb(${colorPicked})`,
+              }}
+            ></span>
+            <input type="text" readOnly value={colorPicked} />
           </div>
           <div>
             <button
@@ -364,7 +378,7 @@ const CanvasEditor = () => {
               value={activeDrawingSignal.value?.x}
               style={{ width: "4em" }}
               onInput={(e) => {
-                moveActiveDrawingAbsolute(e.target.valueAsNumber);
+                moveActiveDrawingAbsolute(e.target.valueAsNumber, undefined);
               }}
             ></input>
           </label>
@@ -380,7 +394,7 @@ const CanvasEditor = () => {
               value={activeDrawingSignal.value?.y}
               style={{ width: "4em" }}
               onInput={(e) => {
-                moveActiveDrawingAbsolute(0, e.target.valueAsNumber);
+                moveActiveDrawingAbsolute(undefined, e.target.valueAsNumber);
               }}
             ></input>
           </label>
@@ -408,9 +422,15 @@ const CanvasEditor = () => {
             zIndex
             <input
               type="number"
+              disabled={!activeDrawingSignal.value}
               value={activeDrawingSignal.value?.zIndex}
               style={{ width: "4em" }}
-              readOnly
+              onInput={(e) => {
+                setDrawingZIndex(
+                  activeDrawingSignal.value,
+                  e.target.valueAsNumber,
+                );
+              }}
             ></input>
           </label>
           <br />
