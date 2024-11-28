@@ -325,6 +325,36 @@ const CanvasEditor = () => {
         }}
       >
         <fieldset>
+          <legend>Tools</legend>
+          <div>
+            <button
+              onClick={() => {
+                if (colorPickerEnabled) {
+                  colorPickerEnabledSetter(false);
+                } else {
+                  colorPickerEnabledSetter(true);
+                }
+              }}
+              style={{
+                backgroundColor: colorPickerEnabled ? "green" : "inherit",
+              }}
+            >
+              Color picker
+            </button>
+            Color: {colorPicked}
+          </div>
+          <div>
+            <button
+              onClick={() => {
+                // eslint-disable-next-line no-alert
+                window.alert("not implemented");
+              }}
+            >
+              Selection rectangle
+            </button>
+          </div>
+        </fieldset>
+        <fieldset>
           <legend>Selection</legend>
           <label>
             x
@@ -400,24 +430,6 @@ const CanvasEditor = () => {
           >
             Move back
           </button>
-        </fieldset>
-        <fieldset>
-          <legend>Tools</legend>
-          <button
-            onClick={() => {
-              if (colorPickerEnabled) {
-                colorPickerEnabledSetter(false);
-              } else {
-                colorPickerEnabledSetter(true);
-              }
-            }}
-            style={{
-              backgroundColor: colorPickerEnabled ? "green" : "inherit",
-            }}
-          >
-            Color picker
-          </button>
-          Color: {colorPicked}
         </fieldset>
         <fieldset>
           <legend>Zoom: {zoomSignal.value}</legend>
