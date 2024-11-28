@@ -1,4 +1,10 @@
-import { computed, effect, signal, useSignalEffect } from "@preact/signals";
+import {
+  batch,
+  computed,
+  effect,
+  signal,
+  useSignalEffect,
+} from "@preact/signals";
 import { render } from "preact";
 import { memo } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
@@ -62,25 +68,64 @@ const readFileAsText = async (file) => {
 const anonymousProjectFile = await createFile("anonymous.json");
 const drawingsSignal = signal([]);
 const zoomSignal = signal(1);
-const selectedDrawingSignal = computed(() => {
-  return drawingsSignal.value.find((drawing) => drawing.isSelected);
+const activeDrawingSignal = computed(() => {
+  return drawingsSignal.value.find((drawing) => drawing.isActive);
 });
-const moveSelectedDrawingAbsolute = (x = 0, y = 0) => {
-  const selectedDrawing = selectedDrawingSignal.value;
-  if (selectedDrawing) {
+const setActiveDrawing = (drawing) => {
+  if (drawing.isActive) {
+    return;
+  }
+  const currentActiveDrawing = activeDrawingSignal.value;
+  if (currentActiveDrawing) {
+    currentActiveDrawing.isActive = false;
+  }
+  drawing.isActive = true;
+  drawingsSignal.value = [...drawingsSignal.value];
+};
+const moveToTheFront = (drawing) => {
+  const drawings = drawingsSignal.value;
+  let highestZIndex = drawings[0].zIndex;
+  for (const drawing of drawings.slice(1)) {
+    const zIndex = drawing.zIndex;
+    if (zIndex > highestZIndex) {
+      highestZIndex = zIndex;
+    }
+  }
+  if (drawing.zIndex !== highestZIndex) {
+    drawing.zIndex = highestZIndex + 1;
+    drawingsSignal.value = [...drawings];
+  }
+};
+const moveToTheBack = (drawing) => {
+  const drawings = drawingsSignal.value;
+  let lowestZIndex = drawings[0].zIndex;
+  for (const drawing of drawings.slice(1)) {
+    const zIndex = drawing.zIndex;
+    if (zIndex < lowestZIndex) {
+      lowestZIndex = zIndex;
+    }
+  }
+  if (drawing.zIndex !== lowestZIndex) {
+    drawing.zIndex = lowestZIndex - 1;
+    drawingsSignal.value = [...drawings];
+  }
+};
+const moveActiveDrawingAbsolute = (x = 0, y = 0) => {
+  const activeDrawing = activeDrawingSignal.value;
+  if (activeDrawing) {
     if (x !== undefined) {
-      selectedDrawing.x = x;
+      activeDrawing.x = x;
     }
     if (y !== undefined) {
-      selectedDrawing.y = y;
+      activeDrawing.y = y;
     }
     drawingsSignal.value = [...drawingsSignal.value];
   }
 };
-const moveSelectedDrawingRelative = (x = 0, y = 0) => {
-  const selectedDrawing = selectedDrawingSignal.value;
-  if (selectedDrawing) {
-    moveSelectedDrawingAbsolute(selectedDrawing.x + x, selectedDrawing.y + y);
+const moveActiveDrawingRelative = (x = 0, y = 0) => {
+  const activeDrawing = activeDrawingSignal.value;
+  if (activeDrawing) {
+    moveActiveDrawingAbsolute(activeDrawing.x + x, activeDrawing.y + y);
   }
 };
 const availableZooms = [0.1, 0.5, 1, 1.5, 2, 4];
@@ -128,7 +173,8 @@ const selectionRectangleFacade = {
 
 const SpritesheetPicker = () => {
   const [mousemoveOrigin, mousemoveOriginSetter] = useState();
-  const [colorAt, colorAtSetter] = useState(); // TODO: replace with a color picker
+  const [colorPickerEnabled, colorPickerEnabledSetter] = useState(false);
+  const [colorPicked, colorPickedSetter] = useState();
   const [grabKeyIsDown, grabKeyIsDownSetter] = useState(false);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
@@ -140,22 +186,22 @@ const SpritesheetPicker = () => {
       if (keydownEvent.metaKey) {
         grabKeyIsDownSetter(true);
       }
-      const selectedDrawing = selectedDrawingSignal.value;
-      if (selectedDrawing && document.activeElement.tagName !== "INPUT") {
+      const activeDrawing = activeDrawingSignal.value;
+      if (activeDrawing && document.activeElement.tagName !== "INPUT") {
         if (keydownEvent.key === "ArrowLeft") {
           keydownEvent.preventDefault();
-          moveSelectedDrawingRelative(-1);
+          moveActiveDrawingRelative(-1);
         } else if (keydownEvent.key === "ArrowRight") {
           keydownEvent.preventDefault();
-          moveSelectedDrawingRelative(1);
+          moveActiveDrawingRelative(1);
         } else if (keydownEvent.key === "ArrowUp") {
           keydownEvent.preventDefault();
-          moveSelectedDrawingRelative(0, -1);
+          moveActiveDrawingRelative(0, -1);
         } else if (keydownEvent.key === "ArrowDown") {
           keydownEvent.preventDefault();
-          moveSelectedDrawingRelative(0, +1);
+          moveActiveDrawingRelative(0, +1);
         } else if (keydownEvent.key === "Backspace") {
-          removeDrawing(selectedDrawing);
+          removeDrawing(activeDrawing);
         }
       }
       removekeyup = () => {
@@ -184,7 +230,11 @@ const SpritesheetPicker = () => {
           height: "400px",
           border: "1px solid black",
           position: "relative",
-          cursor: grabKeyIsDown ? "grab" : "default",
+          cursor: grabKeyIsDown
+            ? "grab"
+            : colorPickerEnabled
+              ? "crosshair"
+              : "default",
           overflow: "hidden",
         }}
         onDragOver={(e) => {
@@ -200,17 +250,27 @@ const SpritesheetPicker = () => {
         }}
         onMouseDown={(e) => {
           const elements = document.elementsFromPoint(e.clientX, e.clientY);
+
           const drawings = drawingsSignal.value;
           const drawing = drawings.find((drawing) => {
             return elements[0] === drawing.elementRef?.current;
           });
           if (drawing) {
-            const selectedDrawing = selectedDrawingSignal.value;
-            if (selectedDrawing) {
-              selectedDrawing.isSelected = false;
+            if (colorPickerEnabled) {
+              const canvas = drawing.elementRef.current;
+              const context = canvas.getContext("2d", {
+                willReadFrequently: true,
+              });
+              const pixel = context.getImageData(
+                e.offsetX,
+                e.offsetY,
+                1,
+                1,
+              ).data;
+              colorPickedSetter(`${pixel[0]},${pixel[1]},${pixel[2]}`);
+              return;
             }
-            drawing.isSelected = true;
-            drawingsSignal.value = [...drawings];
+            setActiveDrawing(drawing);
             startXRef.current = drawing.x;
             startYRef.current = drawing.y;
           }
@@ -234,24 +294,14 @@ const SpritesheetPicker = () => {
           const mouseY = e.offsetY;
           const moveX = mouseX - originX;
           const moveY = mouseY - originY;
-          const selectedDrawing = selectedDrawingSignal.value;
-          if (selectedDrawing) {
-            moveSelectedDrawingAbsolute(
+          const activeDrawing = activeDrawingSignal.value;
+          if (activeDrawing) {
+            moveActiveDrawingAbsolute(
               startXRef.current + moveX,
               startYRef.current + moveY,
             );
-            drawingsSignal.value = [...drawings];
           }
         }}
-        // onMouseDown={(e) => {
-        //   const canvas = canvasRef.current;
-        //   const context = canvas.getContext("2d", { willReadFrequently: true });
-        //   const pixel = context.getImageData(e.offsetX, e.offsetY, 1, 1).data;
-        //   colorAtSetter(`${pixel[0]},${pixel[1]},${pixel[2]}`);
-
-        //   startXRef.current = canvasXSignal.value;
-        //   startYRef.current = canvasYSignal.value;
-        // }}
       >
         {drawings.map((drawing, index) => {
           return <DrawingFacade key={index} {...drawing} drawing={drawing} />;
@@ -271,42 +321,70 @@ const SpritesheetPicker = () => {
           X:
           <input
             type="number"
-            disabled={!selectedDrawingSignal.value}
-            value={selectedDrawingSignal.value?.x}
+            disabled={!activeDrawingSignal.value}
+            value={activeDrawingSignal.value?.x}
             onInput={(e) => {
-              moveSelectedDrawingAbsolute(e.target.valueAsNumber);
+              moveActiveDrawingAbsolute(e.target.valueAsNumber);
             }}
           ></input>
           <br />
           Y:
           <input
             type="number"
-            disabled={!selectedDrawingSignal.value}
-            value={selectedDrawingSignal.value?.y}
+            disabled={!activeDrawingSignal.value}
+            value={activeDrawingSignal.value?.y}
             onInput={(e) => {
-              moveSelectedDrawingAbsolute(0, e.target.valueAsNumber);
+              moveActiveDrawingAbsolute(0, e.target.valueAsNumber);
             }}
           ></input>
           <br />
           width:
           <input
             type="number"
-            value={selectedDrawingSignal.value?.width}
+            value={activeDrawingSignal.value?.width}
             readOnly
           ></input>
           <br />
           height:
           <input
             type="number"
-            value={selectedDrawingSignal.value?.height}
+            value={activeDrawingSignal.value?.height}
             readOnly
           ></input>
+          <button
+            disabled={!activeDrawingSignal.value}
+            onClick={() => {
+              moveToTheFront(activeDrawingSignal.value);
+            }}
+          >
+            Move front
+          </button>
+          <button
+            disabled={!activeDrawingSignal.value}
+            onClick={() => {
+              moveToTheBack(activeDrawingSignal.value);
+            }}
+          >
+            Move back
+          </button>
         </fieldset>
         <fieldset>
-          <legend>
-            Color at {mousemoveOrigin?.x},{mousemoveOrigin?.y}
-          </legend>
-          {colorAt}
+          <legend>Tools</legend>
+          <button
+            onClick={() => {
+              if (colorPickerEnabled) {
+                colorPickerEnabledSetter(false);
+              } else {
+                colorPickerEnabledSetter(true);
+              }
+            }}
+            style={{
+              backgroundColor: colorPickerEnabled ? "green" : "inherit",
+            }}
+          >
+            Color picker
+          </button>
+          Color: {colorPicked}
         </fieldset>
         <fieldset>
           <legend>Zoom: {zoomSignal.value}</legend>
@@ -323,6 +401,16 @@ const SpritesheetPicker = () => {
             );
           })}
         </fieldset>
+        <button
+          onClick={() => {
+            batch(() => {
+              zoomSignal.value = 1;
+              drawingsSignal.value = [];
+            });
+          }}
+        >
+          Reset
+        </button>
       </div>
       <div>
         <button
@@ -402,7 +490,7 @@ const DrawingFacade = memo(({ url, ...props }) => {
   return <Drawing image={image} url={url} {...props} />;
 });
 
-const Drawing = ({ image, url, x, y, isSelected, drawing }) => {
+const Drawing = ({ image, url, x, y, isActive, drawing }) => {
   const canvasRef = useRef();
   const zoom = zoomSignal.value;
   const width = image.naturalWidth * zoom;
@@ -428,8 +516,12 @@ const Drawing = ({ image, url, x, y, isSelected, drawing }) => {
   return (
     <canvas
       ref={canvasRef}
+      tabIndex={-1}
+      onFocus={() => {
+        setActiveDrawing(drawing);
+      }}
       style={{
-        border: isSelected ? "2px dotted black" : "",
+        outline: isActive ? "2px dotted black" : "",
         position: "absolute",
         zIndex: 1,
         left: `${x}px`,
