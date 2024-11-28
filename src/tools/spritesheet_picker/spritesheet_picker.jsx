@@ -63,8 +63,26 @@ const anonymousProjectFile = await createFile("anonymous.json");
 const drawingsSignal = signal([]);
 const zoomSignal = signal(1);
 const selectedDrawingSignal = computed(() => {
-  return drawingsSignal.find((drawing) => drawing.isSelected);
+  return drawingsSignal.value.find((drawing) => drawing.isSelected);
 });
+const moveSelectedDrawingAbsolute = (x = 0, y = 0) => {
+  const selectedDrawing = selectedDrawingSignal.value;
+  if (selectedDrawing) {
+    if (x !== undefined) {
+      selectedDrawing.x = x;
+    }
+    if (y !== undefined) {
+      selectedDrawing.y = y;
+    }
+    drawingsSignal.value = [...drawingsSignal.value];
+  }
+};
+const moveSelectedDrawingRelative = (x = 0, y = 0) => {
+  const selectedDrawing = selectedDrawingSignal.value;
+  if (selectedDrawing) {
+    moveSelectedDrawingAbsolute(selectedDrawing.x + x, selectedDrawing.y + y);
+  }
+};
 const availableZooms = [0.1, 0.5, 1, 1.5, 2, 4];
 
 const anonymousProjectFileContent = await anonymousProjectFile.readAsText();
@@ -123,20 +141,19 @@ const SpritesheetPicker = () => {
         grabKeyIsDownSetter(true);
       }
       const selectedDrawing = selectedDrawingSignal.value;
-      if (selectedDrawing) {
+      if (selectedDrawing && document.activeElement.tagName !== "INPUT") {
         if (keydownEvent.key === "ArrowLeft") {
-          selectedDrawing.x--;
-          drawingsSignal.value = [...drawings];
+          keydownEvent.preventDefault();
+          moveSelectedDrawingRelative(-1);
         } else if (keydownEvent.key === "ArrowRight") {
-          selectedDrawing.x++;
-          drawingsSignal.value = [...drawings];
+          keydownEvent.preventDefault();
+          moveSelectedDrawingRelative(1);
         } else if (keydownEvent.key === "ArrowUp") {
-          selectedDrawing.y--;
-          drawingsSignal.value = [...drawings];
+          keydownEvent.preventDefault();
+          moveSelectedDrawingRelative(0, -1);
         } else if (keydownEvent.key === "ArrowDown") {
           keydownEvent.preventDefault();
-          selectedDrawing.y++;
-          drawingsSignal.value = [...drawings];
+          moveSelectedDrawingRelative(0, +1);
         } else if (keydownEvent.key === "Backspace") {
           removeDrawing(selectedDrawing);
         }
@@ -219,8 +236,10 @@ const SpritesheetPicker = () => {
           const moveY = mouseY - originY;
           const selectedDrawing = selectedDrawingSignal.value;
           if (selectedDrawing) {
-            selectedDrawing.x = startXRef.current + moveX;
-            selectedDrawing.y = startYRef.current + moveY;
+            moveSelectedDrawingAbsolute(
+              startXRef.current + moveX,
+              startYRef.current + moveY,
+            );
             drawingsSignal.value = [...drawings];
           }
         }}
@@ -252,33 +271,34 @@ const SpritesheetPicker = () => {
           X:
           <input
             type="number"
-            value={selectionRectangleFacade.signal.value?.x}
-            readOnly
+            disabled={!selectedDrawingSignal.value}
+            value={selectedDrawingSignal.value?.x}
+            onInput={(e) => {
+              moveSelectedDrawingAbsolute(e.target.valueAsNumber);
+            }}
           ></input>
           <br />
           Y:
           <input
             type="number"
-            value={selectionRectangleFacade.signal.value?.y}
-            readOnly
+            disabled={!selectedDrawingSignal.value}
+            value={selectedDrawingSignal.value?.y}
+            onInput={(e) => {
+              moveSelectedDrawingAbsolute(0, e.target.valueAsNumber);
+            }}
           ></input>
           <br />
           width:
           <input
             type="number"
-            value={selectionRectangleFacade.signal.value?.width}
-            onInput={(e) => {
-              selectionRectangleFacade.signal.value = {
-                ...selectionRectangleFacade.signal.value,
-                width: e.target.value,
-              };
-            }}
+            value={selectedDrawingSignal.value?.width}
+            readOnly
           ></input>
           <br />
           height:
           <input
             type="number"
-            value={selectionRectangleFacade.signal.value?.height}
+            value={selectedDrawingSignal.value?.height}
             readOnly
           ></input>
         </fieldset>
@@ -385,12 +405,9 @@ const DrawingFacade = memo(({ url, ...props }) => {
 const Drawing = ({ image, url, x, y, isSelected, drawing }) => {
   const canvasRef = useRef();
   const zoom = zoomSignal.value;
-  drawing.elementRef = canvasRef;
   const width = image.naturalWidth * zoom;
   const height = image.naturalHeight * zoom;
-  drawing.width = width;
-  drawing.height = height;
-  drawingsSignal.value = [...drawingsSignal.value];
+  drawing.elementRef = canvasRef;
   useDrawImage(canvasRef, image, {
     debug: true,
     x: 0,
@@ -401,9 +418,11 @@ const Drawing = ({ image, url, x, y, isSelected, drawing }) => {
       if (url.startsWith("data")) {
         return;
       }
+      drawing.width = width;
+      drawing.height = height;
       drawing.url = canvasRef.current.toDataURL();
       drawingsSignal.value = [...drawingsSignal.value];
-    }, []),
+    }, [width, height]),
   });
 
   return (
