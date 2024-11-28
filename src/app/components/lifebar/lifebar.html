@@ -18,24 +18,11 @@
       import { render } from "preact";
       import { useState } from "preact/hooks";
       import { Lifebar } from "./lifebar.jsx";
-
-      const useLocalStorageState = (initialValue, key) => {
-        const get = () => {
-          const item = localStorage.getItem(key);
-          return item ? JSON.parse(item) : initialValue;
-        };
-        initialValue = get() || initialValue;
-        const [value, valueSetter] = useState(initialValue);
-        const set = (value) => {
-          localStorage.setItem(key, JSON.stringify(value));
-          valueSetter(value);
-        };
-        return [value, set];
-      };
+      import { useLocalStorageState } from "../../hooks/use_local_storage_state.js";
 
       const App = () => {
-        const [value, valueSetter] = useLocalStorageState(25, "hp");
-        const [max, maxSetter] = useLocalStorageState(40, "hp_max");
+        const [value, valueSetter] = useLocalStorageState("hp", 25);
+        const [max, maxSetter] = useLocalStorageState("hp_max", 40);
 
         return (
           <div style="display: flex;">

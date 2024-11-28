@@ -136,62 +136,86 @@ export const App = () => {
     <div>
       <div
         name="screen"
-        style={{ position: "relative", height: "200px", width: "300px" }}
+        style={{ width: "300px" }}
         onClick={() => {
           if (turnStateRef.current === "idle" && !pausedSignal.value) {
             startTurn();
           }
         }}
       >
-        <div
-          name="background"
-          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
-        >
-          <MountainAndSkyBattleBackground />
-          <WhiteCurtain visible={whiteCurtain} />
+        <div style={{ position: "relative", height: "200px", width: "100%" }}>
+          <div
+            name="background"
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+            }}
+          >
+            <MountainAndSkyBattleBackground />
+            <WhiteCurtain visible={whiteCurtain} />
+          </div>
+          <div
+            name="front"
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              top: 0,
+              bottom: 0,
+            }}
+          >
+            <Box name="enemy_box" height={100} width={100} x="center" y={26}>
+              <FirstEnemy elementRef={enemyElementRef} />
+              <Box
+                name="weapon_box"
+                visible={weaponIsVisible}
+                width={60}
+                height={60}
+              >
+                <SwordA elementRef={weaponElementRef} />
+              </Box>
+              <Digits
+                name="enemy_digits"
+                elementRef={enemyDigitsElementRef}
+                visible={enemyDigitsVisible}
+                x="center"
+                y="center"
+              >
+                14000
+              </Digits>
+            </Box>
+            <Box name="hero_box" width={25} height={25} x="center" y={140}>
+              <Benjamin
+                elementRef={heroElementRef}
+                direction="top"
+                activity="walking"
+              />
+              <Digits
+                name="party_member_digits"
+                elementRef={heroDigitsElementRef}
+                visible={heroDigitsVisible}
+                x="center"
+                y="end"
+                // for some reason it's better centered with that
+                dx={2}
+              >
+                26
+              </Digits>
+            </Box>
+          </div>
         </div>
         <div
-          name="front"
-          style={{ position: "absolute", left: 0, right: 0, top: 0, bottom: 0 }}
+          style={{
+            position: "relative",
+            height: "50px",
+            width: "100%",
+            background: "black",
+          }}
         >
-          <Box name="enemy_box" height={100} width={100} x="center" y={26}>
-            <FirstEnemy elementRef={enemyElementRef} />
-            <Box
-              name="weapon_box"
-              visible={weaponIsVisible}
-              width={60}
-              height={60}
-            >
-              <SwordA elementRef={weaponElementRef} />
-            </Box>
-            <Digits
-              name="enemy_digits"
-              elementRef={enemyDigitsElementRef}
-              visible={enemyDigitsVisible}
-              x="center"
-              y="center"
-            >
-              14000
-            </Digits>
-          </Box>
-          <Box name="hero_box" width={25} height={25} x="center" y={140}>
-            <Benjamin
-              elementRef={heroElementRef}
-              direction="top"
-              activity="walking"
-            />
-            <Digits
-              name="party_member_digits"
-              elementRef={heroDigitsElementRef}
-              visible={heroDigitsVisible}
-              x="center"
-              y="end"
-              // for some reason it's better centered with that
-              dx={2}
-            >
-              26
-            </Digits>
-          </Box>
+          Coucou
         </div>
         <PauseDialog visible={pausedSignal.value} />
       </div>
