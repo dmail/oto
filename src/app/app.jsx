@@ -12,6 +12,7 @@ import { usePartyMemberHitAnimation } from "./animations/use_party_member_hit_an
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
+import { Lifebar } from "./components/lifebar/lifebar.jsx";
 import { FirstEnemy } from "./enemy/enemies.jsx";
 import { SwordA } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
@@ -136,14 +137,14 @@ export const App = () => {
     <div>
       <div
         name="screen"
-        style={{ width: "300px" }}
+        style={{ position: "relative", width: "300px" }}
         onClick={() => {
           if (turnStateRef.current === "idle" && !pausedSignal.value) {
             startTurn();
           }
         }}
       >
-        <div style={{ position: "relative", height: "200px", width: "100%" }}>
+        <div style={{ position: "relative", height: "260px", width: "100%" }}>
           <div
             name="background"
             style={{
@@ -167,9 +168,11 @@ export const App = () => {
               bottom: 0,
             }}
           >
-            <Box name="enemy_box" height={100} width={100} x="center" y={26}>
+            <Box name="enemy_box" height={100} width={100} x="center" y={50}>
               <FirstEnemy elementRef={enemyElementRef} />
               <Box
+                x="center"
+                y="center"
                 name="weapon_box"
                 visible={weaponIsVisible}
                 width={60}
@@ -187,7 +190,7 @@ export const App = () => {
                 14000
               </Digits>
             </Box>
-            <Box name="hero_box" width={25} height={25} x="center" y={140}>
+            <Box name="hero_box" width={25} height={25} x="center" y={170}>
               <Benjamin
                 elementRef={heroElementRef}
                 direction="top"
@@ -213,9 +216,30 @@ export const App = () => {
             height: "50px",
             width: "100%",
             background: "black",
+            padding: "1px",
           }}
         >
-          Coucou
+          <div
+            style={{
+              border: "2px solid white",
+              padding: "2px",
+              height: "100%",
+              width: "50%",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                height: "100%",
+                padding: "4px",
+              }}
+            >
+              <div style={{ height: "20px", width: "120px" }}>
+                <Lifebar value={40} max={40} />
+              </div>
+              <div style={{ width: "20px" }}></div>
+            </div>
+          </div>
         </div>
         <PauseDialog visible={pausedSignal.value} />
       </div>

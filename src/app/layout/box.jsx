@@ -3,8 +3,8 @@ export const Box = ({
   className = "box",
   width = "100%",
   height = "100%",
-  x = "center",
-  y = "center",
+  x = "start",
+  y = "start",
   children,
   ...props
 }) => {
