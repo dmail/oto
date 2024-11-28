@@ -82,8 +82,11 @@ const setActiveDrawing = (drawing) => {
   drawing.isActive = true;
   drawingsSignal.value = [...drawingsSignal.value];
 };
-const moveToTheFront = (drawing) => {
+const getHighestZIndex = () => {
   const drawings = drawingsSignal.value;
+  if (drawings.length === 0) {
+    return 1;
+  }
   let highestZIndex = drawings[0].zIndex;
   for (const drawing of drawings.slice(1)) {
     const zIndex = drawing.zIndex;
@@ -91,9 +94,13 @@ const moveToTheFront = (drawing) => {
       highestZIndex = zIndex;
     }
   }
+  return highestZIndex;
+};
+const moveToTheFront = (drawing) => {
+  const highestZIndex = getHighestZIndex();
   if (drawing.zIndex !== highestZIndex) {
     drawing.zIndex = highestZIndex + 1;
-    drawingsSignal.value = [...drawings];
+    drawingsSignal.value = [...drawingsSignal.value];
   }
 };
 const moveToTheBack = (drawing) => {
@@ -155,6 +162,7 @@ const addDrawing = ({ url, x = 0, y = 0 }) => {
     url,
     x,
     y,
+    zIndex: getHighestZIndex(),
   };
   const drawings = drawingsSignal.value;
   drawingsSignal.value = [...drawings, drawing];
@@ -318,39 +326,64 @@ const CanvasEditor = () => {
       >
         <fieldset>
           <legend>Selection</legend>
-          X:
-          <input
-            type="number"
-            disabled={!activeDrawingSignal.value}
-            value={activeDrawingSignal.value?.x}
-            onInput={(e) => {
-              moveActiveDrawingAbsolute(e.target.valueAsNumber);
+          <label>
+            x
+            <input
+              type="number"
+              disabled={!activeDrawingSignal.value}
+              value={activeDrawingSignal.value?.x}
+              style={{ width: "4em" }}
+              onInput={(e) => {
+                moveActiveDrawingAbsolute(e.target.valueAsNumber);
+              }}
+            ></input>
+          </label>
+          <label
+            style={{
+              marginLeft: "1em",
             }}
-          ></input>
+          >
+            y
+            <input
+              type="number"
+              disabled={!activeDrawingSignal.value}
+              value={activeDrawingSignal.value?.y}
+              style={{ width: "4em" }}
+              onInput={(e) => {
+                moveActiveDrawingAbsolute(0, e.target.valueAsNumber);
+              }}
+            ></input>
+          </label>
           <br />
-          Y:
-          <input
-            type="number"
-            disabled={!activeDrawingSignal.value}
-            value={activeDrawingSignal.value?.y}
-            onInput={(e) => {
-              moveActiveDrawingAbsolute(0, e.target.valueAsNumber);
-            }}
-          ></input>
+          <label>
+            width
+            <input
+              type="number"
+              value={activeDrawingSignal.value?.width}
+              style={{ width: "4em" }}
+              readOnly
+            ></input>
+          </label>
+          <label>
+            height
+            <input
+              type="number"
+              value={activeDrawingSignal.value?.height}
+              style={{ width: "4em" }}
+              readOnly
+            ></input>
+          </label>
           <br />
-          width:
-          <input
-            type="number"
-            value={activeDrawingSignal.value?.width}
-            readOnly
-          ></input>
+          <label>
+            zIndex
+            <input
+              type="number"
+              value={activeDrawingSignal.value?.zIndex}
+              style={{ width: "4em" }}
+              readOnly
+            ></input>
+          </label>
           <br />
-          height:
-          <input
-            type="number"
-            value={activeDrawingSignal.value?.height}
-            readOnly
-          ></input>
           <button
             disabled={!activeDrawingSignal.value}
             onClick={() => {
@@ -490,7 +523,7 @@ const DrawingFacade = memo(({ url, ...props }) => {
   return <Drawing image={image} url={url} {...props} />;
 });
 
-const Drawing = ({ image, url, x, y, isActive, drawing }) => {
+const Drawing = ({ image, url, x, y, isActive, zIndex, drawing }) => {
   const canvasRef = useRef();
   const zoom = zoomSignal.value;
   const width = image.naturalWidth * zoom;
@@ -523,7 +556,7 @@ const Drawing = ({ image, url, x, y, isActive, drawing }) => {
       style={{
         outline: isActive ? "2px dotted black" : "",
         position: "absolute",
-        zIndex: 1,
+        zIndex,
         left: `${x}px`,
         top: `${y}px`,
       }}
