@@ -10,6 +10,9 @@ import { memo } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { useDrawImage } from "../../app/hooks/use_draw_image.js";
 import { useImage } from "../../app/hooks/use_image.js";
+import { EyeClosedIconSvg } from "./eye_closed_icon.jsx";
+import { EyeIconSvg } from "./eye_icon.jsx";
+import { TrashIconSvg } from "./trash_icon.jsx";
 // import { useLocalStorageState } from "../../app/hooks/use_local_storage_state.js";
 
 // if (import.meta.hot) {
@@ -103,6 +106,19 @@ const setDrawingZIndex = (drawing, zIndex) => {
   drawing.zIndex = zIndex;
   drawingsSignal.value = [...drawingsSignal.value];
 };
+const setDrawingVisibility = (drawing, isVisible) => {
+  if (drawing.isVisible === isVisible) {
+    return;
+  }
+  drawing.isVisible = isVisible;
+  drawingsSignal.value = [...drawingsSignal.value];
+};
+const showDrawing = (drawing) => {
+  setDrawingVisibility(drawing, true);
+};
+const hideDrawing = (drawing) => {
+  setDrawingVisibility(drawing, false);
+};
 const moveToTheFront = (drawing) => {
   const highestZIndex = getHighestZIndex();
   if (drawing.zIndex !== highestZIndex) {
@@ -168,6 +184,8 @@ const addDrawing = ({ url, x = 0, y = 0 }) => {
     x,
     y,
     zIndex: getHighestZIndex(),
+    isVisible: true,
+    isActive: false,
   };
   const drawings = drawingsSignal.value;
   drawingsSignal.value = [...drawings, drawing];
@@ -330,46 +348,15 @@ const CanvasEditor = () => {
         }}
       >
         <fieldset>
-          <legend>Tools</legend>
-          <div>
-            <button
-              onClick={() => {
-                if (colorPickerEnabled) {
-                  colorPickerEnabledSetter(false);
-                } else {
-                  colorPickerEnabledSetter(true);
-                }
-              }}
-              style={{
-                backgroundColor: colorPickerEnabled ? "green" : "inherit",
-              }}
-            >
-              Color picker
-            </button>
-            Color:{" "}
-            <span
-              style={{
-                display: "inline-block",
-                width: "1em",
-                height: "1em",
-                backgroundColor: `rgb(${colorPicked})`,
-              }}
-            ></span>
-            <input type="text" readOnly value={colorPicked} />
-          </div>
-          <div>
-            <button
-              onClick={() => {
-                // eslint-disable-next-line no-alert
-                window.alert("not implemented");
-              }}
-            >
-              Selection rectangle
-            </button>
+          <legend>Layers</legend>
+          <div style="overflow:auto">
+            {drawings.map((drawing, index) => {
+              return <LayerListItem key={index} drawing={drawing} />;
+            })}
           </div>
         </fieldset>
         <fieldset>
-          <legend>Selection</legend>
+          <legend>Active layer</legend>
           <label>
             x
             <input
@@ -433,7 +420,6 @@ const CanvasEditor = () => {
               }}
             ></input>
           </label>
-          <br />
           <button
             disabled={!activeDrawingSignal.value}
             onClick={() => {
@@ -450,6 +436,45 @@ const CanvasEditor = () => {
           >
             Move back
           </button>
+        </fieldset>
+        <fieldset>
+          <legend>Tools</legend>
+          <div>
+            <button
+              onClick={() => {
+                if (colorPickerEnabled) {
+                  colorPickerEnabledSetter(false);
+                } else {
+                  colorPickerEnabledSetter(true);
+                }
+              }}
+              style={{
+                backgroundColor: colorPickerEnabled ? "green" : "inherit",
+              }}
+            >
+              Color picker
+            </button>
+            Color:{" "}
+            <span
+              style={{
+                display: "inline-block",
+                width: "1em",
+                height: "1em",
+                backgroundColor: `rgb(${colorPicked})`,
+              }}
+            ></span>
+            <input type="text" readOnly value={colorPicked} />
+          </div>
+          <div>
+            <button
+              onClick={() => {
+                // eslint-disable-next-line no-alert
+                window.alert("not implemented");
+              }}
+            >
+              Selection rectangle
+            </button>
+          </div>
         </fieldset>
         <fieldset>
           <legend>Zoom: {zoomSignal.value}</legend>
@@ -552,6 +577,7 @@ const SelectionRectangle = () => {
 const DrawingFacade = memo(({ url, ...props }) => {
   const [image] = useImage(url);
   if (!image) return null;
+  if (!props.drawing.isVisible) return null;
   return <Drawing image={image} url={url} {...props} />;
 });
 
@@ -595,6 +621,93 @@ const Drawing = ({ image, url, x, y, isActive, zIndex, drawing }) => {
       width={width}
       height={height}
     ></canvas>
+  );
+};
+
+const LayerListItem = ({ drawing }) => {
+  const isVisible = drawing.isVisible;
+  const canvasRef = useRef();
+
+  const [image] = useImage(drawing.url);
+  useDrawImage(canvasRef, image);
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "35px",
+        border: "1px solid black",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      <button
+        style={{
+          width: "38px",
+          height: "100%",
+        }}
+        onClick={() => {
+          if (isVisible) {
+            hideDrawing(drawing);
+          } else {
+            showDrawing(drawing);
+          }
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          {isVisible ? <EyeIconSvg /> : <EyeClosedIconSvg />}
+        </div>
+      </button>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          background: drawing.isActive ? "lightblue" : "inherit",
+          display: "flex",
+          alignItems: "center",
+        }}
+      >
+        <div
+          style={{
+            width: "40px",
+            height: "100%",
+            paddingTop: "2px",
+            paddingBottom: "2px",
+            marginLeft: "5px",
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            style={{
+              width: "100%",
+              height: "100%",
+              border: "1px solid black",
+            }}
+          ></canvas>
+        </div>
+        <div
+          style={{
+            flex: 1,
+          }}
+        ></div>
+        <button
+          style={{
+            width: "24px",
+            height: "100%",
+            border: "none",
+            padding: 0,
+            paddingLeft: "2px",
+            paddingRight: "2px",
+            background: "none",
+          }}
+          onClick={() => {
+            removeDrawing(drawing);
+          }}
+        >
+          <TrashIconSvg />
+        </button>
+      </div>
+    </div>
   );
 };
 

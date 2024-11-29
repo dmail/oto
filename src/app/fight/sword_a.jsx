@@ -33,3 +33,28 @@ export const SwordA = ({ elementRef = useRef(), ...props }) => {
     />
   );
 };
+
+export const SwordAIcon = ({ elementRef = useRef(), ...props }) => {
+  const { x, y, width, height } = WEAPON_CELLS[`sword_a`];
+  const sprite = useSprite({
+    url: weaponSpriteSheetUrl,
+    x,
+    y,
+    width,
+    height,
+  });
+  useDrawImage(elementRef, sprite);
+  return (
+    <canvas
+      {...props}
+      name="sword_a"
+      ref={elementRef}
+      width={width}
+      height={height}
+      style={{
+        width: "100%",
+        height: "100%",
+      }}
+    />
+  );
+};

@@ -14,7 +14,7 @@ import { MountainAndSkyBattleBackground } from "./battle_background/battle_backg
 import { Benjamin } from "./character/benjamin.jsx";
 import { Lifebar } from "./components/lifebar/lifebar.jsx";
 import { FirstEnemy } from "./enemy/enemies.jsx";
-import { SwordA } from "./fight/sword_a.jsx";
+import { SwordA, SwordAIcon } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
 import { WhiteCurtain } from "./fight/white_curtain.jsx";
 import { useBooleanState } from "./hooks/use_boolean_state.js";
@@ -211,6 +211,7 @@ export const App = () => {
           </div>
         </div>
         <div
+          name="bottom_hud"
           style={{
             position: "relative",
             height: "50px",
@@ -220,11 +221,13 @@ export const App = () => {
           }}
         >
           <div
+            name="hero_hud"
             style={{
               border: "2px solid white",
               padding: "2px",
               height: "100%",
               width: "50%",
+              margin: "auto",
             }}
           >
             <div
@@ -237,7 +240,9 @@ export const App = () => {
               <div style={{ height: "20px", width: "120px" }}>
                 <Lifebar value={40} max={40} />
               </div>
-              <div style={{ width: "20px" }}></div>
+              <div style={{ width: "20px" }}>
+                <SwordAIcon />
+              </div>
             </div>
           </div>
         </div>
