@@ -66,9 +66,22 @@ const readFileAsText = async (file) => {
 const anonymousProjectFile = await createFile("anonymous.json");
 const drawingsSignal = signal([]);
 const zoomSignal = signal(1);
+const gridSignal = signal({
+  enabled: false,
+  width: 32,
+  height: 32,
+  insetX: 0,
+  insetY: 0,
+});
 const activeDrawingSignal = computed(() => {
   return drawingsSignal.value.find((drawing) => drawing.isActive);
 });
+const enableGrid = () => {
+  gridSignal.value = { ...gridSignal.value, enabled: true };
+};
+const disableGrid = () => {
+  gridSignal.value = { ...gridSignal.value, enabled: false };
+};
 const setActiveDrawing = (drawing) => {
   if (drawing.isActive) {
     return;
@@ -159,21 +172,26 @@ const availableZooms = [0.1, 0.5, 1, 1.5, 2, 4];
 
 const anonymousProjectFileContent = await anonymousProjectFile.readAsText();
 if (anonymousProjectFileContent) {
-  const { drawings, zoom } = JSON.parse(anonymousProjectFileContent);
+  const { drawings, zoom, grid } = JSON.parse(anonymousProjectFileContent);
   if (Array.isArray(drawings)) {
     drawingsSignal.value = drawings;
   }
   if (typeof zoom === "number") {
     zoomSignal.value = zoom;
   }
+  if (grid) {
+    gridSignal.value = grid;
+  }
 }
 effect(() => {
   const drawings = drawingsSignal.value;
   const zoom = zoomSignal.value;
+  const grid = gridSignal.value;
   anonymousProjectFile.write(
     JSON.stringify({
       drawings,
       zoom,
+      grid,
     }),
   );
 });
@@ -345,6 +363,7 @@ const CanvasEditor = () => {
           }
         }}
       >
+        <Grid />
         {drawings.map((drawing, index) => {
           return <DrawingFacade key={index} {...drawing} drawing={drawing} />;
         })}
@@ -568,6 +587,62 @@ const CanvasEditor = () => {
               Selection rectangle
             </button>
           </div>
+          <div>
+            <button
+              onClick={() => {
+                if (gridSignal.value.enabled) {
+                  disableGrid();
+                } else {
+                  enableGrid();
+                }
+              }}
+              style={{
+                backgroundColor: gridSignal.value.enabled ? "green" : "inherit",
+              }}
+            >
+              Grid
+            </button>
+            <input
+              type="number"
+              value={gridSignal.value.width}
+              onInput={(e) => {
+                gridSignal.value = {
+                  ...gridSignal.value,
+                  width: e.target.valueAsNumber,
+                };
+              }}
+            ></input>
+            <input
+              type="number"
+              value={gridSignal.value.height}
+              onInput={(e) => {
+                gridSignal.value = {
+                  ...gridSignal.value,
+                  height: e.target.valueAsNumber,
+                };
+              }}
+            ></input>
+            <input
+              type="number"
+              value={gridSignal.value.insetX}
+              onInput={(e) => {
+                gridSignal.value = {
+                  ...gridSignal.value,
+                  insetX: e.target.valueAsNumber,
+                };
+              }}
+            ></input>
+            <input
+              type="number"
+              value={gridSignal.value.insetY}
+              onInput={(e) => {
+                gridSignal.value = {
+                  ...gridSignal.value,
+                  insetY: e.target.valueAsNumber,
+                };
+              }}
+            ></input>
+          </div>
         </fieldset>
         <fieldset>
           <legend>Zoom: {zoomSignal.value}</legend>
@@ -737,9 +812,9 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
           fontSize: "10px",
         }}
       >
-        <span>{mouseRelativeX}</span>
+        <span style={{ backgroundColor: "white" }}>{mouseRelativeX}</span>
         <br />
-        <span>{mouseRelativeY}</span>
+        <span style={{ backgroundColor: "white" }}>{mouseRelativeY}</span>
       </div>
       <div
         name="rectangle_xy"
@@ -751,9 +826,9 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
           fontSize: "10px",
         }}
       >
-        <span>{x}</span>
+        <span style={{ backgroundColor: "white" }}>{x}</span>
         <br />
-        <span>{y}</span>
+        <span style={{ backgroundColor: "white" }}>{y}</span>
       </div>
       <div
         name="rectangle_size"
@@ -765,9 +840,9 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
           fontSize: "10px",
         }}
       >
-        <span>{width}</span>
+        <span style={{ backgroundColor: "white" }}>{width}</span>
         <br />
-        <span>{height}</span>
+        <span style={{ backgroundColor: "white" }}>{height}</span>
       </div>
       <canvas
         ref={selectionRectangleCanvasRef}
@@ -780,6 +855,67 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
         }}
       ></canvas>
     </>
+  );
+};
+
+const Grid = () => {
+  const enabled = gridSignal.value.enabled;
+  const insetX = gridSignal.value.insetX;
+  const insetY = gridSignal.value.insetY;
+  const width = gridSignal.value.width;
+  const height = gridSignal.value.height;
+  const canvasRef = useRef();
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    if (!enabled) {
+      return;
+    }
+    context.save();
+
+    const drawCell = (x, y, color) => {
+      console.log("draw cell at", x, y);
+      context.beginPath();
+      // context.globalAlpha = 0.8;
+      // context.lineWidth = 1;
+      context.rect(x + insetX, y + insetY, width, height);
+      context.fillStyle = color;
+      context.fill();
+      context.closePath();
+    };
+    const xCellLastIndex = Math.ceil(canvas.width / width);
+    const yCellLastIndex = Math.ceil(canvas.height / height);
+    let xCellIndex = 0;
+    let yCellIndex = 0;
+    while (yCellIndex < yCellLastIndex) {
+      while (xCellIndex < xCellLastIndex) {
+        drawCell(
+          xCellIndex * width,
+          yCellIndex * height,
+          xCellIndex % 2 === yCellIndex % 2 ? "black" : "violet",
+        );
+        xCellIndex++;
+      }
+      xCellIndex = 0;
+      yCellIndex++;
+    }
+    context.restore();
+  }, [enabled, insetX, insetY, width, height]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        pointerEvents: "none",
+        position: "absolute",
+        left: "0",
+        width: "100%",
+        height: "100%",
+      }}
+    ></canvas>
   );
 };
 
