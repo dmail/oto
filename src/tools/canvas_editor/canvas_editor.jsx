@@ -106,6 +106,10 @@ const setDrawingZIndex = (drawing, zIndex) => {
   drawing.zIndex = zIndex;
   drawingsSignal.value = [...drawingsSignal.value];
 };
+const setDrawingUrl = (drawing, url) => {
+  drawing.url = url;
+  drawingsSignal.value = [...drawingsSignal.value];
+};
 const setDrawingVisibility = (drawing, isVisible) => {
   if (drawing.isVisible === isVisible) {
     return;
@@ -436,6 +440,41 @@ const CanvasEditor = () => {
           >
             Move back
           </button>
+          <br />
+          <label>
+            Url
+            <input type="text" value={activeDrawingSignal.value?.url} />
+            <button
+              onClick={async () => {
+                try {
+                  const [fileHandle] = await window.showOpenFilePicker({
+                    types: [
+                      {
+                        description: "Images",
+                        accept: {
+                          "image/*": [".png", ".gif", ".jpeg", ".jpg"],
+                        },
+                      },
+                    ],
+                    excludeAcceptAllOption: true,
+                    multiple: false,
+                  });
+                  const fileData = await fileHandle.getFile();
+                  setDrawingUrl(
+                    activeDrawingSignal.value,
+                    URL.createObjectURL(fileData),
+                  );
+                } catch (e) {
+                  if (e.name === "AbortError") {
+                    return;
+                  }
+                  throw e;
+                }
+              }}
+            >
+              Select
+            </button>
+          </label>
         </fieldset>
         <fieldset>
           <legend>Tools</legend>
