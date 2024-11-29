@@ -263,7 +263,7 @@ const CanvasEditor = () => {
           position: "relative",
           cursor: grabKeyIsDown
             ? "grab"
-            : colorPickerEnabled
+            : colorPickerEnabled || selectionRectangleEnabled
               ? "crosshair"
               : "default",
           overflow: "hidden",
@@ -529,6 +529,7 @@ const CanvasEditor = () => {
                   colorPickerEnabledSetter(false);
                 } else {
                   colorPickerEnabledSetter(true);
+                  selectionRectangleEnabledSetter(false);
                 }
               }}
               style={{
@@ -555,6 +556,7 @@ const CanvasEditor = () => {
                   selectionRectangleEnabledSetter(false);
                 } else {
                   selectionRectangleEnabledSetter(true);
+                  colorPickerEnabledSetter(false);
                 }
               }}
               style={{
@@ -605,35 +607,54 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
   const selectionRectangleCanvasRef = useRef();
   const moveStartInfoRef = useRef();
 
+  const [interactedOnce, interactedOnceSetter] = useState(false);
+  const [mouseIsDown, mouseIsDownSetter] = useState(false);
+  const [mouseInsideDrawZone, mouseInsideDrawZoneSetter] = useState(false);
+  const [mouseRelativeX, mouseRelativeXSetter] = useState(-1);
+  const [mouseRelativeY, mouseRelativeYSetter] = useState(-1);
+
   useEffect(() => {
     if (!enabled) {
       return null;
     }
     const drawZone = drawZoneRef.current;
     const onmousedown = (e) => {
+      mouseIsDownSetter(true);
+      interactedOnceSetter(true);
       e.preventDefault();
       const drawZoneRect = drawZone.getBoundingClientRect();
       const startX = Math.round(drawZoneRect.left);
       const startY = Math.round(drawZoneRect.top);
+      const startRelativeX = e.clientX - startX;
+      const startRelativeY = e.clientY - startY;
       moveStartInfoRef.current = {
         startX,
         startY,
-        startRelativeX: e.clientX - startX,
-        startRelativeY: e.clientY - startY,
+        startRelativeX,
+        startRelativeY,
       };
-      xSetter(0);
+      mouseRelativeXSetter(startRelativeX);
+      mouseRelativeYSetter(startRelativeY);
+      xSetter(startRelativeX);
       widthSetter(1);
-      ySetter(0);
+      ySetter(startRelativeY);
       heightSetter(1);
     };
     const onmousemove = (e) => {
+      const drawZoneRect = drawZone.getBoundingClientRect();
       const moveStartInfo = moveStartInfoRef.current;
       if (!moveStartInfo) {
+        const relativeX = e.clientX - drawZoneRect.left;
+        const relativeY = e.clientY - drawZoneRect.top;
+        mouseRelativeXSetter(relativeX);
+        mouseRelativeYSetter(relativeY);
         return;
       }
       const { startX, startY, startRelativeX, startRelativeY } = moveStartInfo;
       const relativeX = e.clientX - startX;
       const relativeY = e.clientY - startY;
+      mouseRelativeXSetter(relativeX);
+      mouseRelativeYSetter(relativeY);
       const moveX = relativeX - startRelativeX;
       const moveY = relativeY - startRelativeY;
       if (relativeX > startRelativeX) {
@@ -652,15 +673,29 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
       }
     };
     const onmouseup = () => {
+      mouseIsDownSetter(false);
       moveStartInfoRef.current = null;
     };
+
     drawZone.addEventListener("mousedown", onmousedown);
     document.addEventListener("mousemove", onmousemove);
     document.addEventListener("mouseup", onmouseup);
+
+    const onmouseenter = () => {
+      mouseInsideDrawZoneSetter(true);
+    };
+    const onmouseleave = () => {
+      mouseInsideDrawZoneSetter(false);
+    };
+    drawZone.addEventListener("mouseenter", onmouseenter);
+    drawZone.addEventListener("mouseleave", onmouseleave);
     return () => {
       drawZone.removeEventListener("mousedown", onmousedown);
       document.removeEventListener("mousemove", onmousemove);
       document.removeEventListener("mouseup", onmouseup);
+
+      drawZone.removeEventListener("mouseenter", onmouseenter);
+      drawZone.removeEventListener("mouseleave", onmouseenter);
     };
   }, [enabled]);
 
@@ -690,16 +725,61 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
   }, [enabled, x, y, width, height]);
 
   return (
-    <canvas
-      ref={selectionRectangleCanvasRef}
-      style={{
-        pointerEvents: "none",
-        position: "absolute",
-        left: "0",
-        width: "100%",
-        height: "100%",
-      }}
-    ></canvas>
+    <>
+      <div
+        name="mouse_xy"
+        style={{
+          display:
+            enabled && !mouseIsDown && mouseInsideDrawZone ? "block" : "none",
+          position: "absolute",
+          left: `${mouseRelativeX}px`,
+          top: `${mouseRelativeY}px`,
+          fontSize: "10px",
+        }}
+      >
+        <span>{mouseRelativeX}</span>
+        <br />
+        <span>{mouseRelativeY}</span>
+      </div>
+      <div
+        name="rectangle_xy"
+        style={{
+          display: enabled && interactedOnce ? "block" : "none",
+          position: "absolute",
+          left: `${x}px`,
+          top: `${y}px`,
+          fontSize: "10px",
+        }}
+      >
+        <span>{x}</span>
+        <br />
+        <span>{y}</span>
+      </div>
+      <div
+        name="rectangle_size"
+        style={{
+          display: enabled && interactedOnce ? "block" : "none",
+          position: "absolute",
+          left: `${x + width}px`,
+          top: `${y + height}px`,
+          fontSize: "10px",
+        }}
+      >
+        <span>{width}</span>
+        <br />
+        <span>{height}</span>
+      </div>
+      <canvas
+        ref={selectionRectangleCanvasRef}
+        style={{
+          pointerEvents: "none",
+          position: "absolute",
+          left: "0",
+          width: "100%",
+          height: "100%",
+        }}
+      ></canvas>
+    </>
   );
 };
 
