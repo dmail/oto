@@ -354,9 +354,11 @@ const CanvasEditor = () => {
         <fieldset>
           <legend>Layers</legend>
           <div style="overflow:auto">
-            {drawings.map((drawing, index) => {
-              return <LayerListItem key={index} drawing={drawing} />;
-            })}
+            {drawings
+              .sort((a, b) => a.zIndex - b.zIndex)
+              .map((drawing, index) => {
+                return <LayerListItem key={index} drawing={drawing} />;
+              })}
           </div>
         </fieldset>
         <fieldset>
@@ -704,6 +706,9 @@ const LayerListItem = ({ drawing }) => {
           background: drawing.isActive ? "lightblue" : "inherit",
           display: "flex",
           alignItems: "center",
+        }}
+        onClick={() => {
+          setActiveDrawing(drawing);
         }}
       >
         <div
