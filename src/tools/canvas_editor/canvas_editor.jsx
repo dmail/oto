@@ -358,7 +358,39 @@ const CanvasEditor = () => {
         }}
       >
         <fieldset>
-          <legend>Layers</legend>
+          <legend>
+            Layers
+            <button
+              style={{ marginLeft: "3px" }}
+              onClick={async () => {
+                try {
+                  const [fileHandle] = await window.showOpenFilePicker({
+                    types: [
+                      {
+                        description: "Images",
+                        accept: {
+                          "image/*": [".png", ".gif", ".jpeg", ".jpg"],
+                        },
+                      },
+                    ],
+                    excludeAcceptAllOption: true,
+                    multiple: false,
+                  });
+                  const fileData = await fileHandle.getFile();
+                  addDrawing({
+                    url: URL.createObjectURL(fileData),
+                  });
+                } catch (e) {
+                  if (e.name === "AbortError") {
+                    return;
+                  }
+                  throw e;
+                }
+              }}
+            >
+              Add
+            </button>
+          </legend>
           <div style="overflow:auto">
             {drawings
               .sort((a, b) => a.zIndex - b.zIndex)
@@ -547,30 +579,6 @@ const CanvasEditor = () => {
           }}
         >
           Reset
-        </button>
-      </div>
-      <div>
-        <button
-          onClick={async () => {
-            const [fileHandle] = await window.showOpenFilePicker({
-              types: [
-                {
-                  description: "Images",
-                  accept: {
-                    "image/*": [".png", ".gif", ".jpeg", ".jpg"],
-                  },
-                },
-              ],
-              excludeAcceptAllOption: true,
-              multiple: false,
-            });
-            const fileData = await fileHandle.getFile();
-            addDrawing({
-              url: URL.createObjectURL(fileData),
-            });
-          }}
-        >
-          Add file
         </button>
       </div>
     </div>
