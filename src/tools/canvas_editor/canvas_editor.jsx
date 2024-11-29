@@ -1,23 +1,18 @@
-import {
-  batch,
-  computed,
-  effect,
-  signal,
-  useSignalEffect,
-} from "@preact/signals";
+import { batch, computed, effect, signal } from "@preact/signals";
 import { render } from "preact";
 import { memo } from "preact/compat";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "preact/hooks";
 import { useDrawImage } from "../../app/hooks/use_draw_image.js";
 import { useImage } from "../../app/hooks/use_image.js";
 import { EyeClosedIconSvg } from "./eye_closed_icon.jsx";
 import { EyeIconSvg } from "./eye_icon.jsx";
 import { TrashIconSvg } from "./trash_icon.jsx";
-// import { useLocalStorageState } from "../../app/hooks/use_local_storage_state.js";
-
-// if (import.meta.hot) {
-//   import.meta.hot.decline();
-// }
 
 const createFile = async (filename) => {
   // https://stackoverflow.com/questions/44094507/how-to-store-large-files-to-web-local-storage
@@ -201,14 +196,11 @@ const removeDrawing = (drawing) => {
   drawingsSignal.value = [...drawings];
 };
 
-const selectionRectangleFacade = {
-  borderColor: "orange",
-  signal: signal(),
-};
-
 const CanvasEditor = () => {
   const [mousemoveOrigin, mousemoveOriginSetter] = useState();
   const [colorPickerEnabled, colorPickerEnabledSetter] = useState(false);
+  const [selectionRectangleEnabled, selectionRectangleEnabledSetter] =
+    useState(false);
   const [colorPicked, colorPickedSetter] = useState();
   const [grabKeyIsDown, grabKeyIsDownSetter] = useState(false);
   const startXRef = useRef(0);
@@ -257,9 +249,13 @@ const CanvasEditor = () => {
     };
   }, []);
 
+  const drawZoneRef = useRef();
+
   return (
     <div style={{ display: "flex", flexDirection: "row" }}>
       <div
+        name="draw"
+        ref={drawZoneRef}
         style={{
           width: "700px",
           height: "400px",
@@ -290,8 +286,10 @@ const CanvasEditor = () => {
           });
         }}
         onMouseDown={(e) => {
+          if (selectionRectangleEnabled) {
+            return;
+          }
           const elements = document.elementsFromPoint(e.clientX, e.clientY);
-
           const drawings = drawingsSignal.value;
           const drawing = drawings.find((drawing) => {
             return elements[0] === drawing.elementRef?.current;
@@ -329,6 +327,9 @@ const CanvasEditor = () => {
           if (!mousemoveOrigin) {
             return;
           }
+          if (selectionRectangleEnabled) {
+            return;
+          }
           const originX = mousemoveOrigin.x;
           const originY = mousemoveOrigin.y;
           const mouseX = e.clientX;
@@ -347,7 +348,10 @@ const CanvasEditor = () => {
         {drawings.map((drawing, index) => {
           return <DrawingFacade key={index} {...drawing} drawing={drawing} />;
         })}
-        <SelectionRectangle />
+        <SelectionRectangle
+          drawZoneRef={drawZoneRef}
+          enabled={selectionRectangleEnabled}
+        />
       </div>
       <div
         style={{
@@ -547,8 +551,16 @@ const CanvasEditor = () => {
           <div>
             <button
               onClick={() => {
-                // eslint-disable-next-line no-alert
-                window.alert("not implemented");
+                if (selectionRectangleEnabled) {
+                  selectionRectangleEnabledSetter(false);
+                } else {
+                  selectionRectangleEnabledSetter(true);
+                }
+              }}
+              style={{
+                backgroundColor: selectionRectangleEnabled
+                  ? "green"
+                  : "inherit",
               }}
             >
               Selection rectangle
@@ -585,41 +597,103 @@ const CanvasEditor = () => {
   );
 };
 
-const SelectionRectangle = () => {
+const SelectionRectangle = ({ drawZoneRef, enabled }) => {
+  const [x, xSetter] = useState(0);
+  const [y, ySetter] = useState(0);
+  const [width, widthSetter] = useState(0);
+  const [height, heightSetter] = useState(0);
   const selectionRectangleCanvasRef = useRef();
-  useSignalEffect(() => {
+  const moveStartInfoRef = useRef();
+
+  useEffect(() => {
+    if (!enabled) {
+      return null;
+    }
+    const drawZone = drawZoneRef.current;
+    const onmousedown = (e) => {
+      e.preventDefault();
+      const drawZoneRect = drawZone.getBoundingClientRect();
+      const startX = Math.round(drawZoneRect.left);
+      const startY = Math.round(drawZoneRect.top);
+      moveStartInfoRef.current = {
+        startX,
+        startY,
+        startRelativeX: e.clientX - startX,
+        startRelativeY: e.clientY - startY,
+      };
+      xSetter(0);
+      widthSetter(1);
+      ySetter(0);
+      heightSetter(1);
+    };
+    const onmousemove = (e) => {
+      const moveStartInfo = moveStartInfoRef.current;
+      if (!moveStartInfo) {
+        return;
+      }
+      const { startX, startY, startRelativeX, startRelativeY } = moveStartInfo;
+      const relativeX = e.clientX - startX;
+      const relativeY = e.clientY - startY;
+      const moveX = relativeX - startRelativeX;
+      const moveY = relativeY - startRelativeY;
+      if (relativeX > startRelativeX) {
+        xSetter(startRelativeX);
+        widthSetter(moveX);
+      } else {
+        xSetter(startRelativeX + moveX);
+        widthSetter(-moveX);
+      }
+      if (relativeY > startRelativeY) {
+        ySetter(startRelativeY);
+        heightSetter(moveY);
+      } else {
+        ySetter(startRelativeY + moveY);
+        heightSetter(-moveY);
+      }
+    };
+    const onmouseup = () => {
+      moveStartInfoRef.current = null;
+    };
+    drawZone.addEventListener("mousedown", onmousedown);
+    document.addEventListener("mousemove", onmousemove);
+    document.addEventListener("mouseup", onmouseup);
+    return () => {
+      drawZone.removeEventListener("mousedown", onmousedown);
+      document.removeEventListener("mousemove", onmousemove);
+      document.removeEventListener("mouseup", onmouseup);
+    };
+  }, [enabled]);
+
+  useLayoutEffect(() => {
     const selectionRectangleCanvas = selectionRectangleCanvasRef.current;
     const context = selectionRectangleCanvas.getContext("2d");
-    const selectionRectangle = selectionRectangleFacade.signal.value;
+    selectionRectangleCanvas.width = selectionRectangleCanvas.offsetWidth;
+    selectionRectangleCanvas.height = selectionRectangleCanvas.offsetHeight;
     context.clearRect(
       0,
       0,
       selectionRectangleCanvas.width,
       selectionRectangleCanvas.height,
     );
-    if (!selectionRectangle) {
+    if (!enabled) {
       return;
     }
     context.save();
     context.beginPath();
-    context.rect(
-      selectionRectangle.x,
-      selectionRectangle.y,
-      selectionRectangle.width,
-      selectionRectangle.height,
-    );
+    context.rect(x, y, width, height);
     context.globalAlpha = 0.8;
     context.lineWidth = 1;
-    context.strokeStyle = selectionRectangleFacade.borderColor;
+    context.strokeStyle = "orange";
     context.stroke();
     context.closePath();
     context.restore();
-  });
+  }, [enabled, x, y, width, height]);
 
   return (
     <canvas
       ref={selectionRectangleCanvasRef}
       style={{
+        pointerEvents: "none",
         position: "absolute",
         left: "0",
         width: "100%",
