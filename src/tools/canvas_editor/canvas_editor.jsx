@@ -274,10 +274,16 @@ const CanvasEditor = () => {
         }}
         onDragOver={(e) => {
           e.preventDefault();
+          const [firstItem] = e.dataTransfer.items;
+          if (!firstItem || firstItem.kind !== "file") {
+            e.dataTransfer.dropEffect = "none";
+            return;
+          }
         }}
         onDrop={(e) => {
           e.preventDefault();
-          const file = e.dataTransfer.items[0].getAsFile();
+          const [firstItem] = e.dataTransfer.items;
+          const file = firstItem.getAsFile();
           const objectUrl = URL.createObjectURL(file);
           addDrawing({
             url: objectUrl,
