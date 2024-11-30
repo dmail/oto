@@ -233,18 +233,19 @@ const CanvasEditor = () => {
       }
       const activeDrawing = activeDrawingSignal.value;
       if (activeDrawing && document.activeElement.tagName !== "INPUT") {
+        const moveValue = keydownEvent.shiftKey ? 10 : 1;
         if (keydownEvent.key === "ArrowLeft") {
           keydownEvent.preventDefault();
-          moveActiveDrawingRelative(-1);
+          moveActiveDrawingRelative(-moveValue);
         } else if (keydownEvent.key === "ArrowRight") {
           keydownEvent.preventDefault();
-          moveActiveDrawingRelative(1);
+          moveActiveDrawingRelative(moveValue);
         } else if (keydownEvent.key === "ArrowUp") {
           keydownEvent.preventDefault();
-          moveActiveDrawingRelative(0, -1);
+          moveActiveDrawingRelative(0, -moveValue);
         } else if (keydownEvent.key === "ArrowDown") {
           keydownEvent.preventDefault();
-          moveActiveDrawingRelative(0, +1);
+          moveActiveDrawingRelative(0, moveValue);
         } else if (keydownEvent.key === "Backspace") {
           removeDrawing(activeDrawing);
         }
