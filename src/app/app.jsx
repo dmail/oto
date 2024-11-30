@@ -39,6 +39,8 @@ export const App = () => {
   const heroElementRef = useRef();
   const weaponElementRef = useRef();
   const enemyElementRef = useRef();
+  const [heroHp, heroHpSetter] = useState(40);
+  const [heroMaxHp] = useState(40);
 
   const [playHeroMoveToAct] = useElementAnimation({
     id: "hero_move_to_act",
@@ -60,11 +62,9 @@ export const App = () => {
     id: "weapon_translation",
     elementRef: weaponElementRef,
     from: {
-      mirrorX: true,
       x: 25,
     },
     to: {
-      mirrorX: true,
       x: -15,
     },
     duration: 200,
@@ -129,6 +129,7 @@ export const App = () => {
     await new Promise((resolve) => setTimeout(resolve, 150));
     heroDigitsVisibleSetter(true);
     await playPartyMemberDamage();
+    heroHpSetter((hp) => hp - 26);
     heroDigitsVisibleSetter(false);
     turnStateRef.current = "idle";
   };
@@ -239,7 +240,7 @@ export const App = () => {
               }}
             >
               <div style={{ height: "20px", width: "120px" }}>
-                <Lifebar value={40} max={40} />
+                <Lifebar value={heroHp} max={heroMaxHp} />
               </div>
               <div style={{ width: "48px", height: "48px" }}>
                 <SwordAIcon />
