@@ -218,6 +218,8 @@ export const App = () => {
             width: "100%",
             background: "black",
             padding: "1px",
+            display: "flex",
+            justifyContent: "center",
           }}
         >
           <div
@@ -226,21 +228,20 @@ export const App = () => {
               border: "2px solid white",
               padding: "2px",
               height: "100%",
-              width: "50%",
-              margin: "auto",
             }}
           >
             <div
               style={{
                 display: "flex",
                 height: "100%",
+                alignItems: "center",
                 padding: "4px",
               }}
             >
               <div style={{ height: "20px", width: "120px" }}>
                 <Lifebar value={40} max={40} />
               </div>
-              <div style={{ width: "20px" }}>
+              <div style={{ width: "48px", height: "48px" }}>
                 <SwordAIcon />
               </div>
             </div>
