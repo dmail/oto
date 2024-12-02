@@ -1,12 +1,6 @@
 import { batch, computed, effect, signal } from "@preact/signals";
 import { render } from "preact";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { useDrawImage } from "../../app/hooks/use_draw_image.js";
 import { useImage } from "../../app/hooks/use_image.js";
 import { EyeClosedIconSvg } from "./eye_closed_icon.jsx";
@@ -64,6 +58,28 @@ const readFileAsText = async (file) => {
   });
   reader.readAsText(file);
   return fileContentPromise;
+};
+const imageFromImageFileData = async (imageFileData) => {
+  const imageObjectUrl = URL.createObjectURL(imageFileData);
+  const image = new Image();
+  return new Promise((resolve) => {
+    const onload = () => {
+      const canvas = document.createElement("canvas");
+      const context = canvas.getContext("2d");
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0);
+      resolve({
+        image,
+        width: image.naturalWidth,
+        height: image.naturalHeight,
+        dataUrl: canvas.toDataURL(),
+      });
+    };
+    image.addEventListener("load", onload);
+    image.src = imageObjectUrl;
+  });
 };
 const anonymousProjectFile = await createFile("anonymous.json");
 const drawingsSignal = signal([]);
@@ -289,7 +305,9 @@ const CanvasEditor = () => {
           overflow: "scroll",
           cursor: grabKeyIsDown
             ? "grab"
-            : colorPickerEnabled || rectangleSelectionToolIsActive
+            : colorPickerEnabled ||
+                rectangleSelectionToolIsActive ||
+                magicWandSelectionToolIsActive
               ? "crosshair"
               : "default",
         }}
@@ -301,13 +319,15 @@ const CanvasEditor = () => {
             return;
           }
         }}
-        onDrop={(e) => {
+        onDrop={async (e) => {
           e.preventDefault();
           const [firstItem] = e.dataTransfer.items;
           const file = firstItem.getAsFile();
-          const objectUrl = URL.createObjectURL(file);
+          const { dataUrl, width, height } = await imageFromImageFileData(file);
           addDrawing({
-            url: objectUrl,
+            width,
+            height,
+            url: dataUrl,
           });
         }}
         onMouseDown={(e) => {
@@ -337,6 +357,23 @@ const CanvasEditor = () => {
               ).data;
               colorPickedSetter(`${pixel[0]},${pixel[1]},${pixel[2]}`);
               return;
+            }
+            if (magicWandSelectionToolIsActive) {
+              const canvas = drawing.elementRef.current;
+              const context = canvas.getContext("2d", {
+                willReadFrequently: true,
+              });
+              const pixel = context.getImageData(
+                e.offsetX,
+                e.offsetY,
+                1,
+                1,
+              ).data;
+
+              // now select all pixels
+              // - remove all these pixels from the current layer (make them transparent)
+              // - insert a layer with these pixels close to the current layer
+              // - we can then decide to remove that layer, move it, ...
             }
             setActiveDrawing(drawing);
             startXRef.current = drawing.x;
@@ -420,21 +457,7 @@ const DrawingFacade = ({ drawing }) => {
     const { url, opacity } = drawing;
     return (
       <DrawingContainer drawing={drawing}>
-        <ImageDrawing
-          url={url}
-          opacity={opacity}
-          onDraw={({ width, height, canvas }) => {
-            setDrawingProps(drawing, {
-              ...(url.startsWith("data")
-                ? null
-                : {
-                    width,
-                    height,
-                    url: canvas.toDataURL(),
-                  }),
-            });
-          }}
-        />
+        <ImageDrawing url={url} opacity={opacity} />
       </DrawingContainer>
     );
   }
@@ -448,9 +471,6 @@ const DrawingFacade = ({ drawing }) => {
           opacity={opacity}
           cellWidth={cellWidth}
           cellHeight={cellHeight}
-          onDraw={() => {
-            setDrawingProps(drawing, {});
-          }}
         />
       </DrawingContainer>
     );
@@ -459,7 +479,7 @@ const DrawingFacade = ({ drawing }) => {
 };
 
 const DrawingContainer = ({ drawing, children }) => {
-  const { isActive, x, y, zIndex } = drawing;
+  const { isActive, x, y } = drawing;
   const elementRef = useRef();
   drawing.elementRef = elementRef;
 
@@ -473,7 +493,6 @@ const DrawingContainer = ({ drawing, children }) => {
       style={{
         outline: isActive ? "2px dotted black" : "",
         position: "absolute",
-        zIndex,
         left: `${x}px`,
         top: `${y}px`,
       }}
@@ -483,14 +502,7 @@ const DrawingContainer = ({ drawing, children }) => {
   );
 };
 
-const GridDrawing = ({
-  width,
-  height,
-  opacity,
-  cellWidth,
-  cellHeight,
-  onDraw,
-}) => {
+const GridDrawing = ({ width, height, opacity, cellWidth, cellHeight }) => {
   const canvasRef = useRef();
 
   useLayoutEffect(() => {
@@ -525,10 +537,7 @@ const GridDrawing = ({
       yCellIndex++;
     }
     context.restore();
-    if (onDraw) {
-      onDraw();
-    }
-  }, [opacity, width, height, cellWidth, cellHeight, onDraw]);
+  }, [opacity, width, height, cellWidth, cellHeight]);
 
   return (
     <canvas
@@ -541,7 +550,7 @@ const GridDrawing = ({
     ></canvas>
   );
 };
-const ImageDrawing = ({ url, width, height, opacity, onDraw }) => {
+const ImageDrawing = ({ url, width, height, opacity }) => {
   const canvasRef = useRef();
   const [image] = useImage(url);
   const zoom = zoomSignal.value;
@@ -554,13 +563,6 @@ const ImageDrawing = ({ url, width, height, opacity, onDraw }) => {
     width: sourceWidth,
     height: sourceHeight,
     opacity,
-    onDraw: useCallback(() => {
-      onDraw({
-        width: image.naturalWidth,
-        height: image.naturalHeight,
-        canvas: canvasRef.current,
-      });
-    }, [image, width, height]),
   });
   return (
     <canvas
@@ -608,8 +610,12 @@ const Toolbar = ({
                   multiple: false,
                 });
                 const fileData = await fileHandle.getFile();
+                const { dataUrl, width, height } =
+                  await imageFromImageFileData(fileData);
                 addDrawing({
-                  url: URL.createObjectURL(fileData),
+                  url: dataUrl,
+                  width,
+                  height,
                 });
               } catch (e) {
                 if (e.name === "AbortError") {
