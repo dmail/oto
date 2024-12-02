@@ -11,6 +11,8 @@ import { useDrawImage } from "../../app/hooks/use_draw_image.js";
 import { useImage } from "../../app/hooks/use_image.js";
 import { EyeClosedIconSvg } from "./eye_closed_icon.jsx";
 import { EyeIconSvg } from "./eye_icon.jsx";
+import { MagicWandSelectionIconSvg } from "./magic_wand_selection_icon.jsx";
+import { RectangleSelectionIconSvg } from "./rectangle_selection_icon.jsx";
 import { SelectionRectangle } from "./selection_rectangle.jsx";
 import { TrashIconSvg } from "./trash_icon.jsx";
 
@@ -205,9 +207,25 @@ const removeDrawing = (drawing) => {
 const CanvasEditor = () => {
   const drawings = drawingsSignal.value;
   const [colorPickerEnabled, colorPickerEnabledSetter] = useState(false);
-  const [selectionRectangleEnabled, selectionRectangleEnabledSetter] =
-    useState(false);
   const [colorPicked, colorPickedSetter] = useState();
+
+  const [activeSelectionTool, setActiveSelectionTool] = useState("none");
+  const rectangleSelectionToolIsActive =
+    activeSelectionTool === "selection_rectangle";
+  const magicWandSelectionToolIsActive = activeSelectionTool === "magic_wand";
+  const activateRectangleSelectionTool = () => {
+    setActiveSelectionTool("selection_rectangle");
+  };
+  const deactivateRectangleSelectionTool = () => {
+    setActiveSelectionTool("none");
+  };
+  const activateMagicWandSelectionTool = () => {
+    setActiveSelectionTool("magic_wand");
+  };
+  const deactivateMagicWandSelectionTool = () => {
+    setActiveSelectionTool("none");
+  };
+
   const [mousemoveOrigin, mousemoveOriginSetter] = useState();
   const [grabKeyIsDown, grabKeyIsDownSetter] = useState(false);
   const startXRef = useRef(0);
@@ -271,7 +289,7 @@ const CanvasEditor = () => {
           overflow: "scroll",
           cursor: grabKeyIsDown
             ? "grab"
-            : colorPickerEnabled || selectionRectangleEnabled
+            : colorPickerEnabled || rectangleSelectionToolIsActive
               ? "crosshair"
               : "default",
         }}
@@ -293,7 +311,7 @@ const CanvasEditor = () => {
           });
         }}
         onMouseDown={(e) => {
-          if (selectionRectangleEnabled) {
+          if (activeSelectionTool !== "none") {
             return;
           }
           const elements = document.elementsFromPoint(e.clientX, e.clientY);
@@ -338,7 +356,7 @@ const CanvasEditor = () => {
           if (!mousemoveOrigin) {
             return;
           }
-          if (selectionRectangleEnabled) {
+          if (activeSelectionTool !== "none") {
             return;
           }
           const originX = mousemoveOrigin.x;
@@ -361,7 +379,7 @@ const CanvasEditor = () => {
         })}
         <SelectionRectangle
           drawZoneRef={drawZoneRef}
-          enabled={selectionRectangleEnabled}
+          enabled={rectangleSelectionToolIsActive}
         />
       </div>
       <div
@@ -376,11 +394,15 @@ const CanvasEditor = () => {
       >
         <Toolbar
           drawings={drawings}
-          selectionRectangleEnabled={selectionRectangleEnabled}
+          rectangleSelectionToolIsActive={rectangleSelectionToolIsActive}
+          magicWandSelectionToolIsActive={magicWandSelectionToolIsActive}
+          activateMagicWandSelectionTool={activateMagicWandSelectionTool}
+          deactivateMagicWandSelectionTool={deactivateMagicWandSelectionTool}
+          activateRectangleSelectionTool={activateRectangleSelectionTool}
+          deactivateRectangleSelectionTool={deactivateRectangleSelectionTool}
           colorPicked={colorPicked}
           colorPickerEnabled={colorPickerEnabled}
           colorPickerEnabledSetter={colorPickerEnabledSetter}
-          selectionRectangleEnabledSetter={selectionRectangleEnabledSetter}
         />
       </div>
     </div>
@@ -554,11 +576,15 @@ const ImageDrawing = ({ url, width, height, opacity, onDraw }) => {
 
 const Toolbar = ({
   drawings,
-  selectionRectangleEnabled,
+  rectangleSelectionToolIsActive,
+  magicWandSelectionToolIsActive,
+  activateRectangleSelectionTool,
+  deactivateRectangleSelectionTool,
+  activateMagicWandSelectionTool,
+  deactivateMagicWandSelectionTool,
   colorPicked,
   colorPickerEnabled,
   colorPickerEnabledSetter,
-  selectionRectangleEnabledSetter,
 }) => {
   return (
     <>
@@ -624,6 +650,49 @@ const Toolbar = ({
       </fieldset>
       <fieldset>
         <legend>Tools</legend>
+
+        <button
+          onClick={() => {
+            if (rectangleSelectionToolIsActive) {
+              deactivateRectangleSelectionTool();
+            } else {
+              activateRectangleSelectionTool();
+            }
+          }}
+          style={{
+            padding: "0",
+            width: "24px",
+            height: "24px",
+            border: "none",
+            backgroundColor: rectangleSelectionToolIsActive
+              ? "green"
+              : "inherit",
+          }}
+        >
+          <RectangleSelectionIconSvg />
+        </button>
+
+        <button
+          onClick={() => {
+            if (magicWandSelectionToolIsActive) {
+              deactivateMagicWandSelectionTool();
+            } else {
+              activateMagicWandSelectionTool();
+            }
+          }}
+          style={{
+            padding: "0",
+            width: "24px",
+            height: "24px",
+            border: "none",
+            backgroundColor: magicWandSelectionToolIsActive
+              ? "green"
+              : "inherit",
+          }}
+        >
+          <MagicWandSelectionIconSvg />
+        </button>
+
         <div>
           <button
             onClick={() => {
@@ -631,7 +700,6 @@ const Toolbar = ({
                 colorPickerEnabledSetter(false);
               } else {
                 colorPickerEnabledSetter(true);
-                selectionRectangleEnabledSetter(false);
               }
             }}
             style={{
@@ -650,23 +718,6 @@ const Toolbar = ({
             }}
           ></span>
           <input type="text" readOnly value={colorPicked} />
-        </div>
-        <div>
-          <button
-            onClick={() => {
-              if (selectionRectangleEnabled) {
-                selectionRectangleEnabledSetter(false);
-              } else {
-                selectionRectangleEnabledSetter(true);
-                colorPickerEnabledSetter(false);
-              }
-            }}
-            style={{
-              backgroundColor: selectionRectangleEnabled ? "green" : "inherit",
-            }}
-          >
-            Selection rectangle
-          </button>
         </div>
       </fieldset>
       <fieldset>
