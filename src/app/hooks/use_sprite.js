@@ -3,6 +3,7 @@ import { useMemo } from "preact/hooks";
 import { useImage } from "./use_image.js";
 
 export const useSprite = ({
+  id,
   url,
   x,
   y,
@@ -12,8 +13,19 @@ export const useSprite = ({
   mirrorY,
   transparentColor,
 }) => {
-  x = parseInt(x);
-  y = parseInt(y);
+  if (x === undefined) {
+    x = 0;
+  } else {
+    x = parseInt(x);
+  }
+  if (y === undefined) {
+    y = 0;
+  } else {
+    y = parseInt(y);
+  }
+  if (id === "taurus") {
+    console.log({ url, x, y });
+  }
   width = parseInt(width);
   height = parseInt(height);
   if (transparentColor) {
@@ -77,7 +89,7 @@ export const useSprite = ({
       context.putImageData(imageData, 0, 0);
     }
     return canvas;
-  }, [image, mirrorX, mirrorY, shouldReplace, x, y, width, height]);
+  }, [id, image, mirrorX, mirrorY, shouldReplace, x, y, width, height]);
 
   return imageTransformed;
 };

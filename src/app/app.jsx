@@ -13,7 +13,7 @@ import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
 import { Lifebar } from "./components/lifebar/lifebar.jsx";
-import { FirstEnemy } from "./enemy/enemies.jsx";
+import { Taurus } from "./enemy/taurus.jsx";
 import { SwordA, SwordAIcon } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
 import { WhiteCurtain } from "./fight/white_curtain.jsx";
@@ -39,7 +39,18 @@ export const App = () => {
   const heroElementRef = useRef();
   const weaponElementRef = useRef();
   const enemyElementRef = useRef();
+
+  const [enemyHp, enemyHpSetter] = useState(100);
+  const [enemyDamage, enemyDamageSetter] = useState(null);
+  const decreaseEnemyHp = useCallback((value) => {
+    enemyHpSetter((hp) => hp - value);
+  }, []);
+  const [enemyHpMax] = useState(100);
   const [heroHp, heroHpSetter] = useState(40);
+  const [heroDamage, heroDamageSetter] = useState(null);
+  const decreaseHeroHp = useCallback((value) => {
+    heroHpSetter((hp) => hp - value);
+  }, []);
   const [heroMaxHp] = useState(40);
 
   const [playHeroMoveToAct] = useElementAnimation({
@@ -90,8 +101,6 @@ export const App = () => {
   const enemyDigitsElementRef = useRef();
   const heroDigitsElementRef = useRef();
   const [weaponIsVisible, weaponIsVisibleSetter] = useState(false);
-  const [enemyDigitsVisible, enemyDigitsVisibleSetter] = useState(false);
-  const [heroDigitsVisible, heroDigitsVisibleSetter] = useState(false);
   const [playEnemyDamage] = useDigitsDisplayAnimation({
     elementRef: enemyDigitsElementRef,
     duration: 300,
@@ -119,18 +128,19 @@ export const App = () => {
     weaponIsVisibleSetter(false);
     const moveBackToPositionPromise = playPartyMemberMoveBackToPosition();
     await new Promise((resolve) => setTimeout(resolve, 200));
-    enemyDigitsVisibleSetter(true);
+    enemyDamageSetter(25);
     await Promise.all([playEnemyDamage(), moveBackToPositionPromise]);
-    enemyDigitsVisibleSetter(false);
+    enemyDamageSetter(null);
+    decreaseEnemyHp(25);
     // here we could display a message saying what attack enemy performs
     await new Promise((resolve) => setTimeout(resolve, 150));
     await playEnemyGlow();
     await playPartyMemberHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
-    heroDigitsVisibleSetter(true);
+    heroDamageSetter(15);
     await playPartyMemberDamage();
-    heroHpSetter((hp) => hp - 26);
-    heroDigitsVisibleSetter(false);
+    heroDamageSetter(null);
+    decreaseHeroHp(15);
     turnStateRef.current = "idle";
   };
 
@@ -170,7 +180,11 @@ export const App = () => {
             }}
           >
             <Box name="enemy_box" height={100} width={100} x="center" y={50}>
-              <FirstEnemy elementRef={enemyElementRef} />
+              <Taurus
+                elementRef={enemyElementRef}
+                hp={enemyHp}
+                hpMax={enemyHpMax}
+              />
               <Box
                 x="center"
                 y="center"
@@ -184,11 +198,11 @@ export const App = () => {
               <Digits
                 name="enemy_digits"
                 elementRef={enemyDigitsElementRef}
-                visible={enemyDigitsVisible}
+                visible={enemyDamage !== null}
                 x="center"
                 y="center"
               >
-                14000
+                {enemyDamage}
               </Digits>
             </Box>
             <Box name="hero_box" width={25} height={25} x="center" y={170}>
@@ -200,13 +214,13 @@ export const App = () => {
               <Digits
                 name="party_member_digits"
                 elementRef={heroDigitsElementRef}
-                visible={heroDigitsVisible}
+                visible={heroDamage !== null}
                 x="center"
                 y="end"
                 // for some reason it's better centered with that
                 dx={2}
               >
-                26
+                {heroDamage}
               </Digits>
             </Box>
           </div>
