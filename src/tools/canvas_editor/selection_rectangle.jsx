@@ -110,35 +110,38 @@ export const SelectionRectangle = ({ drawZoneRef, enabled }) => {
     const startClientY = mousedownInfo.clientY;
     const moveX = mouseClientX - startClientX;
     const moveY = mouseClientY - startClientY;
+    const startX = startClientX - offsetLeft + scrollLeft;
+    const startY = startClientY - offsetTop + scrollTop;
     if (moveX === 0 && moveY === 0) {
-      x = mouseClientX + scrollLeft;
-      y = mouseClientY + offsetTop + scrollTop;
+      x = startX;
+      y = startY;
       width = 1;
       height = 1;
     } else {
       if (mouseClientX > startClientX) {
-        x = startClientX + offsetLeft;
+        x = startX;
         width = moveX;
       } else {
-        x = startClientX + scrollLeft + moveX;
+        x = startX + moveX;
         width = -moveX;
       }
       if (mouseClientY > startClientY) {
-        y = startClientY;
+        y = startY;
         height = moveY;
       } else {
-        y = startClientY + moveY;
+        y = startY + moveY;
         height = -moveY;
       }
     }
-    console.log({ x, mouseClientX, scrollLeft });
   }
 
   useLayoutEffect(() => {
     const selectionRectangleCanvas = selectionRectangleCanvasRef.current;
     const context = selectionRectangleCanvas.getContext("2d");
-    selectionRectangleCanvas.width = selectionRectangleCanvas.offsetWidth;
-    selectionRectangleCanvas.height = selectionRectangleCanvas.offsetHeight;
+    selectionRectangleCanvas.width =
+      selectionRectangleCanvas.parentNode.scrollWidth;
+    selectionRectangleCanvas.height =
+      selectionRectangleCanvas.parentNode.scrollHeight;
     context.clearRect(
       0,
       0,
@@ -209,13 +212,13 @@ export const SelectionRectangle = ({ drawZoneRef, enabled }) => {
         <span style={{ backgroundColor: "white" }}>{height}</span>
       </div>
       <canvas
+        name="rectangle_selection"
         ref={selectionRectangleCanvasRef}
         style={{
           pointerEvents: "none",
           position: "absolute",
           left: "0",
-          width: "100%",
-          height: "100%",
+          top: "0",
         }}
       ></canvas>
     </>
