@@ -11,6 +11,7 @@ import { useDrawImage } from "../../app/hooks/use_draw_image.js";
 import { useImage } from "../../app/hooks/use_image.js";
 import { EyeClosedIconSvg } from "./eye_closed_icon.jsx";
 import { EyeIconSvg } from "./eye_icon.jsx";
+import { SelectionRectangle } from "./selection_rectangle.jsx";
 import { TrashIconSvg } from "./trash_icon.jsx";
 
 const createFile = async (filename) => {
@@ -291,7 +292,6 @@ const CanvasEditor = () => {
             return;
           }
           const elements = document.elementsFromPoint(e.clientX, e.clientY);
-          const drawings = drawingsSignal.value;
           const drawing = drawings.find((drawing) => {
             return elements[0] === drawing.elementRef?.current;
           });
@@ -503,197 +503,7 @@ const CanvasEditor = () => {
   );
 };
 
-const SelectionRectangle = ({ drawZoneRef, enabled }) => {
-  const [x, xSetter] = useState(0);
-  const [y, ySetter] = useState(0);
-  const [width, widthSetter] = useState(0);
-  const [height, heightSetter] = useState(0);
-  const selectionRectangleCanvasRef = useRef();
-  const moveStartInfoRef = useRef();
-
-  const [interactedOnce, interactedOnceSetter] = useState(false);
-  const [mouseIsDown, mouseIsDownSetter] = useState(false);
-  const [mouseInsideDrawZone, mouseInsideDrawZoneSetter] = useState(false);
-  const [mouseRelativeX, mouseRelativeXSetter] = useState(-1);
-  const [mouseRelativeY, mouseRelativeYSetter] = useState(-1);
-
-  useEffect(() => {
-    if (!enabled) {
-      return null;
-    }
-    const drawZone = drawZoneRef.current;
-    const onmousedown = (e) => {
-      mouseIsDownSetter(true);
-      interactedOnceSetter(true);
-      e.preventDefault();
-      const drawZoneRect = drawZone.getBoundingClientRect();
-      const startX = Math.round(drawZoneRect.left);
-      const startY = Math.round(drawZoneRect.top);
-      const startRelativeX = e.clientX - startX;
-      const startRelativeY = e.clientY - startY;
-      moveStartInfoRef.current = {
-        startX,
-        startY,
-        startRelativeX,
-        startRelativeY,
-      };
-      mouseRelativeXSetter(startRelativeX);
-      mouseRelativeYSetter(startRelativeY);
-      xSetter(startRelativeX);
-      widthSetter(1);
-      ySetter(startRelativeY);
-      heightSetter(1);
-    };
-    const onmousemove = (e) => {
-      const drawZoneRect = drawZone.getBoundingClientRect();
-      const moveStartInfo = moveStartInfoRef.current;
-      if (!moveStartInfo) {
-        const relativeX = e.clientX - drawZoneRect.left;
-        const relativeY = e.clientY - drawZoneRect.top;
-        mouseRelativeXSetter(relativeX);
-        mouseRelativeYSetter(relativeY);
-        return;
-      }
-      const { startX, startY, startRelativeX, startRelativeY } = moveStartInfo;
-      const relativeX = e.clientX - startX;
-      const relativeY = e.clientY - startY;
-      mouseRelativeXSetter(relativeX);
-      mouseRelativeYSetter(relativeY);
-      const moveX = relativeX - startRelativeX;
-      const moveY = relativeY - startRelativeY;
-      if (relativeX > startRelativeX) {
-        xSetter(startRelativeX);
-        widthSetter(moveX);
-      } else {
-        xSetter(startRelativeX + moveX);
-        widthSetter(-moveX);
-      }
-      if (relativeY > startRelativeY) {
-        ySetter(startRelativeY);
-        heightSetter(moveY);
-      } else {
-        ySetter(startRelativeY + moveY);
-        heightSetter(-moveY);
-      }
-    };
-    const onmouseup = () => {
-      mouseIsDownSetter(false);
-      moveStartInfoRef.current = null;
-    };
-
-    drawZone.addEventListener("mousedown", onmousedown);
-    document.addEventListener("mousemove", onmousemove);
-    document.addEventListener("mouseup", onmouseup);
-
-    const onmouseenter = () => {
-      mouseInsideDrawZoneSetter(true);
-    };
-    const onmouseleave = () => {
-      mouseInsideDrawZoneSetter(false);
-    };
-    drawZone.addEventListener("mouseenter", onmouseenter);
-    drawZone.addEventListener("mouseleave", onmouseleave);
-    return () => {
-      drawZone.removeEventListener("mousedown", onmousedown);
-      document.removeEventListener("mousemove", onmousemove);
-      document.removeEventListener("mouseup", onmouseup);
-
-      drawZone.removeEventListener("mouseenter", onmouseenter);
-      drawZone.removeEventListener("mouseleave", onmouseenter);
-    };
-  }, [enabled]);
-
-  useLayoutEffect(() => {
-    const selectionRectangleCanvas = selectionRectangleCanvasRef.current;
-    const context = selectionRectangleCanvas.getContext("2d");
-    selectionRectangleCanvas.width = selectionRectangleCanvas.offsetWidth;
-    selectionRectangleCanvas.height = selectionRectangleCanvas.offsetHeight;
-    context.clearRect(
-      0,
-      0,
-      selectionRectangleCanvas.width,
-      selectionRectangleCanvas.height,
-    );
-    if (!enabled) {
-      return;
-    }
-    context.save();
-    context.beginPath();
-    context.rect(x, y, width, height);
-    context.globalAlpha = 0.8;
-    context.lineWidth = 1;
-    context.strokeStyle = "orange";
-    context.stroke();
-    context.closePath();
-    context.restore();
-  }, [enabled, x, y, width, height]);
-
-  return (
-    <>
-      <div
-        name="mouse_xy"
-        style={{
-          display:
-            enabled && !mouseIsDown && mouseInsideDrawZone ? "block" : "none",
-          position: "absolute",
-          left: `${mouseRelativeX}px`,
-          top: `${mouseRelativeY}px`,
-          fontSize: "10px",
-        }}
-      >
-        <span style={{ backgroundColor: "white" }}>{mouseRelativeX}</span>
-        <br />
-        <span style={{ backgroundColor: "white" }}>{mouseRelativeY}</span>
-      </div>
-      <div
-        name="rectangle_xy"
-        style={{
-          display: enabled && interactedOnce ? "block" : "none",
-          position: "absolute",
-          left: `${x}px`,
-          top: `${y}px`,
-          fontSize: "10px",
-        }}
-      >
-        <span style={{ backgroundColor: "white" }}>{x}</span>
-        <br />
-        <span style={{ backgroundColor: "white" }}>{y}</span>
-      </div>
-      <div
-        name="rectangle_size"
-        style={{
-          display: enabled && interactedOnce ? "block" : "none",
-          position: "absolute",
-          left: `${x + width}px`,
-          top: `${y + height}px`,
-          fontSize: "10px",
-        }}
-      >
-        <span style={{ backgroundColor: "white" }}>{width}</span>
-        <br />
-        <span style={{ backgroundColor: "white" }}>{height}</span>
-      </div>
-      <canvas
-        ref={selectionRectangleCanvasRef}
-        style={{
-          pointerEvents: "none",
-          position: "absolute",
-          left: "0",
-          width: "100%",
-          height: "100%",
-        }}
-      ></canvas>
-    </>
-  );
-};
-
 const DrawingFacade = ({ drawing }) => {
-  let { offscreenCanvas } = drawing;
-  if (!offscreenCanvas) {
-    offscreenCanvas = drawing.offscreenCanvas =
-      document.createElement("canvas");
-  }
-
   const { isVisible } = drawing;
   if (!isVisible) {
     return null;
@@ -757,6 +567,161 @@ const DrawingContainer = ({ drawing, children }) => {
       }}
     >
       {children}
+    </div>
+  );
+};
+
+const GridDrawing = ({ width, height, opacity, cellWidth, cellHeight }) => {
+  const canvasRef = useRef();
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    // canvas.width = canvas.offsetWidth;
+    // canvas.height = canvas.offsetHeight;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.save();
+    context.globalAlpha = opacity;
+    const drawCell = (cellX, cellY, color) => {
+      context.beginPath();
+      // context.globalAlpha = 0.8;
+      // context.lineWidth = 1;
+      context.rect(cellX, cellY, cellWidth, cellHeight);
+      context.fillStyle = color;
+      context.fill();
+      context.closePath();
+    };
+    const xCellLastIndex = Math.ceil(canvas.width / cellWidth);
+    const yCellLastIndex = Math.ceil(canvas.height / cellHeight);
+    let xCellIndex = 0;
+    let yCellIndex = 0;
+    while (yCellIndex < yCellLastIndex) {
+      while (xCellIndex < xCellLastIndex) {
+        drawCell(
+          xCellIndex * cellWidth,
+          yCellIndex * cellHeight,
+          xCellIndex % 2 === yCellIndex % 2 ? "black" : "violet",
+        );
+        xCellIndex++;
+      }
+      xCellIndex = 0;
+      yCellIndex++;
+    }
+    context.restore();
+  }, [opacity, cellWidth, cellHeight]);
+
+  return <canvas ref={canvasRef} width={width} height={height}></canvas>;
+};
+
+const ImageDrawing = ({ url, width, height, opacity, onDraw }) => {
+  const canvasRef = useRef();
+  const [image] = useImage(url);
+  const zoom = zoomSignal.value;
+  const sourceWidth = image ? image.naturalWidth * zoom : 0;
+  const sourceHeight = image ? image.naturalHeight * zoom : 0;
+  useDrawImage(canvasRef.current, image, {
+    debug: true,
+    x: 0,
+    y: 0,
+    width: sourceWidth,
+    height: sourceHeight,
+    opacity,
+    onDraw: useCallback(() => {
+      onDraw({
+        url,
+        width,
+        height,
+        canvas: canvasRef.current,
+      });
+    }, [url, width, height]),
+  });
+  return <canvas ref={canvasRef} width={width} height={height}></canvas>;
+};
+
+const LayerListItem = ({ drawing }) => {
+  const isVisible = drawing.isVisible;
+  const canvasRef = useRef();
+  useDrawImage(canvasRef.current, drawing.offscreenCanvas);
+
+  return (
+    <div
+      style={{
+        width: "100%",
+        height: "35px",
+        border: "1px solid black",
+        display: "flex",
+        alignItems: "center",
+      }}
+    >
+      <button
+        style={{
+          width: "38px",
+          height: "100%",
+        }}
+        onClick={() => {
+          if (isVisible) {
+            hideDrawing(drawing);
+          } else {
+            showDrawing(drawing);
+          }
+        }}
+      >
+        <div style={{ display: "flex", flexDirection: "row" }}>
+          {isVisible ? <EyeIconSvg /> : <EyeClosedIconSvg />}
+        </div>
+      </button>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          background: drawing.isActive ? "lightblue" : "inherit",
+          display: "flex",
+          alignItems: "center",
+        }}
+        onClick={() => {
+          setActiveDrawing(drawing);
+        }}
+      >
+        <div
+          style={{
+            width: "40px",
+            height: "100%",
+            paddingTop: "2px",
+            paddingBottom: "2px",
+            marginLeft: "5px",
+          }}
+        >
+          <canvas
+            ref={canvasRef}
+            style={{
+              width: "100%",
+              height: "100%",
+              border: "1px solid black",
+            }}
+          ></canvas>
+        </div>
+        <div
+          style={{
+            flex: 1,
+          }}
+        ></div>
+        <button
+          style={{
+            width: "24px",
+            height: "100%",
+            border: "none",
+            padding: 0,
+            paddingLeft: "2px",
+            paddingRight: "2px",
+            background: "none",
+          }}
+          onClick={() => {
+            removeDrawing(drawing);
+          }}
+        >
+          <TrashIconSvg />
+        </button>
+      </div>
     </div>
   );
 };
@@ -932,170 +897,6 @@ const GridLayerForm = ({ activeLayer }) => {
         ></input>
       </label>
     </>
-  );
-};
-
-const ImageDrawing = ({ offscreenCanvas, url, opacity, onDraw }) => {
-  const [image] = useImage(url);
-  const width = image ? image.naturalWidth : 0;
-  const height = image ? image.naturalHeight : 0;
-  useDrawImage(offscreenCanvas, image, {
-    debug: true,
-    x: 0,
-    y: 0,
-    width,
-    height,
-    opacity,
-    onDraw: useCallback(() => {
-      onDraw({
-        url,
-        width,
-        height,
-        canvas: offscreenCanvas,
-      });
-    }, [url, width, height]),
-  });
-  return <Drawing source={offscreenCanvas} />;
-};
-
-const GridDrawing = ({ offscreenCanvas, opacity, cellWidth, cellHeight }) => {
-  useLayoutEffect(() => {
-    const context = offscreenCanvas.getContext("2d");
-    // canvas.width = canvas.offsetWidth;
-    // canvas.height = canvas.offsetHeight;
-    context.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
-    context.save();
-    context.globalAlpha = opacity;
-    const drawCell = (cellX, cellY, color) => {
-      context.beginPath();
-      // context.globalAlpha = 0.8;
-      // context.lineWidth = 1;
-      context.rect(cellX, cellY, cellWidth, cellHeight);
-      context.fillStyle = color;
-      context.fill();
-      context.closePath();
-    };
-    const xCellLastIndex = Math.ceil(offscreenCanvas.width / cellWidth);
-    const yCellLastIndex = Math.ceil(offscreenCanvas.height / cellHeight);
-    let xCellIndex = 0;
-    let yCellIndex = 0;
-    while (yCellIndex < yCellLastIndex) {
-      while (xCellIndex < xCellLastIndex) {
-        drawCell(
-          xCellIndex * cellWidth,
-          yCellIndex * cellHeight,
-          xCellIndex % 2 === yCellIndex % 2 ? "black" : "violet",
-        );
-        xCellIndex++;
-      }
-      xCellIndex = 0;
-      yCellIndex++;
-    }
-    context.restore();
-  }, [opacity, cellWidth, cellHeight]);
-  return <Drawing source={offscreenCanvas} />;
-};
-
-const Drawing = ({ source }) => {
-  const canvasRef = useRef();
-  const zoom = zoomSignal.value;
-  const width = source ? source.width * zoom : 0;
-  const height = source ? source.height * zoom : 0;
-  useDrawImage(canvasRef.current, source, {
-    debug: true,
-    x: 0,
-    y: 0,
-    width,
-    height,
-  });
-  return <canvas ref={canvasRef} width={width} height={height}></canvas>;
-};
-
-const LayerListItem = ({ drawing }) => {
-  const isVisible = drawing.isVisible;
-  const canvasRef = useRef();
-  useDrawImage(canvasRef.current, drawing.offscreenCanvas);
-
-  return (
-    <div
-      style={{
-        width: "100%",
-        height: "35px",
-        border: "1px solid black",
-        display: "flex",
-        alignItems: "center",
-      }}
-    >
-      <button
-        style={{
-          width: "38px",
-          height: "100%",
-        }}
-        onClick={() => {
-          if (isVisible) {
-            hideDrawing(drawing);
-          } else {
-            showDrawing(drawing);
-          }
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "row" }}>
-          {isVisible ? <EyeIconSvg /> : <EyeClosedIconSvg />}
-        </div>
-      </button>
-      <div
-        style={{
-          width: "100%",
-          height: "100%",
-          background: drawing.isActive ? "lightblue" : "inherit",
-          display: "flex",
-          alignItems: "center",
-        }}
-        onClick={() => {
-          setActiveDrawing(drawing);
-        }}
-      >
-        <div
-          style={{
-            width: "40px",
-            height: "100%",
-            paddingTop: "2px",
-            paddingBottom: "2px",
-            marginLeft: "5px",
-          }}
-        >
-          <canvas
-            ref={canvasRef}
-            style={{
-              width: "100%",
-              height: "100%",
-              border: "1px solid black",
-            }}
-          ></canvas>
-        </div>
-        <div
-          style={{
-            flex: 1,
-          }}
-        ></div>
-        <button
-          style={{
-            width: "24px",
-            height: "100%",
-            border: "none",
-            padding: 0,
-            paddingLeft: "2px",
-            paddingRight: "2px",
-            background: "none",
-          }}
-          onClick={() => {
-            removeDrawing(drawing);
-          }}
-        >
-          <TrashIconSvg />
-        </button>
-      </div>
-    </div>
   );
 };
 
