@@ -355,7 +355,7 @@ const CanvasEditor = () => {
             });
           if (drawing) {
             if (colorPickerEnabled) {
-              const canvas = drawing.elementRef.current;
+              const canvas = drawing.elementRef.current.querySelector("canvas");
               const context = canvas.getContext("2d", {
                 willReadFrequently: true,
               });

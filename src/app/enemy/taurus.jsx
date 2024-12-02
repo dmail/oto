@@ -2,7 +2,7 @@ import { useRef } from "preact/hooks";
 import { useDrawImage } from "../hooks/use_draw_image.js";
 import { useSprite } from "../hooks/use_sprite.js";
 
-const enemySpritesheetUrl = new URL("./enemy_spritesheet.png", import.meta.url);
+const enemySpritesheetUrl = new URL("./enemy_sprite.png", import.meta.url);
 const hpAbove =
   (percentage) =>
   ({ hp, hpMax }) => {
@@ -15,20 +15,20 @@ const states = {
   full_life: {
     hp: hpAbove(50),
     url: enemySpritesheetUrl,
-    x: 450,
-    y: 90,
+    x: 449,
+    y: 98,
   },
   mid_life: {
     hp: hpAbove(25),
     url: enemySpritesheetUrl,
-    x: 520,
-    y: 90,
+    x: 514,
+    y: 98,
   },
   low_life: {
-    hp: hpAbove(0),
+    hp: () => true,
     url: enemySpritesheetUrl,
-    x: 240,
-    y: 90,
+    x: 579,
+    y: 98,
   },
 };
 
@@ -42,9 +42,9 @@ export const Taurus = ({ elementRef = useRef(), hp, hpMax, ...props }) => {
     url,
     x,
     y,
-    width: 70,
-    height: 70,
-    transparentColor: [0, 128, 128],
+    width: 64,
+    height: 64,
+    transparentColor: [0, 202, 202],
   });
   useDrawImage(elementRef.current, sprite);
 
