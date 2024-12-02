@@ -114,6 +114,13 @@ const setDrawingZIndex = (drawing, zIndex) => {
   drawing.zIndex = zIndex;
   drawingsSignal.value = [...drawingsSignal.value];
 };
+const setDrawingOpacity = (drawing, opacity) => {
+  if (drawing.opacity === opacity) {
+    return;
+  }
+  drawing.opacity = opacity;
+  drawingsSignal.value = [...drawingsSignal.value];
+};
 const setDrawingUrl = (drawing, url) => {
   drawing.url = url;
   drawingsSignal.value = [...drawingsSignal.value];
@@ -203,6 +210,7 @@ const addDrawing = ({ url, x = 0, y = 0 }) => {
     zIndex: getHighestZIndex(),
     isVisible: true,
     isActive: false,
+    opacity: 1,
   };
   const drawings = drawingsSignal.value;
   drawingsSignal.value = [...drawings, drawing];
@@ -504,6 +512,25 @@ const CanvasEditor = () => {
           >
             Move back
           </button>
+          <br />
+          <label>
+            Transparence
+            <input
+              type="number"
+              disabled={!activeDrawingSignal.value}
+              value={activeDrawingSignal.value?.opacity}
+              min={0.1}
+              max={1}
+              step={0.1}
+              style={{ width: "4em" }}
+              onInput={(e) => {
+                setDrawingOpacity(
+                  activeDrawingSignal.value,
+                  e.target.valueAsNumber,
+                );
+              }}
+            ></input>
+          </label>
           <br />
           <label>
             Url
@@ -932,6 +959,7 @@ const Drawing = ({ image, url, x, y, isActive, zIndex, drawing }) => {
   const zoom = zoomSignal.value;
   const width = image.naturalWidth * zoom;
   const height = image.naturalHeight * zoom;
+  const opacity = drawing.opacity;
   drawing.elementRef = canvasRef;
   useDrawImage(canvasRef, image, {
     debug: true,
@@ -939,6 +967,7 @@ const Drawing = ({ image, url, x, y, isActive, zIndex, drawing }) => {
     y: 0,
     width,
     height,
+    opacity,
     onDraw: useCallback(() => {
       if (url.startsWith("data")) {
         return;
@@ -947,7 +976,7 @@ const Drawing = ({ image, url, x, y, isActive, zIndex, drawing }) => {
       drawing.height = height;
       drawing.url = canvasRef.current.toDataURL();
       drawingsSignal.value = [...drawingsSignal.value];
-    }, [width, height]),
+    }, [width, height, opacity]),
   });
 
   return (

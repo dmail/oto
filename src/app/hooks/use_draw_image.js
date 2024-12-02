@@ -3,7 +3,7 @@ import { useLayoutEffect } from "preact/hooks";
 export const useDrawImage = (
   canvasRef,
   source,
-  { x = 0, y = 0, width, height, onDraw, debug } = {},
+  { x = 0, y = 0, width, opacity = 1, height, onDraw, debug } = {},
 ) => {
   useLayoutEffect(() => {
     if (!source) return;
@@ -28,6 +28,7 @@ export const useDrawImage = (
         dHeight: height,
       });
     }
+    context.globalAlpha = opacity;
     context.drawImage(
       source,
       x,
@@ -42,5 +43,5 @@ export const useDrawImage = (
     if (onDraw) {
       onDraw();
     }
-  }, [source, x, y, width, height, onDraw]);
+  }, [source, x, y, width, height, opacity, onDraw]);
 };
