@@ -939,8 +939,13 @@ const Drawing = ({ image, url, opacity, onDraw }) => {
     height,
     opacity,
     onDraw: useCallback(() => {
-      onDraw({ url, width, height, canvas: canvasRef.current });
-    }, [width, height, opacity]),
+      onDraw({
+        url,
+        width,
+        height,
+        canvas: canvasRef.current,
+      });
+    }, [url, width, height]),
   });
 
   return <canvas ref={canvasRef} width={width} height={height}></canvas>;
