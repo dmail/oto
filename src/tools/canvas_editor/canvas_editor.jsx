@@ -379,42 +379,44 @@ const CanvasEditor = () => {
                 canvas.height,
               );
               const pixels = imageData.data;
-              const imageDataForPixels = context.createImageData(
+              const pixelSelectionCanvas = document.createElement("canvas");
+              pixelSelectionCanvas.width = canvas.width;
+              pixelSelectionCanvas.height = canvas.height;
+              const pixelSelectionContext =
+                pixelSelectionCanvas.getContext("2d");
+              const pixelSelectionImageData = new ImageData(
                 canvas.width,
                 canvas.height,
               );
+              const pixelSelectionPixels = pixelSelectionImageData.data;
               for (let i = 0, n = pixels.length; i < n; i += 4) {
                 const r = pixels[i];
                 const g = pixels[i + 1];
                 const b = pixels[i + 2];
                 if (r === rToSelect && g === gToSelect && b === bToSelect) {
+                  const alpha = pixels[i + 3];
+                  pixelSelectionPixels[i] = r;
+                  pixelSelectionPixels[i + 1] = g;
+                  pixelSelectionPixels[i + 2] = b;
+                  pixelSelectionPixels[i + 3] = alpha;
                   pixels[i + 3] = 0;
-                  imageDataForPixels.data[i] = r;
-                  imageDataForPixels.data[i + 1] = g;
-                  imageDataForPixels.data[i + 2] = b;
-                  imageDataForPixels.data[i + 3] = pixels[1 + 3];
-                } else {
-                  // imageDataForPixels.data[i] = r;
-                  // imageDataForPixels.data[i + 1] = g;
-                  // imageDataForPixels.data[i + 2] = b;
-                  // imageDataForPixels.data[i + 3] = 0;
                 }
               }
+              if (pixelSelectionPixels.length === 0) {
+                return;
+              }
               context.putImageData(imageData, 0, 0);
-              setDrawingProps(drawing, {
-                url: canvas.toDataURL(),
-              });
-              const newLayerCanvas = document.createElement("canvas");
-              newLayerCanvas.width = canvas.width;
-              newLayerCanvas.height = canvas.height;
-              const newLayerContext = newLayerCanvas.getContext("2d");
-              newLayerContext.putImageData(imageDataForPixels, 0, 0);
-              document.body.appendChild(newLayerCanvas);
-              console.log(imageDataForPixels);
-              addDrawing({
-                url: newLayerCanvas.toDataURL(),
-                width: canvas.width,
-                height: canvas.height,
+              pixelSelectionContext.putImageData(pixelSelectionImageData, 0, 0);
+              batch(() => {
+                setDrawingProps(drawing, {
+                  url: canvas.toDataURL(),
+                });
+                addDrawing({
+                  url: pixelSelectionCanvas.toDataURL(),
+                  width: pixelSelectionCanvas.width,
+                  height: pixelSelectionCanvas.height,
+                  isVisible: false,
+                });
               });
               deactivateMagicWandSelectionTool();
             }
@@ -490,11 +492,6 @@ const CanvasEditor = () => {
 };
 
 const DrawingFacade = ({ drawing }) => {
-  const { isVisible } = drawing;
-  if (!isVisible) {
-    return null;
-  }
-
   const { type } = drawing;
   if (type === "image") {
     const { url, opacity } = drawing;
@@ -522,6 +519,7 @@ const DrawingFacade = ({ drawing }) => {
 };
 
 const DrawingContainer = ({ drawing, children }) => {
+  const { isVisible } = drawing;
   const { isActive, x, y } = drawing;
   const elementRef = useRef();
   drawing.elementRef = elementRef;
@@ -534,6 +532,7 @@ const DrawingContainer = ({ drawing, children }) => {
         setActiveDrawing(drawing);
       }}
       style={{
+        display: isVisible ? "block" : "none",
         outline: isActive ? "2px dotted black" : "",
         position: "absolute",
         left: `${x}px`,
