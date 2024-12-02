@@ -495,10 +495,15 @@ const CanvasEditor = () => {
 const DrawingFacade = ({ drawing }) => {
   const { type } = drawing;
   if (type === "image") {
-    const { url, opacity } = drawing;
+    const { url, opacity, width, height } = drawing;
     return (
       <DrawingContainer drawing={drawing}>
-        <ImageDrawing url={url} opacity={opacity} />
+        <ImageDrawing
+          url={url}
+          opacity={opacity}
+          width={width}
+          height={height}
+        />
       </DrawingContainer>
     );
   }

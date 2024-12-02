@@ -3,38 +3,30 @@ import { useLayoutEffect } from "preact/hooks";
 export const useDrawImage = (
   canvas,
   source,
-  { x = 0, y = 0, width, opacity = 1, height, onDraw, debug } = {},
+  { x = 0, y = 0, width, height, opacity = 1, onDraw, debug } = {},
 ) => {
   useLayoutEffect(() => {
     if (!canvas) return;
     if (typeof source === "function") source = source();
     if (!source) return;
     const context = canvas.getContext("2d");
+    context.clearRect(0, 0, canvas.width, canvas.height);
     if (width === undefined) {
       width = canvas.width;
-    } else {
-      canvas.width = width;
     }
     if (height === undefined) {
       height = canvas.height;
-    } else {
-      canvas.height = height;
     }
-    context.clearRect(0, 0, width, height);
-    const imageWidth =
-      source.nodeName === "IMG" ? source.naturalWidth : source.width;
-    const imageHeight =
-      source.nodeName === "IMG" ? source.naturalHeight : source.height;
     if (debug) {
       console.log("draw image", {
         sx: x,
         sy: y,
-        sWidth: imageWidth,
-        sHeight: imageHeight,
+        sWidth: width,
+        sHeight: height,
         dx: 0,
         dy: 0,
-        dWidth: width,
-        dHeight: height,
+        dWidth: canvas.width,
+        dHeight: canvas.height,
       });
     }
     context.globalAlpha = opacity;
@@ -42,12 +34,12 @@ export const useDrawImage = (
       source,
       x,
       y,
-      imageWidth,
-      imageHeight,
-      0,
-      0,
       width,
       height,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
     );
     if (onDraw) {
       onDraw();
