@@ -6,7 +6,7 @@ const enemySpritesheetUrl = new URL("./enemy_spritesheet.png", import.meta.url);
 const hpAbove =
   (percentage) =>
   ({ hp, hpMax }) => {
-    const hpRatio = hpMax / hp;
+    const hpRatio = hp / hpMax;
     const ratio = percentage / 100;
     return hpRatio > ratio;
   };
@@ -37,6 +37,7 @@ export const Taurus = ({ elementRef = useRef(), hp, hpMax, ...props }) => {
     return states[key].hp({ hp, hpMax });
   });
   const { url, x, y } = states[stateKey];
+  console.log({ hp, url, x, y, stateKey });
   const sprite = useSprite({
     id: "taurus",
     url,
