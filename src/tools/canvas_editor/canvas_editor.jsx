@@ -263,12 +263,12 @@ const CanvasEditor = () => {
           height: "400px",
           border: "1px solid black",
           position: "relative",
+          overflow: "scroll",
           cursor: grabKeyIsDown
             ? "grab"
             : colorPickerEnabled || selectionRectangleEnabled
               ? "crosshair"
               : "default",
-          overflow: "hidden",
         }}
         onDragOver={(e) => {
           e.preventDefault();
