@@ -66,22 +66,10 @@ const readFileAsText = async (file) => {
 const anonymousProjectFile = await createFile("anonymous.json");
 const drawingsSignal = signal([]);
 const zoomSignal = signal(1);
-const gridSignal = signal({
-  enabled: false,
-  width: 32,
-  height: 32,
-  insetX: 0,
-  insetY: 0,
-});
 const activeDrawingSignal = computed(() => {
   return drawingsSignal.value.find((drawing) => drawing.isActive);
 });
-const enableGrid = () => {
-  gridSignal.value = { ...gridSignal.value, enabled: true };
-};
-const disableGrid = () => {
-  gridSignal.value = { ...gridSignal.value, enabled: false };
-};
+
 const setActiveDrawing = (drawing) => {
   if (drawing.isActive) {
     return;
@@ -107,30 +95,36 @@ const getHighestZIndex = () => {
   }
   return highestZIndex;
 };
-const setDrawingZIndex = (drawing, zIndex) => {
-  if (drawing.zIndex === zIndex) {
-    return;
+const setDrawingProps = (drawing, props) => {
+  let someDiff = false;
+  for (const key of Object.keys(props)) {
+    const value = props[key];
+    if (drawing[key] !== value) {
+      someDiff = true;
+      drawing[key] = value;
+    }
   }
-  drawing.zIndex = zIndex;
-  drawingsSignal.value = [...drawingsSignal.value];
+  if (someDiff) {
+    drawingsSignal.value = [...drawingsSignal.value];
+  }
+};
+const setDrawingZIndex = (drawing, zIndex) => {
+  setDrawingProps(drawing, { zIndex });
 };
 const setDrawingOpacity = (drawing, opacity) => {
-  if (drawing.opacity === opacity) {
-    return;
-  }
-  drawing.opacity = opacity;
-  drawingsSignal.value = [...drawingsSignal.value];
+  setDrawingProps(drawing, { opacity });
+};
+const setDrawingX = (drawing, x) => {
+  setDrawingProps(drawing, { x });
+};
+const setDrawingY = (drawing, y) => {
+  setDrawingProps(drawing, { y });
 };
 const setDrawingUrl = (drawing, url) => {
-  drawing.url = url;
-  drawingsSignal.value = [...drawingsSignal.value];
+  setDrawingProps(drawing, { url });
 };
 const setDrawingVisibility = (drawing, isVisible) => {
-  if (drawing.isVisible === isVisible) {
-    return;
-  }
-  drawing.isVisible = isVisible;
-  drawingsSignal.value = [...drawingsSignal.value];
+  setDrawingProps(drawing, { isVisible });
 };
 const showDrawing = (drawing) => {
   setDrawingVisibility(drawing, true);
@@ -157,53 +151,31 @@ const moveToTheBack = (drawing) => {
     setDrawingZIndex(drawing, lowestZIndex - 1);
   }
 };
-const moveActiveDrawingAbsolute = (x, y) => {
-  const activeDrawing = activeDrawingSignal.value;
-  if (activeDrawing) {
-    if (x !== undefined) {
-      activeDrawing.x = x;
-    }
-    if (y !== undefined) {
-      activeDrawing.y = y;
-    }
-    drawingsSignal.value = [...drawingsSignal.value];
-  }
-};
-const moveActiveDrawingRelative = (x = 0, y = 0) => {
-  const activeDrawing = activeDrawingSignal.value;
-  if (activeDrawing) {
-    moveActiveDrawingAbsolute(activeDrawing.x + x, activeDrawing.y + y);
-  }
-};
 const availableZooms = [0.1, 0.5, 1, 1.5, 2, 4];
 
 const anonymousProjectFileContent = await anonymousProjectFile.readAsText();
 if (anonymousProjectFileContent) {
-  const { drawings, zoom, grid } = JSON.parse(anonymousProjectFileContent);
+  const { drawings, zoom } = JSON.parse(anonymousProjectFileContent);
   if (Array.isArray(drawings)) {
     drawingsSignal.value = drawings;
   }
   if (typeof zoom === "number") {
     zoomSignal.value = zoom;
   }
-  if (grid) {
-    gridSignal.value = grid;
-  }
 }
 effect(() => {
   const drawings = drawingsSignal.value;
   const zoom = zoomSignal.value;
-  const grid = gridSignal.value;
   anonymousProjectFile.write(
     JSON.stringify({
       drawings,
       zoom,
-      grid,
     }),
   );
 });
-const addDrawing = ({ url, x = 0, y = 0 }) => {
+const addDrawing = ({ type = "image", url, x = 0, y = 0 }) => {
   const drawing = {
+    type,
     url,
     x,
     y,
@@ -244,16 +216,16 @@ const CanvasEditor = () => {
         const moveValue = keydownEvent.shiftKey ? 10 : 1;
         if (keydownEvent.key === "ArrowLeft") {
           keydownEvent.preventDefault();
-          moveActiveDrawingRelative(-moveValue);
+          setDrawingX(activeDrawing, activeDrawing.x - moveValue);
         } else if (keydownEvent.key === "ArrowRight") {
           keydownEvent.preventDefault();
-          moveActiveDrawingRelative(moveValue);
+          setDrawingX(activeDrawing, activeDrawing.x + moveValue);
         } else if (keydownEvent.key === "ArrowUp") {
           keydownEvent.preventDefault();
-          moveActiveDrawingRelative(0, -moveValue);
+          setDrawingY(activeDrawing, activeDrawing.y - moveValue);
         } else if (keydownEvent.key === "ArrowDown") {
           keydownEvent.preventDefault();
-          moveActiveDrawingRelative(0, moveValue);
+          setDrawingY(activeDrawing, activeDrawing.y + moveValue);
         } else if (keydownEvent.key === "Backspace") {
           removeDrawing(activeDrawing);
         }
@@ -365,14 +337,13 @@ const CanvasEditor = () => {
           const moveY = mouseY - originY;
           const activeDrawing = activeDrawingSignal.value;
           if (activeDrawing) {
-            moveActiveDrawingAbsolute(
-              startXRef.current + moveX,
-              startYRef.current + moveY,
-            );
+            setDrawingProps(activeDrawing, {
+              x: startXRef.current + moveX,
+              y: startYRef.current + moveY,
+            });
           }
         }}
       >
-        <Grid />
         {drawings.map((drawing, index) => {
           return <DrawingFacade key={index} {...drawing} drawing={drawing} />;
         })}
@@ -384,9 +355,11 @@ const CanvasEditor = () => {
       <div
         style={{
           width: "400px",
-          height: "400px",
           border: "1px solid black",
           marginLeft: "10px",
+          paddingLeft: "7px",
+          paddingRight: "7px",
+          paddingBottom: "7px",
         }}
       >
         <fieldset>
@@ -433,139 +406,9 @@ const CanvasEditor = () => {
         </fieldset>
         <fieldset>
           <legend>Active layer</legend>
-          <label>
-            x
-            <input
-              type="number"
-              disabled={!activeDrawingSignal.value}
-              value={activeDrawingSignal.value?.x}
-              style={{ width: "4em" }}
-              onInput={(e) => {
-                moveActiveDrawingAbsolute(e.target.valueAsNumber, undefined);
-              }}
-            ></input>
-          </label>
-          <label
-            style={{
-              marginLeft: "1em",
-            }}
-          >
-            y
-            <input
-              type="number"
-              disabled={!activeDrawingSignal.value}
-              value={activeDrawingSignal.value?.y}
-              style={{ width: "4em" }}
-              onInput={(e) => {
-                moveActiveDrawingAbsolute(undefined, e.target.valueAsNumber);
-              }}
-            ></input>
-          </label>
-          <br />
-          <label>
-            width
-            <input
-              type="number"
-              value={activeDrawingSignal.value?.width}
-              style={{ width: "4em" }}
-              readOnly
-            ></input>
-          </label>
-          <label>
-            height
-            <input
-              type="number"
-              value={activeDrawingSignal.value?.height}
-              style={{ width: "4em" }}
-              readOnly
-            ></input>
-          </label>
-          <br />
-          <label>
-            zIndex
-            <input
-              type="number"
-              disabled={!activeDrawingSignal.value}
-              value={activeDrawingSignal.value?.zIndex}
-              style={{ width: "4em" }}
-              onInput={(e) => {
-                setDrawingZIndex(
-                  activeDrawingSignal.value,
-                  e.target.valueAsNumber,
-                );
-              }}
-            ></input>
-          </label>
-          <button
-            disabled={!activeDrawingSignal.value}
-            onClick={() => {
-              moveToTheFront(activeDrawingSignal.value);
-            }}
-          >
-            Move front
-          </button>
-          <button
-            disabled={!activeDrawingSignal.value}
-            onClick={() => {
-              moveToTheBack(activeDrawingSignal.value);
-            }}
-          >
-            Move back
-          </button>
-          <br />
-          <label>
-            Transparence
-            <input
-              type="number"
-              disabled={!activeDrawingSignal.value}
-              value={activeDrawingSignal.value?.opacity}
-              min={0.1}
-              max={1}
-              step={0.1}
-              style={{ width: "4em" }}
-              onInput={(e) => {
-                setDrawingOpacity(
-                  activeDrawingSignal.value,
-                  e.target.valueAsNumber,
-                );
-              }}
-            ></input>
-          </label>
-          <br />
-          <label>
-            Url
-            <input type="text" value={activeDrawingSignal.value?.url} />
-            <button
-              onClick={async () => {
-                try {
-                  const [fileHandle] = await window.showOpenFilePicker({
-                    types: [
-                      {
-                        description: "Images",
-                        accept: {
-                          "image/*": [".png", ".gif", ".jpeg", ".jpg"],
-                        },
-                      },
-                    ],
-                    excludeAcceptAllOption: true,
-                    multiple: false,
-                  });
-                  const fileData = await fileHandle.getFile();
-                  setDrawingUrl(
-                    activeDrawingSignal.value,
-                    URL.createObjectURL(fileData),
-                  );
-                } catch (e) {
-                  if (e.name === "AbortError") {
-                    return;
-                  }
-                  throw e;
-                }
-              }}
-            >
-              Select
-            </button>
-          </label>
+          {activeDrawingSignal.value ? (
+            <ActiveLayerForm activeLayer={activeDrawingSignal.value} />
+          ) : null}
         </fieldset>
         <fieldset>
           <legend>Tools</legend>
@@ -614,62 +457,6 @@ const CanvasEditor = () => {
             >
               Selection rectangle
             </button>
-          </div>
-          <div>
-            <button
-              onClick={() => {
-                if (gridSignal.value.enabled) {
-                  disableGrid();
-                } else {
-                  enableGrid();
-                }
-              }}
-              style={{
-                backgroundColor: gridSignal.value.enabled ? "green" : "inherit",
-              }}
-            >
-              Grid
-            </button>
-            <input
-              type="number"
-              value={gridSignal.value.width}
-              onInput={(e) => {
-                gridSignal.value = {
-                  ...gridSignal.value,
-                  width: e.target.valueAsNumber,
-                };
-              }}
-            ></input>
-            <input
-              type="number"
-              value={gridSignal.value.height}
-              onInput={(e) => {
-                gridSignal.value = {
-                  ...gridSignal.value,
-                  height: e.target.valueAsNumber,
-                };
-              }}
-            ></input>
-            <input
-              type="number"
-              value={gridSignal.value.insetX}
-              onInput={(e) => {
-                gridSignal.value = {
-                  ...gridSignal.value,
-                  insetX: e.target.valueAsNumber,
-                };
-              }}
-            ></input>
-            <input
-              type="number"
-              value={gridSignal.value.insetY}
-              onInput={(e) => {
-                gridSignal.value = {
-                  ...gridSignal.value,
-                  insetY: e.target.valueAsNumber,
-                };
-              }}
-            ></input>
           </div>
         </fieldset>
         <fieldset>
@@ -886,79 +673,204 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
   );
 };
 
-const Grid = () => {
-  const enabled = gridSignal.value.enabled;
-  const insetX = gridSignal.value.insetX;
-  const insetY = gridSignal.value.insetY;
-  const width = gridSignal.value.width;
-  const height = gridSignal.value.height;
-  const canvasRef = useRef();
-  useLayoutEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    if (!enabled) {
-      return;
-    }
-    context.save();
+const DrawingFacade = memo(({ type, ...props }) => {
+  if (!props.drawing.isVisible) {
+    return null;
+  }
+  if (type === "image") {
+    return <ImageLayerFacade {...props} />;
+  }
+  if (type === "grid") {
+    return <Grid {...props} />;
+  }
+  return <Drawing {...props} />;
+});
 
-    const drawCell = (x, y, color) => {
-      console.log("draw cell at", x, y);
-      context.beginPath();
-      // context.globalAlpha = 0.8;
-      // context.lineWidth = 1;
-      context.rect(x + insetX, y + insetY, width, height);
-      context.fillStyle = color;
-      context.fill();
-      context.closePath();
-    };
-    const xCellLastIndex = Math.ceil(canvas.width / width);
-    const yCellLastIndex = Math.ceil(canvas.height / height);
-    let xCellIndex = 0;
-    let yCellIndex = 0;
-    while (yCellIndex < yCellLastIndex) {
-      while (xCellIndex < xCellLastIndex) {
-        drawCell(
-          xCellIndex * width,
-          yCellIndex * height,
-          xCellIndex % 2 === yCellIndex % 2 ? "black" : "violet",
-        );
-        xCellIndex++;
-      }
-      xCellIndex = 0;
-      yCellIndex++;
-    }
-    context.restore();
-  }, [enabled, insetX, insetY, width, height]);
-
+const ActiveLayerForm = ({ activeLayer }) => {
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        pointerEvents: "none",
-        position: "absolute",
-        left: "0",
-        width: "100%",
-        height: "100%",
-      }}
-    ></canvas>
+    <div>
+      <label>
+        type
+        <input type="text" value={activeLayer.type} readOnly />
+      </label>
+      <br />
+      <label>
+        x
+        <input
+          type="number"
+          value={activeLayer.x}
+          style={{ width: "4em" }}
+          onInput={(e) => {
+            setDrawingX(activeLayer, e.target.valueAsNumber);
+          }}
+        ></input>
+      </label>
+      <label
+        style={{
+          marginLeft: "1em",
+        }}
+      >
+        y
+        <input
+          type="number"
+          value={activeLayer.y}
+          style={{ width: "4em" }}
+          onInput={(e) => {
+            setDrawingY(activeLayer, e.target.valueAsNumber);
+          }}
+        ></input>
+      </label>
+      <br />
+      <label>
+        width
+        <input
+          type="number"
+          value={activeLayer.width}
+          style={{ width: "4em" }}
+          readOnly
+        ></input>
+      </label>
+      <label>
+        height
+        <input
+          type="number"
+          value={activeLayer.height}
+          style={{ width: "4em" }}
+          readOnly
+        ></input>
+      </label>
+      <br />
+      <label>
+        zIndex
+        <input
+          type="number"
+          value={activeLayer.zIndex}
+          style={{ width: "4em" }}
+          onInput={(e) => {
+            setDrawingZIndex(activeLayer, e.target.valueAsNumber);
+          }}
+        ></input>
+      </label>
+      <button
+        onClick={() => {
+          moveToTheFront(activeLayer);
+        }}
+      >
+        Move front
+      </button>
+      <button
+        onClick={() => {
+          moveToTheBack(activeLayer);
+        }}
+      >
+        Move back
+      </button>
+      <br />
+      <label>
+        Transparence
+        <input
+          type="number"
+          value={activeLayer.opacity}
+          min={0.1}
+          max={1}
+          step={0.1}
+          style={{ width: "4em" }}
+          onInput={(e) => {
+            setDrawingOpacity(activeLayer, e.target.valueAsNumber);
+          }}
+        ></input>
+      </label>
+      <br />
+      <fieldset>
+        <legend>{activeLayer.type} props</legend>
+        {activeLayer.type === "image" ? (
+          <ImageLayerForm activeLayer={activeLayer} />
+        ) : activeLayer.type === "grid" ? (
+          <GridLayerForm activeLayer={activeLayer} />
+        ) : null}
+      </fieldset>
+    </div>
   );
 };
 
-const DrawingFacade = memo(({ url, ...props }) => {
+const ImageLayerForm = ({ activeLayer }) => {
+  return (
+    <label>
+      Url
+      <input type="text" value={activeLayer.url} />
+      <button
+        onClick={async () => {
+          try {
+            const [fileHandle] = await window.showOpenFilePicker({
+              types: [
+                {
+                  description: "Images",
+                  accept: {
+                    "image/*": [".png", ".gif", ".jpeg", ".jpg"],
+                  },
+                },
+              ],
+              excludeAcceptAllOption: true,
+              multiple: false,
+            });
+            const fileData = await fileHandle.getFile();
+            setDrawingUrl(activeLayer, URL.createObjectURL(fileData));
+          } catch (e) {
+            if (e.name === "AbortError") {
+              return;
+            }
+            throw e;
+          }
+        }}
+      >
+        Select
+      </button>
+    </label>
+  );
+};
+
+const GridLayerForm = ({ activeLayer }) => {
+  return (
+    <>
+      <label>
+        Cell width
+        <input
+          type="number"
+          value={activeLayer.cellWidth}
+          onInput={(e) => {
+            setDrawingProps(activeLayer, {
+              cellWidth: e.target.valueAsNumber,
+            });
+          }}
+        ></input>
+      </label>
+      <label>
+        Cell height
+        <input
+          type="number"
+          value={activeLayer.cellHeight}
+          onInput={(e) => {
+            setDrawingProps(activeLayer, {
+              cellHeight: e.target.valueAsNumber,
+            });
+          }}
+        ></input>
+      </label>
+    </>
+  );
+};
+
+const ImageLayerFacade = ({ url, ...props }) => {
   const [image] = useImage(url);
   if (!image) return null;
-  if (!props.drawing.isVisible) return null;
   return <Drawing image={image} url={url} {...props} />;
-});
+};
 
 const Drawing = ({ image, url, x, y, isActive, zIndex, drawing }) => {
   const canvasRef = useRef();
   const zoom = zoomSignal.value;
-  const width = image.naturalWidth * zoom;
-  const height = image.naturalHeight * zoom;
+  const width = image ? image.naturalWidth * zoom : 0;
+  const height = image ? image.naturalHeight * zoom : 0;
   const opacity = drawing.opacity;
   drawing.elementRef = canvasRef;
   useDrawImage(canvasRef, image, {
@@ -995,6 +907,58 @@ const Drawing = ({ image, url, x, y, isActive, zIndex, drawing }) => {
       }}
       width={width}
       height={height}
+    ></canvas>
+  );
+};
+
+const Grid = ({ opacity, x, y, cellWidth, cellHeight }) => {
+  const canvasRef = useRef();
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas.getContext("2d");
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.save();
+    context.globalAlpha = opacity;
+    const drawCell = (cellX, cellY, color) => {
+      context.beginPath();
+      // context.globalAlpha = 0.8;
+      // context.lineWidth = 1;
+      context.rect(cellX + x, cellY + y, cellWidth, cellHeight);
+      context.fillStyle = color;
+      context.fill();
+      context.closePath();
+    };
+    const xCellLastIndex = Math.ceil(canvas.width / cellWidth);
+    const yCellLastIndex = Math.ceil(canvas.height / cellHeight);
+    let xCellIndex = 0;
+    let yCellIndex = 0;
+    while (yCellIndex < yCellLastIndex) {
+      while (xCellIndex < xCellLastIndex) {
+        drawCell(
+          xCellIndex * cellWidth,
+          yCellIndex * cellHeight,
+          xCellIndex % 2 === yCellIndex % 2 ? "black" : "violet",
+        );
+        xCellIndex++;
+      }
+      xCellIndex = 0;
+      yCellIndex++;
+    }
+    context.restore();
+  }, [opacity, x, y, cellWidth, cellHeight]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        pointerEvents: "none",
+        position: "absolute",
+        left: "0",
+        width: "100%",
+        height: "100%",
+      }}
     ></canvas>
   );
 };
