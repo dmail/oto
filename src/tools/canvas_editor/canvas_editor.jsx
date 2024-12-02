@@ -125,7 +125,9 @@ const setDrawingProps = (drawing, props) => {
 
   if (keysModified.length) {
     if (keysModified.includes("zIndex")) {
-      drawingsSignal.value.sort((a, b) => a.zIndex - b.zIndex);
+      drawingsSignal.value = drawingsSignal.value.sort(
+        (a, b) => a.zIndex - b.zIndex,
+      );
     } else {
       drawingsSignal.value = [...drawingsSignal.value];
     }
@@ -198,13 +200,14 @@ effect(() => {
 });
 let drawingId = 1;
 const addDrawing = ({ type = "image", url, x = 0, y = 0, ...props }) => {
+  const id = drawingId++;
   const drawing = {
-    id: drawingId++,
+    id,
     type,
     url,
     x,
     y,
-    zIndex: getHighestZIndex(),
+    zIndex: getHighestZIndex() + 1,
     isVisible: true,
     isActive: false,
     opacity: 1,
@@ -331,7 +334,7 @@ const CanvasEditor = () => {
           });
         }}
         onMouseDown={(e) => {
-          if (activeSelectionTool !== "none") {
+          if (rectangleSelectionToolIsActive) {
             return;
           }
           const elements = document.elementsFromPoint(e.clientX, e.clientY);
@@ -359,21 +362,61 @@ const CanvasEditor = () => {
               return;
             }
             if (magicWandSelectionToolIsActive) {
-              const canvas = drawing.elementRef.current;
+              const canvas = drawing.elementRef.current.querySelector("canvas");
               const context = canvas.getContext("2d", {
                 willReadFrequently: true,
               });
-              const pixel = context.getImageData(
+              const [rToSelect, gToSelect, bToSelect] = context.getImageData(
                 e.offsetX,
                 e.offsetY,
                 1,
                 1,
               ).data;
-
-              // now select all pixels
-              // - remove all these pixels from the current layer (make them transparent)
-              // - insert a layer with these pixels close to the current layer
-              // - we can then decide to remove that layer, move it, ...
+              const imageData = context.getImageData(
+                0,
+                0,
+                canvas.width,
+                canvas.height,
+              );
+              const pixels = imageData.data;
+              const imageDataForPixels = context.createImageData(
+                canvas.width,
+                canvas.height,
+              );
+              for (let i = 0, n = pixels.length; i < n; i += 4) {
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                if (r === rToSelect && g === gToSelect && b === bToSelect) {
+                  pixels[i + 3] = 0;
+                  imageDataForPixels.data[i] = r;
+                  imageDataForPixels.data[i + 1] = g;
+                  imageDataForPixels.data[i + 2] = b;
+                  imageDataForPixels.data[i + 3] = pixels[1 + 3];
+                } else {
+                  // imageDataForPixels.data[i] = r;
+                  // imageDataForPixels.data[i + 1] = g;
+                  // imageDataForPixels.data[i + 2] = b;
+                  // imageDataForPixels.data[i + 3] = 0;
+                }
+              }
+              context.putImageData(imageData, 0, 0);
+              setDrawingProps(drawing, {
+                url: canvas.toDataURL(),
+              });
+              const newLayerCanvas = document.createElement("canvas");
+              newLayerCanvas.width = canvas.width;
+              newLayerCanvas.height = canvas.height;
+              const newLayerContext = newLayerCanvas.getContext("2d");
+              newLayerContext.putImageData(imageDataForPixels, 0, 0);
+              document.body.appendChild(newLayerCanvas);
+              console.log(imageDataForPixels);
+              addDrawing({
+                url: newLayerCanvas.toDataURL(),
+                width: canvas.width,
+                height: canvas.height,
+              });
+              deactivateMagicWandSelectionTool();
             }
             setActiveDrawing(drawing);
             startXRef.current = drawing.x;
