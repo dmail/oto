@@ -122,16 +122,16 @@ const setDrawingProps = (drawing, props) => {
       drawing[key] = value;
     }
   }
-
-  if (keysModified.length) {
-    if (keysModified.includes("zIndex")) {
-      drawingsSignal.value = drawingsSignal.value.sort(
-        (a, b) => a.zIndex - b.zIndex,
-      );
-    } else {
-      drawingsSignal.value = [...drawingsSignal.value];
-    }
+  if (keysModified.length === 0) {
+    return;
   }
+  if (keysModified.includes("zIndex")) {
+    drawingsSignal.value = [
+      ...drawingsSignal.value.sort((a, b) => a.zIndex - b.zIndex),
+    ];
+    return;
+  }
+  drawingsSignal.value = [...drawingsSignal.value];
 };
 const setDrawingZIndex = (drawing, zIndex) => {
   setDrawingProps(drawing, { zIndex });
