@@ -1,16 +1,24 @@
 import { useLayoutEffect } from "preact/hooks";
 
 export const useDrawImage = (
-  canvasRef,
+  canvas,
   source,
   { x = 0, y = 0, width, opacity = 1, height, onDraw, debug } = {},
 ) => {
   useLayoutEffect(() => {
+    if (!canvas) return;
     if (!source) return;
-    const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    if (width === undefined) width = canvas.width;
-    if (height === undefined) height = canvas.height;
+    if (width === undefined) {
+      width = canvas.width;
+    } else {
+      canvas.width = width;
+    }
+    if (height === undefined) {
+      height = canvas.height;
+    } else {
+      canvas.height = height;
+    }
     context.clearRect(0, 0, width, height);
     const imageWidth =
       source.nodeName === "IMG" ? source.naturalWidth : source.width;
@@ -43,5 +51,5 @@ export const useDrawImage = (
     if (onDraw) {
       onDraw();
     }
-  }, [source, x, y, width, height, opacity, onDraw]);
+  }, [canvas, source, x, y, width, height, opacity, onDraw]);
 };

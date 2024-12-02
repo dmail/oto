@@ -17,7 +17,7 @@ export const SwordA = ({ elementRef = useRef(), ...props }) => {
     width,
     height,
   });
-  useDrawImage(elementRef, sprite);
+  useDrawImage(elementRef.current, sprite);
 
   return (
     <canvas
@@ -43,7 +43,7 @@ export const SwordAIcon = ({ elementRef = useRef(), ...props }) => {
     width,
     height,
   });
-  useDrawImage(elementRef, sprite);
+  useDrawImage(elementRef.current, sprite);
   return (
     <canvas
       {...props}

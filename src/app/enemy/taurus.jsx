@@ -47,7 +47,7 @@ export const Taurus = ({ elementRef = useRef(), hp, hpMax, ...props }) => {
     height: 80,
     transparentColor: [0, 128, 128],
   });
-  useDrawImage(elementRef, sprite);
+  useDrawImage(elementRef.current, sprite);
 
   return (
     <canvas

@@ -413,8 +413,8 @@ const CanvasEditor = () => {
           <div style="overflow:auto">
             {drawings
               .sort((a, b) => a.zIndex - b.zIndex)
-              .map((drawing, index) => {
-                return <LayerListItem key={index} drawing={drawing} />;
+              .map((drawing) => {
+                return <LayerListItem key={drawing.id} drawing={drawing} />;
               })}
           </div>
         </fieldset>
@@ -688,16 +688,23 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
 };
 
 const DrawingFacade = ({ drawing }) => {
+  let { offscreenCanvas } = drawing;
+  if (!offscreenCanvas) {
+    offscreenCanvas = drawing.offscreenCanvas =
+      document.createElement("canvas");
+  }
+
   const { isVisible } = drawing;
   if (!isVisible) {
     return null;
   }
+
   const { type } = drawing;
   if (type === "image") {
     const { url, opacity } = drawing;
     return (
       <DrawingContainer drawing={drawing}>
-        <ImageLayerFacade
+        <ImageDrawing
           url={url}
           opacity={opacity}
           onDraw={({ url, width, height, canvas }) => {
@@ -718,7 +725,11 @@ const DrawingFacade = ({ drawing }) => {
     const { cellWidth, cellHeight, opacity } = drawing;
     return (
       <DrawingContainer drawing={drawing}>
-        <Grid opacity={opacity} cellWidth={cellWidth} cellHeight={cellHeight} />
+        <GridDrawing
+          opacity={opacity}
+          cellWidth={cellWidth}
+          cellHeight={cellHeight}
+        />
       </DrawingContainer>
     );
   }
@@ -729,6 +740,7 @@ const DrawingContainer = ({ drawing, children }) => {
   const { isActive, x, y, zIndex } = drawing;
   const elementRef = useRef();
   drawing.elementRef = elementRef;
+
   return (
     <div
       ref={elementRef}
@@ -923,20 +935,11 @@ const GridLayerForm = ({ activeLayer }) => {
   );
 };
 
-const ImageLayerFacade = ({ url, opacity, onDraw }) => {
+const ImageDrawing = ({ offscreenCanvas, url, opacity, onDraw }) => {
   const [image] = useImage(url);
-  if (!image) {
-    return null;
-  }
-  return <Drawing url={url} opacity={opacity} onDraw={onDraw} image={image} />;
-};
-
-const Drawing = ({ image, url, opacity, onDraw }) => {
-  const canvasRef = useRef();
-  const zoom = zoomSignal.value;
-  const width = image ? image.naturalWidth * zoom : 0;
-  const height = image ? image.naturalHeight * zoom : 0;
-  useDrawImage(canvasRef, image, {
+  const width = image ? image.naturalWidth : 0;
+  const height = image ? image.naturalHeight : 0;
+  useDrawImage(offscreenCanvas, image, {
     debug: true,
     x: 0,
     y: 0,
@@ -948,22 +951,19 @@ const Drawing = ({ image, url, opacity, onDraw }) => {
         url,
         width,
         height,
-        canvas: canvasRef.current,
+        canvas: offscreenCanvas,
       });
     }, [url, width, height]),
   });
-
-  return <canvas ref={canvasRef} width={width} height={height}></canvas>;
+  return <Drawing source={offscreenCanvas} />;
 };
 
-const Grid = ({ opacity, cellWidth, cellHeight }) => {
-  const canvasRef = useRef();
+const GridDrawing = ({ offscreenCanvas, opacity, cellWidth, cellHeight }) => {
   useLayoutEffect(() => {
-    const canvas = canvasRef.current;
-    const context = canvas.getContext("2d");
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    const context = offscreenCanvas.getContext("2d");
+    // canvas.width = canvas.offsetWidth;
+    // canvas.height = canvas.offsetHeight;
+    context.clearRect(0, 0, offscreenCanvas.width, offscreenCanvas.height);
     context.save();
     context.globalAlpha = opacity;
     const drawCell = (cellX, cellY, color) => {
@@ -975,8 +975,8 @@ const Grid = ({ opacity, cellWidth, cellHeight }) => {
       context.fill();
       context.closePath();
     };
-    const xCellLastIndex = Math.ceil(canvas.width / cellWidth);
-    const yCellLastIndex = Math.ceil(canvas.height / cellHeight);
+    const xCellLastIndex = Math.ceil(offscreenCanvas.width / cellWidth);
+    const yCellLastIndex = Math.ceil(offscreenCanvas.height / cellHeight);
     let xCellIndex = 0;
     let yCellIndex = 0;
     while (yCellIndex < yCellLastIndex) {
@@ -993,16 +993,28 @@ const Grid = ({ opacity, cellWidth, cellHeight }) => {
     }
     context.restore();
   }, [opacity, cellWidth, cellHeight]);
+  return <Drawing source={offscreenCanvas} />;
+};
 
-  return <canvas ref={canvasRef}></canvas>;
+const Drawing = ({ source }) => {
+  const canvasRef = useRef();
+  const zoom = zoomSignal.value;
+  const width = source ? source.width * zoom : 0;
+  const height = source ? source.height * zoom : 0;
+  useDrawImage(canvasRef.current, source, {
+    debug: true,
+    x: 0,
+    y: 0,
+    width,
+    height,
+  });
+  return <canvas ref={canvasRef} width={width} height={height}></canvas>;
 };
 
 const LayerListItem = ({ drawing }) => {
   const isVisible = drawing.isVisible;
   const canvasRef = useRef();
-
-  const [image] = useImage(drawing.url);
-  useDrawImage(canvasRef, image);
+  useDrawImage(canvasRef.current, drawing.offscreenCanvas);
 
   return (
     <div

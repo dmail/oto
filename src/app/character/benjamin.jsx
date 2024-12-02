@@ -52,7 +52,7 @@ export const Benjamin = ({
       [0, 155, 155],
     ],
   });
-  useDrawImage(elementRef, sprite);
+  useDrawImage(elementRef.current, sprite);
 
   return (
     <canvas

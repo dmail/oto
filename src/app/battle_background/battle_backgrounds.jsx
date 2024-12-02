@@ -18,7 +18,7 @@ export const MountainAndSkyBattleBackground = ({
     width: 255,
     height: 200,
   });
-  useDrawImage(elementRef, sprite);
+  useDrawImage(elementRef.current, sprite);
 
   return (
     <canvas
