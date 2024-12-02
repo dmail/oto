@@ -198,15 +198,15 @@ const removeDrawing = (drawing) => {
 };
 
 const CanvasEditor = () => {
-  const [mousemoveOrigin, mousemoveOriginSetter] = useState();
+  const drawings = drawingsSignal.value;
   const [colorPickerEnabled, colorPickerEnabledSetter] = useState(false);
   const [selectionRectangleEnabled, selectionRectangleEnabledSetter] =
     useState(false);
   const [colorPicked, colorPickedSetter] = useState();
+  const [mousemoveOrigin, mousemoveOriginSetter] = useState();
   const [grabKeyIsDown, grabKeyIsDownSetter] = useState(false);
   const startXRef = useRef(0);
   const startYRef = useRef(0);
-  const drawings = drawingsSignal.value;
 
   useEffect(() => {
     let removekeyup = () => {};
@@ -293,7 +293,9 @@ const CanvasEditor = () => {
           }
           const elements = document.elementsFromPoint(e.clientX, e.clientY);
           const drawing = drawings.find((drawing) => {
-            return elements[0] === drawing.elementRef?.current;
+            return elements.find(
+              (element) => element === drawing.elementRef?.current,
+            );
           });
           if (drawing) {
             if (colorPickerEnabled) {
@@ -364,142 +366,14 @@ const CanvasEditor = () => {
           paddingBottom: "7px",
         }}
       >
-        <fieldset>
-          <legend>
-            Layers
-            <button
-              style={{ marginLeft: "3px" }}
-              onClick={async () => {
-                try {
-                  const [fileHandle] = await window.showOpenFilePicker({
-                    types: [
-                      {
-                        description: "Images",
-                        accept: {
-                          "image/*": [".png", ".gif", ".jpeg", ".jpg"],
-                        },
-                      },
-                    ],
-                    excludeAcceptAllOption: true,
-                    multiple: false,
-                  });
-                  const fileData = await fileHandle.getFile();
-                  addDrawing({
-                    url: URL.createObjectURL(fileData),
-                  });
-                } catch (e) {
-                  if (e.name === "AbortError") {
-                    return;
-                  }
-                  throw e;
-                }
-              }}
-            >
-              Add
-            </button>
-            <button
-              style={{ marginLeft: "3px" }}
-              onClick={() => {
-                addDrawing({
-                  type: "grid",
-                  width: 100,
-                  height: 100,
-                  cellWidth: 32,
-                  cellHeight: 32,
-                });
-              }}
-            >
-              Add grid
-            </button>
-          </legend>
-          <div style="overflow:auto">
-            {drawings
-              .sort((a, b) => a.zIndex - b.zIndex)
-              .map((drawing) => {
-                return <LayerListItem key={drawing.id} drawing={drawing} />;
-              })}
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend>Active layer</legend>
-          {activeDrawingSignal.value ? (
-            <ActiveLayerForm activeLayer={activeDrawingSignal.value} />
-          ) : null}
-        </fieldset>
-        <fieldset>
-          <legend>Tools</legend>
-          <div>
-            <button
-              onClick={() => {
-                if (colorPickerEnabled) {
-                  colorPickerEnabledSetter(false);
-                } else {
-                  colorPickerEnabledSetter(true);
-                  selectionRectangleEnabledSetter(false);
-                }
-              }}
-              style={{
-                backgroundColor: colorPickerEnabled ? "green" : "inherit",
-              }}
-            >
-              Color picker
-            </button>
-            Color:{" "}
-            <span
-              style={{
-                display: "inline-block",
-                width: "1em",
-                height: "1em",
-                backgroundColor: `rgb(${colorPicked})`,
-              }}
-            ></span>
-            <input type="text" readOnly value={colorPicked} />
-          </div>
-          <div>
-            <button
-              onClick={() => {
-                if (selectionRectangleEnabled) {
-                  selectionRectangleEnabledSetter(false);
-                } else {
-                  selectionRectangleEnabledSetter(true);
-                  colorPickerEnabledSetter(false);
-                }
-              }}
-              style={{
-                backgroundColor: selectionRectangleEnabled
-                  ? "green"
-                  : "inherit",
-              }}
-            >
-              Selection rectangle
-            </button>
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend>Zoom: {zoomSignal.value}</legend>
-          {availableZooms.map((availableZoom) => {
-            return (
-              <button
-                key={availableZoom}
-                onClick={() => {
-                  zoomSignal.value = availableZoom;
-                }}
-              >
-                {availableZoom}
-              </button>
-            );
-          })}
-        </fieldset>
-        <button
-          onClick={() => {
-            batch(() => {
-              zoomSignal.value = 1;
-              drawingsSignal.value = [];
-            });
-          }}
-        >
-          Reset
-        </button>
+        <Toolbar
+          drawings={drawings}
+          selectionRectangleEnabled={selectionRectangleEnabled}
+          colorPicked={colorPicked}
+          colorPickerEnabled={colorPickerEnabled}
+          colorPickerEnabledSetter={colorPickerEnabledSetter}
+          selectionRectangleEnabledSetter={selectionRectangleEnabledSetter}
+        />
       </div>
     </div>
   );
@@ -628,9 +502,17 @@ const GridDrawing = ({
     }
   }, [opacity, width, height, cellWidth, cellHeight, onDraw]);
 
-  return <canvas ref={canvasRef} width={width} height={height}></canvas>;
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        display: "block", // ensure parent div size is correct
+      }}
+      width={width}
+      height={height}
+    ></canvas>
+  );
 };
-
 const ImageDrawing = ({ url, width, height, opacity, onDraw }) => {
   const canvasRef = useRef();
   const [image] = useImage(url);
@@ -653,9 +535,165 @@ const ImageDrawing = ({ url, width, height, opacity, onDraw }) => {
       });
     }, [url, width, height]),
   });
-  return <canvas ref={canvasRef} width={width} height={height}></canvas>;
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        display: "block", // ensure parent div size is correct
+      }}
+      width={width}
+      height={height}
+    ></canvas>
+  );
 };
 
+const Toolbar = ({
+  drawings,
+  selectionRectangleEnabled,
+  colorPicked,
+  colorPickerEnabled,
+  colorPickerEnabledSetter,
+  selectionRectangleEnabledSetter,
+}) => {
+  return (
+    <>
+      <fieldset>
+        <legend>
+          Layers
+          <button
+            style={{ marginLeft: "3px" }}
+            onClick={async () => {
+              try {
+                const [fileHandle] = await window.showOpenFilePicker({
+                  types: [
+                    {
+                      description: "Images",
+                      accept: {
+                        "image/*": [".png", ".gif", ".jpeg", ".jpg"],
+                      },
+                    },
+                  ],
+                  excludeAcceptAllOption: true,
+                  multiple: false,
+                });
+                const fileData = await fileHandle.getFile();
+                addDrawing({
+                  url: URL.createObjectURL(fileData),
+                });
+              } catch (e) {
+                if (e.name === "AbortError") {
+                  return;
+                }
+                throw e;
+              }
+            }}
+          >
+            Add
+          </button>
+          <button
+            style={{ marginLeft: "3px" }}
+            onClick={() => {
+              addDrawing({
+                type: "grid",
+                width: 100,
+                height: 100,
+                cellWidth: 32,
+                cellHeight: 32,
+              });
+            }}
+          >
+            Add grid
+          </button>
+        </legend>
+        <div style="overflow:auto">
+          {drawings
+            .sort((a, b) => a.zIndex - b.zIndex)
+            .map((drawing) => {
+              return <LayerListItem key={drawing.id} drawing={drawing} />;
+            })}
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Active layer</legend>
+        {activeDrawingSignal.value ? (
+          <ActiveLayerForm activeLayer={activeDrawingSignal.value} />
+        ) : null}
+      </fieldset>
+      <fieldset>
+        <legend>Tools</legend>
+        <div>
+          <button
+            onClick={() => {
+              if (colorPickerEnabled) {
+                colorPickerEnabledSetter(false);
+              } else {
+                colorPickerEnabledSetter(true);
+                selectionRectangleEnabledSetter(false);
+              }
+            }}
+            style={{
+              backgroundColor: colorPickerEnabled ? "green" : "inherit",
+            }}
+          >
+            Color picker
+          </button>
+          Color:
+          <span
+            style={{
+              display: "inline-block",
+              width: "1em",
+              height: "1em",
+              backgroundColor: `rgb(${colorPicked})`,
+            }}
+          ></span>
+          <input type="text" readOnly value={colorPicked} />
+        </div>
+        <div>
+          <button
+            onClick={() => {
+              if (selectionRectangleEnabled) {
+                selectionRectangleEnabledSetter(false);
+              } else {
+                selectionRectangleEnabledSetter(true);
+                colorPickerEnabledSetter(false);
+              }
+            }}
+            style={{
+              backgroundColor: selectionRectangleEnabled ? "green" : "inherit",
+            }}
+          >
+            Selection rectangle
+          </button>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Zoom: {zoomSignal.value}</legend>
+        {availableZooms.map((availableZoom) => {
+          return (
+            <button
+              key={availableZoom}
+              onClick={() => {
+                zoomSignal.value = availableZoom;
+              }}
+            >
+              {availableZoom}
+            </button>
+          );
+        })}
+      </fieldset>
+      <button
+        onClick={() => {
+          batch(() => {
+            zoomSignal.value = 1;
+            drawingsSignal.value = [];
+          });
+        }}
+      >
+        Reset
+      </button>
+    </>
+  );
+};
 const LayerListItem = ({ drawing }) => {
   const isVisible = drawing.isVisible;
   const canvasRef = useRef();
@@ -746,7 +784,6 @@ const LayerListItem = ({ drawing }) => {
     </div>
   );
 };
-
 const ActiveLayerForm = ({ activeLayer }) => {
   return (
     <div>
@@ -857,7 +894,6 @@ const ActiveLayerForm = ({ activeLayer }) => {
     </div>
   );
 };
-
 const ImageLayerForm = ({ activeLayer }) => {
   return (
     <label>
@@ -893,7 +929,6 @@ const ImageLayerForm = ({ activeLayer }) => {
     </label>
   );
 };
-
 const GridLayerForm = ({ activeLayer }) => {
   return (
     <>
@@ -909,6 +944,7 @@ const GridLayerForm = ({ activeLayer }) => {
           }}
         ></input>
       </label>
+      <br />
       <label>
         Cell height
         <input
