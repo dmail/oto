@@ -395,6 +395,16 @@ const CanvasEditor = () => {
             >
               Add
             </button>
+            <button
+              style={{ marginLeft: "3px" }}
+              onClick={() => {
+                addDrawing({
+                  type: "grid",
+                });
+              }}
+            >
+              Add grid
+            </button>
           </legend>
           <div style="overflow:auto">
             {drawings
@@ -673,17 +683,65 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
   );
 };
 
-const DrawingFacade = memo(({ type, ...props }) => {
-  if (!props.drawing.isVisible) {
+const DrawingFacade = memo(({ type, drawing, ...props }) => {
+  if (!drawing.isVisible) {
     return null;
   }
+
+  const Wrapper = ({ children }) => {
+    const elementRef = useRef();
+    drawing.elementRef = elementRef;
+    return (
+      <div
+        ref={elementRef}
+        tabIndex={-1}
+        onFocus={() => {
+          setActiveDrawing(drawing);
+        }}
+        style={{
+          outline: props.isActive ? "2px dotted black" : "",
+          position: "absolute",
+          zIndex: props.zIndex,
+          left: `${props.x}px`,
+          top: `${props.y}px`,
+        }}
+      >
+        {children}
+      </div>
+    );
+  };
+
   if (type === "image") {
-    return <ImageLayerFacade {...props} />;
+    return (
+      <Wrapper>
+        <ImageLayerFacade
+          {...props}
+          onDraw={({ url, width, height, canvas }) => {
+            if (url.startsWith("data")) {
+              return;
+            }
+            setDrawingProps(drawing, {
+              width,
+              height,
+              url: canvas.toDataURL(),
+            });
+          }}
+        />
+      </Wrapper>
+    );
   }
   if (type === "grid") {
-    return <Grid {...props} />;
+    return (
+      <Wrapper>
+        <Grid {...props} />
+      </Wrapper>
+    );
   }
-  return <Drawing {...props} />;
+  return (
+    <Wrapper>
+      <Drawing {...props} />
+    </Wrapper>
+  );
 });
 
 const ActiveLayerForm = ({ activeLayer }) => {
@@ -862,56 +920,33 @@ const GridLayerForm = ({ activeLayer }) => {
 
 const ImageLayerFacade = ({ url, ...props }) => {
   const [image] = useImage(url);
-  if (!image) return null;
+  if (!image) {
+    return null;
+  }
   return <Drawing image={image} url={url} {...props} />;
 };
 
-const Drawing = ({ image, url, x, y, isActive, zIndex, drawing }) => {
+const Drawing = ({ image, url, opacity, onDraw }) => {
   const canvasRef = useRef();
   const zoom = zoomSignal.value;
   const width = image ? image.naturalWidth * zoom : 0;
   const height = image ? image.naturalHeight * zoom : 0;
-  const opacity = drawing.opacity;
-  drawing.elementRef = canvasRef;
   useDrawImage(canvasRef, image, {
-    debug: true,
+    // debug: true,
     x: 0,
     y: 0,
     width,
     height,
     opacity,
     onDraw: useCallback(() => {
-      if (url.startsWith("data")) {
-        return;
-      }
-      drawing.width = width;
-      drawing.height = height;
-      drawing.url = canvasRef.current.toDataURL();
-      drawingsSignal.value = [...drawingsSignal.value];
+      onDraw({ url, width, height, canvas: canvasRef.current });
     }, [width, height, opacity]),
   });
 
-  return (
-    <canvas
-      ref={canvasRef}
-      tabIndex={-1}
-      onFocus={() => {
-        setActiveDrawing(drawing);
-      }}
-      style={{
-        outline: isActive ? "2px dotted black" : "",
-        position: "absolute",
-        zIndex,
-        left: `${x}px`,
-        top: `${y}px`,
-      }}
-      width={width}
-      height={height}
-    ></canvas>
-  );
+  return <canvas ref={canvasRef} width={width} height={height}></canvas>;
 };
 
-const Grid = ({ opacity, x, y, cellWidth, cellHeight }) => {
+const Grid = ({ opacity, cellWidth, cellHeight }) => {
   const canvasRef = useRef();
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -925,7 +960,7 @@ const Grid = ({ opacity, x, y, cellWidth, cellHeight }) => {
       context.beginPath();
       // context.globalAlpha = 0.8;
       // context.lineWidth = 1;
-      context.rect(cellX + x, cellY + y, cellWidth, cellHeight);
+      context.rect(cellX, cellY, cellWidth, cellHeight);
       context.fillStyle = color;
       context.fill();
       context.closePath();
@@ -947,20 +982,9 @@ const Grid = ({ opacity, x, y, cellWidth, cellHeight }) => {
       yCellIndex++;
     }
     context.restore();
-  }, [opacity, x, y, cellWidth, cellHeight]);
+  }, [opacity, cellWidth, cellHeight]);
 
-  return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        pointerEvents: "none",
-        position: "absolute",
-        left: "0",
-        width: "100%",
-        height: "100%",
-      }}
-    ></canvas>
-  );
+  return <canvas ref={canvasRef}></canvas>;
 };
 
 const LayerListItem = ({ drawing }) => {
