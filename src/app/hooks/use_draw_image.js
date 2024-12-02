@@ -7,8 +7,8 @@ export const useDrawImage = (
 ) => {
   useLayoutEffect(() => {
     if (!canvas) return;
-    if (!source) return;
     if (typeof source === "function") source = source();
+    if (!source) return;
     const context = canvas.getContext("2d");
     if (width === undefined) {
       width = canvas.width;

@@ -401,7 +401,7 @@ const DrawingFacade = ({ drawing }) => {
         <ImageDrawing
           url={url}
           opacity={opacity}
-          onDraw={({ url, width, height, canvas }) => {
+          onDraw={({ width, height, canvas }) => {
             setDrawingProps(drawing, {
               ...(url.startsWith("data")
                 ? null
@@ -479,8 +479,6 @@ const GridDrawing = ({
     context.globalAlpha = opacity;
     const drawCell = (cellX, cellY, color) => {
       context.beginPath();
-      // context.globalAlpha = 0.8;
-      // context.lineWidth = 1;
       context.rect(cellX, cellY, cellWidth, cellHeight);
       context.fillStyle = color;
       context.fill();
@@ -536,12 +534,11 @@ const ImageDrawing = ({ url, width, height, opacity, onDraw }) => {
     opacity,
     onDraw: useCallback(() => {
       onDraw({
-        url,
-        width,
-        height,
+        width: image.naturalWidth,
+        height: image.naturalHeight,
         canvas: canvasRef.current,
       });
-    }, [url, width, height]),
+    }, [image, width, height]),
   });
   return (
     <canvas
