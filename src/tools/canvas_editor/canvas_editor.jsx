@@ -87,6 +87,23 @@ const zoomSignal = signal(1);
 const activeDrawingSignal = computed(() => {
   return drawingsSignal.value.find((drawing) => drawing.isActive);
 });
+const rectangleSelectionToolIsActive = () =>
+  activeSelectionToolSignal.value === "selection_rectangle";
+const magicWandSelectionToolIsActive = () =>
+  activeSelectionToolSignal.value === "magic_wand";
+const activeSelectionToolSignal = signal("none");
+const activateRectangleSelectionTool = () => {
+  activeSelectionToolSignal.value = "selection_rectangle";
+};
+const deactivateRectangleSelectionTool = () => {
+  activeSelectionToolSignal.value = "none";
+};
+const activateMagicWandSelectionTool = () => {
+  activeSelectionToolSignal.value = "magic_wand";
+};
+const deactivateMagicWandSelectionTool = () => {
+  activeSelectionToolSignal.value = "none";
+};
 
 const setActiveDrawing = (drawing) => {
   if (drawing.isActive) {
@@ -180,21 +197,28 @@ const availableZooms = [0.1, 0.5, 1, 1.5, 2, 4];
 
 const anonymousProjectFileContent = await anonymousProjectFile.readAsText();
 if (anonymousProjectFileContent) {
-  const { drawings, zoom } = JSON.parse(anonymousProjectFileContent);
+  const { drawings, zoom, activeSelectionTool } = JSON.parse(
+    anonymousProjectFileContent,
+  );
   if (Array.isArray(drawings)) {
     drawingsSignal.value = drawings;
   }
   if (typeof zoom === "number") {
     zoomSignal.value = zoom;
   }
+  if (typeof activeSelectionTool === "string") {
+    activeSelectionToolSignal.value = activeSelectionTool;
+  }
 }
 effect(() => {
   const drawings = drawingsSignal.value;
   const zoom = zoomSignal.value;
+  const activeSelectionTool = activeSelectionToolSignal.value;
   anonymousProjectFile.write(
     JSON.stringify({
       drawings,
       zoom,
+      activeSelectionTool,
     }),
   );
 });
@@ -227,23 +251,6 @@ const CanvasEditor = () => {
   const drawings = drawingsSignal.value;
   const [colorPickerEnabled, colorPickerEnabledSetter] = useState(false);
   const [colorPicked, colorPickedSetter] = useState();
-
-  const [activeSelectionTool, setActiveSelectionTool] = useState("none");
-  const rectangleSelectionToolIsActive =
-    activeSelectionTool === "selection_rectangle";
-  const magicWandSelectionToolIsActive = activeSelectionTool === "magic_wand";
-  const activateRectangleSelectionTool = () => {
-    setActiveSelectionTool("selection_rectangle");
-  };
-  const deactivateRectangleSelectionTool = () => {
-    setActiveSelectionTool("none");
-  };
-  const activateMagicWandSelectionTool = () => {
-    setActiveSelectionTool("magic_wand");
-  };
-  const deactivateMagicWandSelectionTool = () => {
-    setActiveSelectionTool("none");
-  };
 
   const [mousemoveOrigin, mousemoveOriginSetter] = useState();
   const [grabKeyIsDown, grabKeyIsDownSetter] = useState(false);
@@ -309,8 +316,8 @@ const CanvasEditor = () => {
           cursor: grabKeyIsDown
             ? "grab"
             : colorPickerEnabled ||
-                rectangleSelectionToolIsActive ||
-                magicWandSelectionToolIsActive
+                rectangleSelectionToolIsActive() ||
+                magicWandSelectionToolIsActive()
               ? "crosshair"
               : "default",
         }}
@@ -334,7 +341,7 @@ const CanvasEditor = () => {
           });
         }}
         onMouseDown={(e) => {
-          if (rectangleSelectionToolIsActive) {
+          if (rectangleSelectionToolIsActive()) {
             return;
           }
           const elements = document.elementsFromPoint(e.clientX, e.clientY);
@@ -361,7 +368,7 @@ const CanvasEditor = () => {
               colorPickedSetter(`${pixel[0]},${pixel[1]},${pixel[2]}`);
               return;
             }
-            if (magicWandSelectionToolIsActive) {
+            if (magicWandSelectionToolIsActive()) {
               const canvas = drawing.elementRef.current.querySelector("canvas");
               const context = canvas.getContext("2d", {
                 willReadFrequently: true,
@@ -438,7 +445,7 @@ const CanvasEditor = () => {
           if (!mousemoveOrigin) {
             return;
           }
-          if (activeSelectionTool !== "none") {
+          if (activeSelectionToolSignal.value !== "none") {
             return;
           }
           const originX = mousemoveOrigin.x;
@@ -461,7 +468,7 @@ const CanvasEditor = () => {
         })}
         <SelectionRectangle
           drawZoneRef={drawZoneRef}
-          enabled={rectangleSelectionToolIsActive}
+          enabled={rectangleSelectionToolIsActive()}
         />
       </div>
       <div
@@ -476,12 +483,6 @@ const CanvasEditor = () => {
       >
         <Toolbar
           drawings={drawings}
-          rectangleSelectionToolIsActive={rectangleSelectionToolIsActive}
-          magicWandSelectionToolIsActive={magicWandSelectionToolIsActive}
-          activateMagicWandSelectionTool={activateMagicWandSelectionTool}
-          deactivateMagicWandSelectionTool={deactivateMagicWandSelectionTool}
-          activateRectangleSelectionTool={activateRectangleSelectionTool}
-          deactivateRectangleSelectionTool={deactivateRectangleSelectionTool}
           colorPicked={colorPicked}
           colorPickerEnabled={colorPickerEnabled}
           colorPickerEnabledSetter={colorPickerEnabledSetter}
@@ -620,12 +621,6 @@ const ImageDrawing = ({ url, width, height, opacity }) => {
 
 const Toolbar = ({
   drawings,
-  rectangleSelectionToolIsActive,
-  magicWandSelectionToolIsActive,
-  activateRectangleSelectionTool,
-  deactivateRectangleSelectionTool,
-  activateMagicWandSelectionTool,
-  deactivateMagicWandSelectionTool,
   colorPicked,
   colorPickerEnabled,
   colorPickerEnabledSetter,
@@ -701,7 +696,7 @@ const Toolbar = ({
 
         <button
           onClick={() => {
-            if (rectangleSelectionToolIsActive) {
+            if (rectangleSelectionToolIsActive()) {
               deactivateRectangleSelectionTool();
             } else {
               activateRectangleSelectionTool();
@@ -712,7 +707,7 @@ const Toolbar = ({
             width: "24px",
             height: "24px",
             border: "none",
-            backgroundColor: rectangleSelectionToolIsActive
+            backgroundColor: rectangleSelectionToolIsActive()
               ? "green"
               : "inherit",
           }}
@@ -722,7 +717,7 @@ const Toolbar = ({
 
         <button
           onClick={() => {
-            if (magicWandSelectionToolIsActive) {
+            if (magicWandSelectionToolIsActive()) {
               deactivateMagicWandSelectionTool();
             } else {
               activateMagicWandSelectionTool();
@@ -733,7 +728,7 @@ const Toolbar = ({
             width: "24px",
             height: "24px",
             border: "none",
-            backgroundColor: magicWandSelectionToolIsActive
+            backgroundColor: magicWandSelectionToolIsActive()
               ? "green"
               : "inherit",
           }}

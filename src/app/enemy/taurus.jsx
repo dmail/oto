@@ -15,20 +15,20 @@ const states = {
   full_life: {
     hp: hpAbove(50),
     url: enemySpritesheetUrl,
-    x: 80,
-    y: 0,
+    x: 450,
+    y: 90,
   },
   mid_life: {
     hp: hpAbove(25),
     url: enemySpritesheetUrl,
-    x: 160,
-    y: 10,
+    x: 520,
+    y: 90,
   },
   low_life: {
     hp: hpAbove(0),
     url: enemySpritesheetUrl,
     x: 240,
-    y: 10,
+    y: 90,
   },
 };
 
@@ -37,14 +37,13 @@ export const Taurus = ({ elementRef = useRef(), hp, hpMax, ...props }) => {
     return states[key].hp({ hp, hpMax });
   });
   const { url, x, y } = states[stateKey];
-  console.log({ hp, url, x, y, stateKey });
   const sprite = useSprite({
     id: "taurus",
     url,
     x,
     y,
     width: 70,
-    height: 80,
+    height: 70,
     transparentColor: [0, 128, 128],
   });
   useDrawImage(elementRef.current, sprite);

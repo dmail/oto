@@ -1,19 +1,49 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { getDomElementBox } from "../../app/utils/get_dom_element_box.js";
 
 export const SelectionRectangle = ({ drawZoneRef, enabled }) => {
-  const [x, xSetter] = useState(0);
-  const [y, ySetter] = useState(0);
-  const [width, widthSetter] = useState(0);
-  const [height, heightSetter] = useState(0);
   const selectionRectangleCanvasRef = useRef();
-  const moveStartInfoRef = useRef();
+
+  const [offsetLeft, offsetLeftSetter] = useState(0);
+  const [offsetTop, offsetTopSetter] = useState(0);
+  useLayoutEffect(() => {
+    if (!enabled) {
+      return;
+    }
+    const drawZone = drawZoneRef.current;
+    const { left, top } = getDomElementBox(drawZone);
+    offsetLeftSetter(left);
+    offsetTopSetter(top);
+  }, [enabled]);
+
+  const [scrollLeft, scrollLeftSetter] = useState(0);
+  const [scrollTop, scrollTopSetter] = useState(0);
+  useLayoutEffect(() => {
+    if (!enabled) {
+      return null;
+    }
+    const drawZone = drawZoneRef.current;
+    const updateScrolls = () => {
+      scrollLeftSetter(drawZone.scrollLeft);
+      scrollTopSetter(drawZone.scrollTop);
+    };
+    updateScrolls();
+    const onscroll = () => {
+      updateScrolls();
+    };
+    drawZone.addEventListener("scroll", onscroll, { passive: true });
+    return () => {
+      drawZone.removeEventListener("scroll", onscroll, { passive: true });
+    };
+  }, [enabled]);
 
   const [interactedOnce, interactedOnceSetter] = useState(false);
   const [mouseIsDown, mouseIsDownSetter] = useState(false);
-  const [mouseInsideDrawZone, mouseInsideDrawZoneSetter] = useState(false);
-  const [mouseRelativeX, mouseRelativeXSetter] = useState(-1);
-  const [mouseRelativeY, mouseRelativeYSetter] = useState(-1);
-
+  const [mouseClientX, mouseClientXSetter] = useState(0);
+  const [mouseClientY, mouseClientYSetter] = useState(0);
+  const mouseXRelativeToParent = mouseClientX - offsetLeft + scrollLeft;
+  const mouseYRelativeToParent = mouseClientY - offsetTop + scrollTop;
+  const mousedownInfoRef = useRef();
   useEffect(() => {
     if (!enabled) {
       return null;
@@ -23,65 +53,39 @@ export const SelectionRectangle = ({ drawZoneRef, enabled }) => {
       mouseIsDownSetter(true);
       interactedOnceSetter(true);
       e.preventDefault();
-      const drawZoneRect = drawZone.getBoundingClientRect();
-      const startX = Math.round(drawZoneRect.left);
-      const startY = Math.round(drawZoneRect.top);
-      const startRelativeX = e.clientX - startX;
-      const startRelativeY = e.clientY - startY;
-      moveStartInfoRef.current = {
-        startX,
-        startY,
-        startRelativeX,
-        startRelativeY,
+      const { clientX, clientY } = e;
+      mousedownInfoRef.current = {
+        clientX,
+        clientY,
       };
-      mouseRelativeXSetter(startRelativeX);
-      mouseRelativeYSetter(startRelativeY);
-      xSetter(startRelativeX);
-      widthSetter(1);
-      ySetter(startRelativeY);
-      heightSetter(1);
+      mouseClientXSetter(clientX);
+      mouseClientYSetter(clientY);
     };
     const onmousemove = (e) => {
-      const drawZoneRect = drawZone.getBoundingClientRect();
-      const moveStartInfo = moveStartInfoRef.current;
-      if (!moveStartInfo) {
-        const relativeX = e.clientX - drawZoneRect.left;
-        const relativeY = e.clientY - drawZoneRect.top;
-        mouseRelativeXSetter(relativeX);
-        mouseRelativeYSetter(relativeY);
-        return;
-      }
-      const { startX, startY, startRelativeX, startRelativeY } = moveStartInfo;
-      const relativeX = e.clientX - startX;
-      const relativeY = e.clientY - startY;
-      mouseRelativeXSetter(relativeX);
-      mouseRelativeYSetter(relativeY);
-      const moveX = relativeX - startRelativeX;
-      const moveY = relativeY - startRelativeY;
-      if (relativeX > startRelativeX) {
-        xSetter(startRelativeX);
-        widthSetter(moveX);
-      } else {
-        xSetter(startRelativeX + moveX);
-        widthSetter(-moveX);
-      }
-      if (relativeY > startRelativeY) {
-        ySetter(startRelativeY);
-        heightSetter(moveY);
-      } else {
-        ySetter(startRelativeY + moveY);
-        heightSetter(-moveY);
-      }
+      const { clientX, clientY } = e;
+      mouseClientXSetter(clientX);
+      mouseClientYSetter(clientY);
     };
     const onmouseup = () => {
       mouseIsDownSetter(false);
-      moveStartInfoRef.current = null;
+      mousedownInfoRef.current = null;
     };
-
     drawZone.addEventListener("mousedown", onmousedown);
     document.addEventListener("mousemove", onmousemove);
     document.addEventListener("mouseup", onmouseup);
+    return () => {
+      drawZone.removeEventListener("mousedown", onmousedown);
+      document.removeEventListener("mousemove", onmousemove);
+      document.removeEventListener("mouseup", onmouseup);
+    };
+  }, [enabled]);
 
+  const [mouseInsideDrawZone, mouseInsideDrawZoneSetter] = useState(false);
+  useEffect(() => {
+    if (!enabled) {
+      return null;
+    }
+    const drawZone = drawZoneRef.current;
     const onmouseenter = () => {
       mouseInsideDrawZoneSetter(true);
     };
@@ -91,14 +95,44 @@ export const SelectionRectangle = ({ drawZoneRef, enabled }) => {
     drawZone.addEventListener("mouseenter", onmouseenter);
     drawZone.addEventListener("mouseleave", onmouseleave);
     return () => {
-      drawZone.removeEventListener("mousedown", onmousedown);
-      document.removeEventListener("mousemove", onmousemove);
-      document.removeEventListener("mouseup", onmouseup);
-
       drawZone.removeEventListener("mouseenter", onmouseenter);
-      drawZone.removeEventListener("mouseleave", onmouseenter);
+      drawZone.removeEventListener("mouseleave", onmouseleave);
     };
   }, [enabled]);
+
+  let x;
+  let y;
+  let width;
+  let height;
+  const mousedownInfo = mousedownInfoRef.current;
+  if (mousedownInfo) {
+    const startClientX = mousedownInfo.clientX;
+    const startClientY = mousedownInfo.clientY;
+    const moveX = mouseClientX - startClientX;
+    const moveY = mouseClientY - startClientY;
+    if (moveX === 0 && moveY === 0) {
+      x = mouseClientX + scrollLeft;
+      y = mouseClientY + offsetTop + scrollTop;
+      width = 1;
+      height = 1;
+    } else {
+      if (mouseClientX > startClientX) {
+        x = startClientX + offsetLeft;
+        width = moveX;
+      } else {
+        x = startClientX + scrollLeft + moveX;
+        width = -moveX;
+      }
+      if (mouseClientY > startClientY) {
+        y = startClientY;
+        height = moveY;
+      } else {
+        y = startClientY + moveY;
+        height = -moveY;
+      }
+    }
+    console.log({ x, mouseClientX, scrollLeft });
+  }
 
   useLayoutEffect(() => {
     const selectionRectangleCanvas = selectionRectangleCanvasRef.current;
@@ -118,7 +152,7 @@ export const SelectionRectangle = ({ drawZoneRef, enabled }) => {
     context.beginPath();
     context.rect(x, y, width, height);
     context.globalAlpha = 0.8;
-    context.lineWidth = 1;
+    context.lineWidth = 3;
     context.strokeStyle = "orange";
     context.stroke();
     context.closePath();
@@ -133,14 +167,18 @@ export const SelectionRectangle = ({ drawZoneRef, enabled }) => {
           display:
             enabled && !mouseIsDown && mouseInsideDrawZone ? "block" : "none",
           position: "absolute",
-          left: `${mouseRelativeX}px`,
-          top: `${mouseRelativeY}px`,
+          left: `${mouseXRelativeToParent + 15}px`,
+          top: `${mouseYRelativeToParent + 15}px`,
           fontSize: "10px",
         }}
       >
-        <span style={{ backgroundColor: "white" }}>{mouseRelativeX}</span>
+        <span style={{ backgroundColor: "white" }}>
+          {mouseXRelativeToParent}
+        </span>
         <br />
-        <span style={{ backgroundColor: "white" }}>{mouseRelativeY}</span>
+        <span style={{ backgroundColor: "white" }}>
+          {mouseYRelativeToParent}
+        </span>
       </div>
       <div
         name="rectangle_xy"
