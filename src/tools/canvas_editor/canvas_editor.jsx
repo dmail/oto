@@ -96,16 +96,21 @@ const getHighestZIndex = () => {
   return highestZIndex;
 };
 const setDrawingProps = (drawing, props) => {
-  let someDiff = false;
+  const keysModified = [];
   for (const key of Object.keys(props)) {
     const value = props[key];
     if (drawing[key] !== value) {
-      someDiff = true;
+      keysModified.push(key);
       drawing[key] = value;
     }
   }
-  if (someDiff) {
-    drawingsSignal.value = [...drawingsSignal.value];
+
+  if (keysModified.length) {
+    if (keysModified.includes("zIndex")) {
+      drawingsSignal.value.sort((a, b) => a.zIndex - b.zIndex);
+    } else {
+      drawingsSignal.value = [...drawingsSignal.value];
+    }
   }
 };
 const setDrawingZIndex = (drawing, zIndex) => {
@@ -292,11 +297,14 @@ const CanvasEditor = () => {
             return;
           }
           const elements = document.elementsFromPoint(e.clientX, e.clientY);
-          const drawing = drawings.find((drawing) => {
-            return elements.find(
-              (element) => element === drawing.elementRef?.current,
-            );
-          });
+          const drawing = drawings
+            .slice()
+            .reverse()
+            .find((drawing) => {
+              return elements.find(
+                (element) => element === drawing.elementRef?.current,
+              );
+            });
           if (drawing) {
             if (colorPickerEnabled) {
               const canvas = drawing.elementRef.current;
@@ -466,8 +474,6 @@ const GridDrawing = ({
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    // canvas.width = canvas.offsetWidth;
-    // canvas.height = canvas.offsetHeight;
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.save();
     context.globalAlpha = opacity;
@@ -480,8 +486,10 @@ const GridDrawing = ({
       context.fill();
       context.closePath();
     };
-    const xCellLastIndex = Math.ceil(canvas.width / cellWidth);
-    const yCellLastIndex = Math.ceil(canvas.height / cellHeight);
+    const width = canvas.width;
+    const height = canvas.height;
+    const xCellLastIndex = Math.ceil(width / cellWidth);
+    const yCellLastIndex = Math.ceil(height / cellHeight);
     let xCellIndex = 0;
     let yCellIndex = 0;
     while (yCellIndex < yCellLastIndex) {
@@ -606,11 +614,9 @@ const Toolbar = ({
           </button>
         </legend>
         <div style="overflow:auto">
-          {drawings
-            .sort((a, b) => a.zIndex - b.zIndex)
-            .map((drawing) => {
-              return <LayerListItem key={drawing.id} drawing={drawing} />;
-            })}
+          {drawings.map((drawing) => {
+            return <LayerListItem key={drawing.id} drawing={drawing} />;
+          })}
         </div>
       </fieldset>
       <fieldset>
