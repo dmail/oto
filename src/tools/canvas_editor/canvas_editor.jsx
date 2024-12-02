@@ -402,6 +402,8 @@ const CanvasEditor = () => {
               onClick={() => {
                 addDrawing({
                   type: "grid",
+                  width: 100,
+                  height: 100,
                   cellWidth: 32,
                   cellHeight: 32,
                 });
@@ -518,13 +520,14 @@ const DrawingFacade = ({ drawing }) => {
           url={url}
           opacity={opacity}
           onDraw={({ url, width, height, canvas }) => {
-            if (url.startsWith("data")) {
-              return;
-            }
             setDrawingProps(drawing, {
-              width,
-              height,
-              url: canvas.toDataURL(),
+              ...(url.startsWith("data")
+                ? null
+                : {
+                    width,
+                    height,
+                    url: canvas.toDataURL(),
+                  }),
             });
           }}
         />
@@ -532,13 +535,18 @@ const DrawingFacade = ({ drawing }) => {
     );
   }
   if (type === "grid") {
-    const { cellWidth, cellHeight, opacity } = drawing;
+    const { cellWidth, cellHeight, opacity, width, height } = drawing;
     return (
       <DrawingContainer drawing={drawing}>
         <GridDrawing
+          width={width}
+          height={height}
           opacity={opacity}
           cellWidth={cellWidth}
           cellHeight={cellHeight}
+          onDraw={() => {
+            setDrawingProps(drawing, {});
+          }}
         />
       </DrawingContainer>
     );
@@ -571,7 +579,14 @@ const DrawingContainer = ({ drawing, children }) => {
   );
 };
 
-const GridDrawing = ({ width, height, opacity, cellWidth, cellHeight }) => {
+const GridDrawing = ({
+  width,
+  height,
+  opacity,
+  cellWidth,
+  cellHeight,
+  onDraw,
+}) => {
   const canvasRef = useRef();
 
   useLayoutEffect(() => {
@@ -608,7 +623,10 @@ const GridDrawing = ({ width, height, opacity, cellWidth, cellHeight }) => {
       yCellIndex++;
     }
     context.restore();
-  }, [opacity, cellWidth, cellHeight]);
+    if (onDraw) {
+      onDraw();
+    }
+  }, [opacity, width, height, cellWidth, cellHeight, onDraw]);
 
   return <canvas ref={canvasRef} width={width} height={height}></canvas>;
 };
@@ -641,7 +659,10 @@ const ImageDrawing = ({ url, width, height, opacity, onDraw }) => {
 const LayerListItem = ({ drawing }) => {
   const isVisible = drawing.isVisible;
   const canvasRef = useRef();
-  useDrawImage(canvasRef.current, drawing.offscreenCanvas);
+  useDrawImage(canvasRef.current, () => {
+    const drawingElement = drawing.elementRef.current;
+    return drawingElement?.querySelector("canvas");
+  });
 
   return (
     <div
@@ -767,7 +788,9 @@ const ActiveLayerForm = ({ activeLayer }) => {
           type="number"
           value={activeLayer.width}
           style={{ width: "4em" }}
-          readOnly
+          onInput={(e) => {
+            setDrawingProps(activeLayer, { width: e.target.valueAsNumber });
+          }}
         ></input>
       </label>
       <label>
@@ -776,7 +799,9 @@ const ActiveLayerForm = ({ activeLayer }) => {
           type="number"
           value={activeLayer.height}
           style={{ width: "4em" }}
-          readOnly
+          onInput={(e) => {
+            setDrawingProps(activeLayer, { height: e.target.valueAsNumber });
+          }}
         ></input>
       </label>
       <br />
