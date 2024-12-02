@@ -1,6 +1,5 @@
 import { batch, computed, effect, signal } from "@preact/signals";
 import { render } from "preact";
-import { memo } from "preact/compat";
 import {
   useCallback,
   useEffect,
@@ -173,8 +172,10 @@ effect(() => {
     }),
   );
 });
-const addDrawing = ({ type = "image", url, x = 0, y = 0 }) => {
+let drawingId = 1;
+const addDrawing = ({ type = "image", url, x = 0, y = 0, ...props }) => {
   const drawing = {
+    id: drawingId++,
     type,
     url,
     x,
@@ -183,6 +184,7 @@ const addDrawing = ({ type = "image", url, x = 0, y = 0 }) => {
     isVisible: true,
     isActive: false,
     opacity: 1,
+    ...props,
   };
   const drawings = drawingsSignal.value;
   drawingsSignal.value = [...drawings, drawing];
@@ -344,8 +346,8 @@ const CanvasEditor = () => {
           }
         }}
       >
-        {drawings.map((drawing, index) => {
-          return <DrawingFacade key={index} {...drawing} drawing={drawing} />;
+        {drawings.map((drawing) => {
+          return <DrawingFacade key={drawing.id} drawing={drawing} />;
         })}
         <SelectionRectangle
           drawZoneRef={drawZoneRef}
@@ -400,6 +402,8 @@ const CanvasEditor = () => {
               onClick={() => {
                 addDrawing({
                   type: "grid",
+                  cellWidth: 32,
+                  cellHeight: 32,
                 });
               }}
             >
@@ -683,39 +687,19 @@ const SelectionRectangle = ({ drawZoneRef, enabled }) => {
   );
 };
 
-const DrawingFacade = memo(({ type, drawing, ...props }) => {
-  if (!drawing.isVisible) {
+const DrawingFacade = ({ drawing }) => {
+  const { isVisible } = drawing;
+  if (!isVisible) {
     return null;
   }
-
-  const Wrapper = ({ children }) => {
-    const elementRef = useRef();
-    drawing.elementRef = elementRef;
-    return (
-      <div
-        ref={elementRef}
-        tabIndex={-1}
-        onFocus={() => {
-          setActiveDrawing(drawing);
-        }}
-        style={{
-          outline: props.isActive ? "2px dotted black" : "",
-          position: "absolute",
-          zIndex: props.zIndex,
-          left: `${props.x}px`,
-          top: `${props.y}px`,
-        }}
-      >
-        {children}
-      </div>
-    );
-  };
-
+  const { type } = drawing;
   if (type === "image") {
+    const { url, opacity } = drawing;
     return (
-      <Wrapper>
+      <DrawingContainer drawing={drawing}>
         <ImageLayerFacade
-          {...props}
+          url={url}
+          opacity={opacity}
           onDraw={({ url, width, height, canvas }) => {
             if (url.startsWith("data")) {
               return;
@@ -727,22 +711,43 @@ const DrawingFacade = memo(({ type, drawing, ...props }) => {
             });
           }}
         />
-      </Wrapper>
+      </DrawingContainer>
     );
   }
   if (type === "grid") {
+    const { cellWidth, cellHeight, opacity } = drawing;
     return (
-      <Wrapper>
-        <Grid {...props} />
-      </Wrapper>
+      <DrawingContainer drawing={drawing}>
+        <Grid opacity={opacity} cellWidth={cellWidth} cellHeight={cellHeight} />
+      </DrawingContainer>
     );
   }
+  return <DrawingContainer drawing={drawing} />;
+};
+
+const DrawingContainer = ({ drawing, children }) => {
+  const { isActive, x, y, zIndex } = drawing;
+  const elementRef = useRef();
+  drawing.elementRef = elementRef;
   return (
-    <Wrapper>
-      <Drawing {...props} />
-    </Wrapper>
+    <div
+      ref={elementRef}
+      tabIndex={-1}
+      onFocus={() => {
+        setActiveDrawing(drawing);
+      }}
+      style={{
+        outline: isActive ? "2px dotted black" : "",
+        position: "absolute",
+        zIndex,
+        left: `${x}px`,
+        top: `${y}px`,
+      }}
+    >
+      {children}
+    </div>
   );
-});
+};
 
 const ActiveLayerForm = ({ activeLayer }) => {
   return (
@@ -918,12 +923,12 @@ const GridLayerForm = ({ activeLayer }) => {
   );
 };
 
-const ImageLayerFacade = ({ url, ...props }) => {
+const ImageLayerFacade = ({ url, opacity, onDraw }) => {
   const [image] = useImage(url);
   if (!image) {
     return null;
   }
-  return <Drawing image={image} url={url} {...props} />;
+  return <Drawing url={url} opacity={opacity} onDraw={onDraw} image={image} />;
 };
 
 const Drawing = ({ image, url, opacity, onDraw }) => {
@@ -932,7 +937,7 @@ const Drawing = ({ image, url, opacity, onDraw }) => {
   const width = image ? image.naturalWidth * zoom : 0;
   const height = image ? image.naturalHeight * zoom : 0;
   useDrawImage(canvasRef, image, {
-    // debug: true,
+    debug: true,
     x: 0,
     y: 0,
     width,
