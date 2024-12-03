@@ -1,6 +1,7 @@
 export const PauseDialog = ({ visible }) => {
   return (
     <div
+      name="pause_dialog"
       style={{
         position: "absolute",
         display: visible ? "block" : "none",

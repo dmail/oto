@@ -33,8 +33,13 @@ export const Box = ({
       return;
     }
     const div = elementRef.current;
-    const availableWidth = div.parentNode.clientWidth;
-    const availableHeight = div.parentNode.clientHeight;
+    const offsetParent = div.offsetParent;
+    let availableWidth = offsetParent.clientWidth;
+    let availableHeight = offsetParent.clientHeight;
+    const paddings = getPaddings(offsetParent);
+    availableWidth -= paddings.left + paddings.right;
+    availableHeight -= paddings.top + paddings.bottom;
+
     let widthComputed;
     if (typeof width === "number") {
       widthComputed = width;
@@ -49,9 +54,19 @@ export const Box = ({
     }
     if (width === "auto") {
       widthComputed = heightComputed * aspectRatio;
+      if (widthComputed > availableWidth) {
+        // ensure cannot exceed available width
+        widthComputed = availableWidth;
+        heightComputed = widthComputed / aspectRatio;
+      }
     }
     if (height === "auto") {
       heightComputed = widthComputed / aspectRatio;
+      if (heightComputed > availableHeight) {
+        // ensure cannot exceed available height
+        heightComputed = availableHeight;
+        widthComputed = heightComputed * aspectRatio;
+      }
     }
     let xComputed;
     if (x === "start") {
@@ -65,6 +80,7 @@ export const Box = ({
     } else if (typeof x === "string" && x.endsWith("%")) {
       xComputed = availableWidth * (parseInt(x) / 100);
     }
+    xComputed += paddings.left;
     let yComputed;
     if (y === "start") {
       yComputed = 0;
@@ -77,6 +93,7 @@ export const Box = ({
     } else if (typeof y === "string" && y.endsWith("%")) {
       yComputed = availableHeight * (parseInt(y) / 100);
     }
+    yComputed += paddings.top;
     div.style.left = `${xComputed}px`;
     div.style.top = `${yComputed}px`;
     div.style.width = `${widthComputed}px`;
@@ -98,4 +115,15 @@ export const Box = ({
       {shouldCompute ? null : children}
     </div>
   );
+};
+
+const getPaddings = (element) => {
+  const { paddingLeft, paddingRight, paddingTop, paddingBottom } =
+    window.getComputedStyle(element, null);
+  return {
+    left: parseFloat(paddingLeft),
+    right: parseFloat(paddingRight),
+    top: parseFloat(paddingTop),
+    bottom: parseFloat(paddingBottom),
+  };
 };

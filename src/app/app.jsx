@@ -170,7 +170,7 @@ export const App = () => {
               opacity: 0.5,
             }}
           ></Box>
-          <Box name="enemy_box" height="45%" x="center" y="20%">
+          <Box name="enemy_box" height="40%" x="center" y="20%">
             <Taurus
               elementRef={enemyElementRef}
               hp={enemyHp}
@@ -236,30 +236,23 @@ export const App = () => {
             justifyContent: "center",
           }}
         >
-          <div
+          <Box
             name="hero_hud"
+            height="100%"
+            width="50%"
+            x="center"
             style={{
               border: "2px solid white",
-              padding: "2px",
-              height: "100%",
+              padding: "1%",
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                height: "100%",
-                alignItems: "center",
-                padding: "4px",
-              }}
-            >
-              <div style={{ height: "20px", width: "120px" }}>
-                <Lifebar value={heroHp} max={heroMaxHp} />
-              </div>
-              <div style={{ width: "48px", height: "48px" }}>
-                <SwordAIcon />
-              </div>
-            </div>
-          </div>
+            <Box name="lifebar_box" height="80%" width="80%" y="center">
+              <Lifebar value={heroHp} max={heroMaxHp} />
+            </Box>
+            <Box name="weapon_box" x="end" width="20%">
+              <SwordAIcon />
+            </Box>
+          </Box>
         </Box>
         <PauseDialog visible={pausedSignal.value} />
       </div>
