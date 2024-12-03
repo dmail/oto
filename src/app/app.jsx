@@ -148,14 +148,14 @@ export const App = () => {
     <div>
       <div
         name="screen"
-        style={{ position: "relative", width: "300px" }}
+        style={{ position: "relative", width: "400px" }}
         onClick={() => {
           if (turnStateRef.current === "idle" && !pausedSignal.value) {
             startTurn();
           }
         }}
       >
-        <div style={{ position: "relative", height: "260px", width: "100%" }}>
+        <div name="game" style={{ position: "relative", height: "260px" }}>
           <div
             name="background"
             style={{
@@ -179,19 +179,18 @@ export const App = () => {
               bottom: 0,
             }}
           >
-            <Box name="enemy_box" height={100} width={100} x="center" y={50}>
+            <Box name="enemy_box" height="50%" x="center" y="18%">
               <Taurus
                 elementRef={enemyElementRef}
                 hp={enemyHp}
                 hpMax={enemyHpMax}
               />
               <Box
-                x="center"
-                y="center"
                 name="weapon_box"
                 visible={weaponIsVisible}
-                width={60}
-                height={60}
+                x="center"
+                y="center"
+                height="50%"
               >
                 <SwordA elementRef={weaponElementRef} />
               </Box>
@@ -205,7 +204,7 @@ export const App = () => {
                 {enemyDamage}
               </Digits>
             </Box>
-            <Box name="hero_box" width={25} height={25} x="center" y={170}>
+            <Box name="hero_box" height="10%" x="center" y="70%">
               <Benjamin
                 elementRef={heroElementRef}
                 direction="top"

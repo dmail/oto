@@ -1,4 +1,2 @@
 - le personne doit avoir des caracs (atq/def/pv)
 - le monstre doit avoir de caracs (atq/def/pv)
-- afficher barre de vie du personnage
-- le monstre doit changer de sprite lorsque sa vie baisse
