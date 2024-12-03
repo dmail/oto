@@ -24,12 +24,17 @@ export const Box = ({
     width = "auto";
   }
 
-  const [computed, setComputed] = useState(false);
+  const [shouldCompute, shouldComputeSetter] = useState(true);
   useLayoutEffect(() => {
+    shouldComputeSetter(true);
+  }, [name, x, y, width, height, aspectRatio]);
+  useLayoutEffect(() => {
+    if (!shouldCompute) {
+      return;
+    }
     const div = elementRef.current;
     const availableWidth = div.parentNode.clientWidth;
     const availableHeight = div.parentNode.clientHeight;
-
     let widthComputed;
     if (typeof width === "number") {
       widthComputed = width;
@@ -48,7 +53,6 @@ export const Box = ({
     if (height === "auto") {
       heightComputed = widthComputed / aspectRatio;
     }
-
     let xComputed;
     if (x === "start") {
       xComputed = 0;
@@ -61,7 +65,6 @@ export const Box = ({
     } else if (typeof x === "string" && x.endsWith("%")) {
       xComputed = availableWidth * (parseInt(x) / 100);
     }
-
     let yComputed;
     if (y === "start") {
       yComputed = 0;
@@ -74,13 +77,12 @@ export const Box = ({
     } else if (typeof y === "string" && y.endsWith("%")) {
       yComputed = availableHeight * (parseInt(y) / 100);
     }
-
     div.style.left = `${xComputed}px`;
     div.style.top = `${yComputed}px`;
     div.style.width = `${widthComputed}px`;
     div.style.height = `${heightComputed}px`;
-    setComputed(true);
-  }, [name, x, y, width, height, aspectRatio]);
+    shouldComputeSetter(false);
+  }, [shouldCompute]);
 
   return (
     <div
@@ -93,7 +95,7 @@ export const Box = ({
         visibility: visible ? "visible" : "hidden",
       }}
     >
-      {computed ? children : null}
+      {shouldCompute ? null : children}
     </div>
   );
 };

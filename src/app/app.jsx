@@ -148,88 +148,88 @@ export const App = () => {
     <div>
       <div
         name="screen"
-        style={{ position: "relative", width: "400px" }}
+        style={{ position: "relative", width: "400px", height: "300px" }}
         onClick={() => {
           if (turnStateRef.current === "idle" && !pausedSignal.value) {
             startTurn();
           }
         }}
       >
-        <div name="game" style={{ position: "relative", height: "260px" }}>
-          <div
-            name="background"
-            style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
-            }}
-          >
+        <Box name="game" height="85%" width="100%">
+          <Box name="background" height="100%" width="100%">
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
-          </div>
-          <div
-            name="front"
+          </Box>
+          <Box
+            name="top_ui"
+            height="20%"
+            width="100%"
+            y="start"
             style={{
-              position: "absolute",
-              left: 0,
-              right: 0,
-              top: 0,
-              bottom: 0,
+              background: "blue",
+              opacity: 0.5,
             }}
-          >
-            <Box name="enemy_box" height="50%" x="center" y="18%">
-              <Taurus
-                elementRef={enemyElementRef}
-                hp={enemyHp}
-                hpMax={enemyHpMax}
-              />
-              <Box
-                name="weapon_box"
-                visible={weaponIsVisible}
-                x="center"
-                y="center"
-                height="50%"
-              >
-                <SwordA elementRef={weaponElementRef} />
-              </Box>
-              <Digits
-                name="enemy_digits"
-                elementRef={enemyDigitsElementRef}
-                visible={enemyDamage !== null}
-                x="center"
-                y="center"
-              >
-                {enemyDamage}
-              </Digits>
+          ></Box>
+          <Box name="enemy_box" height="45%" x="center" y="20%">
+            <Taurus
+              elementRef={enemyElementRef}
+              hp={enemyHp}
+              hpMax={enemyHpMax}
+            />
+            <Box
+              name="weapon_box"
+              visible={weaponIsVisible}
+              x="center"
+              y="center"
+              height="50%"
+            >
+              <SwordA elementRef={weaponElementRef} />
             </Box>
-            <Box name="hero_box" height="10%" x="center" y="70%">
-              <Benjamin
-                elementRef={heroElementRef}
-                direction="top"
-                activity="walking"
-              />
-              <Digits
-                name="party_member_digits"
-                elementRef={heroDigitsElementRef}
-                visible={heroDamage !== null}
-                x="center"
-                y="end"
-                // for some reason it's better centered with that
-                dx={2}
-              >
-                {heroDamage}
-              </Digits>
-            </Box>
-          </div>
-        </div>
-        <div
+            <Digits
+              name="enemy_digits"
+              elementRef={enemyDigitsElementRef}
+              visible={enemyDamage !== null}
+              x="center"
+              y="center"
+            >
+              {enemyDamage}
+            </Digits>
+          </Box>
+          <Box name="hero_box" height="10%" x="center" y="70%">
+            <Benjamin
+              elementRef={heroElementRef}
+              direction="top"
+              activity="walking"
+            />
+            <Digits
+              name="party_member_digits"
+              elementRef={heroDigitsElementRef}
+              visible={heroDamage !== null}
+              x="center"
+              y="end"
+              // for some reason it's better centered with that
+              dx={2}
+            >
+              {heroDamage}
+            </Digits>
+          </Box>
+          <Box
+            name="bottom_ui"
+            height="20%"
+            width="100%"
+            y="end"
+            style={{
+              background: "blue",
+              opacity: 0.5,
+            }}
+          ></Box>
+        </Box>
+        <Box
           name="bottom_hud"
+          height="15%"
+          width="100%"
+          y="end"
           style={{
-            position: "relative",
-            height: "50px",
-            width: "100%",
             background: "black",
             padding: "1px",
             display: "flex",
@@ -260,7 +260,7 @@ export const App = () => {
               </div>
             </div>
           </div>
-        </div>
+        </Box>
         <PauseDialog visible={pausedSignal.value} />
       </div>
       <div>
