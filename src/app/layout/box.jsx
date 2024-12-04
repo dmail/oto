@@ -1,4 +1,38 @@
-import { useLayoutEffect, useRef, useState } from "preact/hooks";
+/**
+ * This component allow to position and dimension itself as follow:
+ * x: "start" | "center" | "end" | number | string (e.g. "50%")
+ * y: "start" | "center" | "end" | number | string (e.g. "50%")
+ * width: number | string (e.g. "50%") | "auto"
+ * height: number | string (e.g. "50%") | "auto"
+ * aspectRatio: number
+ *
+ * Best parts
+ * - "start", "center", "end" position allow to position the box
+ * dynamically depending on it size
+ * - aspectRatio allow width or height to be dertermined accoring to the other
+ * - width height cannot exceed parent size, even when computed from aspectRatio
+ *
+ * Technical details
+ *
+ * useLayoutEffect are called from child to parent
+ * https://github.com/facebook/react/issues/15281
+ * But child needs parent size to be determined to position itself
+ * (happens when <Box> elements are nested)
+ * To solve this, we use a <LayoutEffectParentBeforeAnyChild /> rendered before any child
+ * see https://gist.github.com/nikparo/33544fe0228dd5aa6f0de8d03e96c378
+ *
+ * This allow to call useLayoutEffect in the expected order
+ * However when component is re-rendered it must re-render the children
+ * so that they are all respecting the new positions&dimensions
+ * To achieve this we use a state variable shouldRerender
+ *
+ * We could use solely shouldRerender state but that means on the first render
+ * all children would need a re-render to start rendering. With the current technic
+ * we got the best of both worlds where first render is immediate and subsequent renders
+ * are properly re-rendering children
+ */
+
+import { useCallback, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 export const Box = ({
   name,
@@ -24,12 +58,18 @@ export const Box = ({
     width = "auto";
   }
 
-  const [shouldCompute, shouldComputeSetter] = useState(true);
+  const [shouldRerender, shouldRerenderSetter] = useState(false);
+  const isFirstRenderRef = useRef(false);
   useLayoutEffect(() => {
-    shouldComputeSetter(true);
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
+    shouldRerenderSetter(true);
   }, [name, x, y, width, height, aspectRatio]);
-  useLayoutEffect(() => {
-    if (!shouldCompute) {
+
+  const layoutEffectCallback = useCallback(() => {
+    if (!shouldRerender && !isFirstRenderRef.current) {
       return;
     }
     const div = elementRef.current;
@@ -98,8 +138,8 @@ export const Box = ({
     div.style.top = `${yComputed}px`;
     div.style.width = `${widthComputed}px`;
     div.style.height = `${heightComputed}px`;
-    shouldComputeSetter(false);
-  }, [shouldCompute]);
+    shouldRerenderSetter(false);
+  }, [shouldRerender]);
 
   return (
     <div
@@ -112,9 +152,17 @@ export const Box = ({
         visibility: visible ? "visible" : "hidden",
       }}
     >
-      {shouldCompute ? null : children}
+      <LayoutEffectParentBeforeAnyChild callback={layoutEffectCallback} />
+      {shouldRerender ? null : children}
     </div>
   );
+};
+
+const LayoutEffectParentBeforeAnyChild = ({ callback, children }) => {
+  useLayoutEffect(() => {
+    return callback();
+  }, [callback]);
+  return children;
 };
 
 const getPaddings = (element) => {

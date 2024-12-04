@@ -23,9 +23,6 @@ export const useSprite = ({
   } else {
     y = parseInt(y);
   }
-  if (id === "taurus") {
-    console.log({ url, x, y });
-  }
   width = parseInt(width);
   height = parseInt(height);
   if (transparentColor) {
