@@ -253,14 +253,14 @@ export const App = () => {
         </Box>
         <Box
           name="bottom_hud"
-          height="15%"
           width="100%"
+          height="15%"
+          maxHeight="60"
           y="end"
+          innerSpacing="xss"
           style={{
             background: "black",
-            maxHeight: "60px",
           }}
-          innerSpacing="xss"
         >
           <Box
             name="hero_hud"

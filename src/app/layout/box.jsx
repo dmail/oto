@@ -68,7 +68,6 @@ export const Box = ({
         : height,
     maxWidth,
     maxHeight,
-    flexWrap: "wrap",
   };
   if (innerSpacing) {
     style.padding =
