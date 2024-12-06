@@ -1,7 +1,7 @@
 /**
  * This component allow to position and dimension itself as follow:
- * x: "start" | "center" | "end" | number | string (e.g. "50%")
- * y: "start" | "center" | "end" | number | string (e.g. "50%")
+ * x: "start" | "center" | "end" | number | string (e.g. "50%") | "fit-content"
+ * y: "start" | "center" | "end" | number | string (e.g. "50%") | "fit-content"
  * width: number | string (e.g. "50%") | "auto"
  * height: number | string (e.g. "50%") | "auto"
  * aspectRatio: number
@@ -32,7 +32,7 @@
  * are properly re-rendering children
  */
 
-import { useCallback, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 
 export const Box = ({
   name,
@@ -58,37 +58,31 @@ export const Box = ({
     width = "auto";
   }
 
-  const [shouldRerender, shouldRerenderSetter] = useState(false);
-  const isFirstRenderRef = useRef(false);
   useLayoutEffect(() => {
-    if (isFirstRenderRef.current) {
-      isFirstRenderRef.current = false;
-      return;
-    }
-    shouldRerenderSetter(true);
-  }, [name, x, y, width, height, aspectRatio]);
-
-  const layoutEffectCallback = useCallback(() => {
-    if (!shouldRerender && !isFirstRenderRef.current) {
-      return;
-    }
-    const div = elementRef.current;
-    const offsetParent = div.offsetParent;
+    const element = elementRef.current;
+    const offsetParent = element.offsetParent;
     let availableWidth = offsetParent.clientWidth;
     let availableHeight = offsetParent.clientHeight;
-    const paddings = getPaddings(offsetParent);
-    availableWidth -= paddings.left + paddings.right;
-    availableHeight -= paddings.top + paddings.bottom;
+    const { paddingSizes } = getPaddingAndBorderSizes(offsetParent);
+    const { borderSizes } = getPaddingAndBorderSizes(element);
+    availableWidth -= paddingSizes.left + paddingSizes.right;
+    availableHeight -= paddingSizes.top + paddingSizes.bottom;
 
     let widthComputed;
     if (typeof width === "number") {
       widthComputed = width;
+    } else if (width === "fit-content") {
+      widthComputed =
+        element.clientWidth + borderSizes.left + borderSizes.right;
     } else if (typeof width === "string" && width.endsWith("%")) {
       widthComputed = availableWidth * (parseInt(width) / 100);
     }
     let heightComputed;
     if (typeof height === "number") {
       heightComputed = height;
+    } else if (height === "fit-content") {
+      heightComputed =
+        element.clientHeight + borderSizes.top + borderSizes.bottom;
     } else if (typeof height === "string" && height.endsWith("%")) {
       heightComputed = availableHeight * (parseInt(height) / 100);
     }
@@ -120,7 +114,7 @@ export const Box = ({
     } else if (typeof x === "string" && x.endsWith("%")) {
       xComputed = availableWidth * (parseInt(x) / 100);
     }
-    xComputed += paddings.left;
+    xComputed += paddingSizes.left;
     let yComputed;
     if (y === "start") {
       yComputed = 0;
@@ -133,13 +127,12 @@ export const Box = ({
     } else if (typeof y === "string" && y.endsWith("%")) {
       yComputed = availableHeight * (parseInt(y) / 100);
     }
-    yComputed += paddings.top;
-    div.style.left = `${xComputed}px`;
-    div.style.top = `${yComputed}px`;
-    div.style.width = `${widthComputed}px`;
-    div.style.height = `${heightComputed}px`;
-    shouldRerenderSetter(false);
-  }, [shouldRerender]);
+    yComputed += paddingSizes.top;
+    element.style.left = `${xComputed}px`;
+    element.style.top = `${yComputed}px`;
+    element.style.width = `${widthComputed}px`;
+    element.style.height = `${heightComputed}px`;
+  }, [name, width, height, aspectRatio, x, y]);
 
   return (
     <div
@@ -149,29 +142,50 @@ export const Box = ({
       style={{
         ...props.style,
         position: "absolute",
+        display: "inline-block",
+        width: width === "fit-content" ? "auto" : width,
+        height: height === "fit-content" ? "auto" : height,
         visibility: visible ? "visible" : "hidden",
       }}
     >
-      <LayoutEffectParentBeforeAnyChild callback={layoutEffectCallback} />
-      {shouldRerender ? null : children}
+      <BeforeChildrenLayoutEffect />
+      {children}
+      <AfterChildrenLayoutEffect />
     </div>
   );
 };
 
-const LayoutEffectParentBeforeAnyChild = ({ callback, children }) => {
-  useLayoutEffect(() => {
-    return callback();
-  }, [callback]);
-  return children;
+const BeforeChildrenLayoutEffect = () => {
+  return null;
 };
 
-const getPaddings = (element) => {
-  const { paddingLeft, paddingRight, paddingTop, paddingBottom } =
-    window.getComputedStyle(element, null);
+const AfterChildrenLayoutEffect = () => {
+  return null;
+};
+
+const getPaddingAndBorderSizes = (element) => {
+  const {
+    paddingLeft,
+    paddingRight,
+    paddingTop,
+    paddingBottom,
+    borderLeftWidth,
+    borderRightWidth,
+    borderTopWidth,
+    borderBottomWidth,
+  } = window.getComputedStyle(element, null);
   return {
-    left: parseFloat(paddingLeft),
-    right: parseFloat(paddingRight),
-    top: parseFloat(paddingTop),
-    bottom: parseFloat(paddingBottom),
+    paddingSizes: {
+      left: parseFloat(paddingLeft),
+      right: parseFloat(paddingRight),
+      top: parseFloat(paddingTop),
+      bottom: parseFloat(paddingBottom),
+    },
+    borderSizes: {
+      left: parseFloat(borderLeftWidth),
+      right: parseFloat(borderRightWidth),
+      top: parseFloat(borderTopWidth),
+      bottom: parseFloat(borderBottomWidth),
+    },
   };
 };

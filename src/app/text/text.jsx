@@ -1,10 +1,13 @@
 import { toChildArray } from "preact";
-import { useRef } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 
 export const Text = ({
+  name,
   elementRef = useRef(),
-  x,
-  y,
+  width = "auto",
+  height = "auto",
+  x = "start",
+  y = "start",
   dx = 0,
   dy = 0,
   fontFamily = "goblin",
@@ -84,25 +87,33 @@ export const Text = ({
     letterSpacing += thickness;
   }
 
+  useLayoutEffect(() => {
+    if (width === "auto" || height === "auto") {
+      const svg = elementRef.current;
+      const textBBox = textRef.current.getBBox();
+      if (width === "auto") {
+        svg.style.width = `${textBBox.width}px`;
+      }
+      if (height === "auto") {
+        svg.style.height = `${textBBox.height}px`;
+      }
+    }
+  }, [width, height, outlineColor, letterSpacing, lineHeight, size]);
+
   return (
     <svg
       {...props}
       ref={elementRef}
       xmlns="http://www.w3.org/2000/svg"
-      width="100%"
-      height="100%"
       style={{
+        ...props.style,
+        // width: width === "100%" ? width : undefined,
+        // height: height === "100%" ? height : undefined,
+        display: "block",
         visibility: visible ? "visible" : "hidden",
         pointerEvents: visible ? "auto" : "none",
-        dominantBaseline: "central",
-        position: "absolute",
+        dominantBaseline: "text-before-edge",
         overflow: "visible",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        width: "100%",
-        height: "100%",
         fontSize: size,
         fontFamily,
       }}
@@ -113,7 +124,6 @@ export const Text = ({
           font-family={fontFamily}
           stroke={outlineColor}
           stroke-width={thickness + 3}
-          // eslint-disable-next-line react/no-unknown-property
           letter-spacing={letterSpacing}
         >
           {textChildren}
@@ -124,7 +134,6 @@ export const Text = ({
         fill={color}
         stroke={color}
         stroke-width={thickness}
-        // eslint-disable-next-line react/no-unknown-property
         letter-spacing={letterSpacing}
       >
         {textChildren}

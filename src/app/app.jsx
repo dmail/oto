@@ -23,6 +23,7 @@ import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 import { Digits } from "./text/digits.jsx";
+import { Text } from "./text/text.jsx";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -160,16 +161,25 @@ export const App = () => {
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
           </Box>
-          <Box
-            name="top_ui"
-            height="20%"
-            width="100%"
-            y="start"
-            style={{
-              background: "blue",
-              opacity: 0.5,
-            }}
-          ></Box>
+          <Box name="top_ui" height="20%" width="100%" y="start">
+            <Box
+              name="text_container"
+              x="center"
+              y="center"
+              width="fit-content"
+              height="fit-content"
+              style={{
+                background: "black",
+                padding: "10px",
+                border: "5px solid white",
+                borderRadius: "10%",
+              }}
+            >
+              <Text x="center" y="start" color="white">
+                Taurus
+              </Text>
+            </Box>
+          </Box>
           <Box name="enemy_box" height="40%" x="center" y="20%">
             <Taurus
               elementRef={enemyElementRef}
@@ -185,15 +195,22 @@ export const App = () => {
             >
               <SwordA elementRef={weaponElementRef} />
             </Box>
-            <Digits
-              name="enemy_digits"
+            <Box
+              name="enemy_digits_box"
               elementRef={enemyDigitsElementRef}
               visible={enemyDamage !== null}
-              x="center"
-              y="center"
+              width="100%"
+              height="100%"
             >
-              {enemyDamage}
-            </Digits>
+              <Box
+                x="center"
+                y="center"
+                width="fit-content"
+                height="fit-content"
+              >
+                <Digits name="enemy_digits">{enemyDamage}</Digits>
+              </Box>
+            </Box>
           </Box>
           <Box name="hero_box" height="10%" x="center" y="70%">
             <Benjamin
