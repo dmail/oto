@@ -13,6 +13,7 @@ export const Box = ({
   outerSpacingTop,
   width = vertical ? "100%" : "auto",
   height = vertical ? "auto" : "100%",
+  maxWidth,
   maxHeight,
   aspectRatio = 1,
   x = "start",
@@ -52,7 +53,7 @@ export const Box = ({
         element.style.width = `${width}px`;
       }
     }
-  }, [width, height, aspectRatio]);
+  }, [width, height, aspectRatio, innerSpacing, outerSpacingTop]);
 
   const style = {
     ...props.style,
@@ -60,11 +61,14 @@ export const Box = ({
     flexDirection: vertical ? "column" : "row",
     position: "relative",
     width: isFinite(width) ? `${width}px` : width === "..." ? undefined : width,
-    height: isFinite(height) ? `${height}px` : height,
+    height: isFinite(height)
+      ? `${height}px`
+      : height === "..."
+        ? undefined
+        : height,
+    maxWidth,
     maxHeight,
     flexWrap: "wrap",
-    minWidth: height === "..." ? 0 : undefined,
-    minHeight: width === "..." ? 0 : undefined,
   };
   if (innerSpacing) {
     style.padding =
