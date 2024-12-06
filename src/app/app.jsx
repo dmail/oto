@@ -150,7 +150,7 @@ export const App = () => {
   return (
     <div>
       <Box
-        rows
+        vertical
         name="screen"
         width="400"
         height="300"
@@ -160,7 +160,7 @@ export const App = () => {
           }
         }}
       >
-        <Box rows name="game" height="85%" width="100%">
+        <Box vertical name="game" height="85%" width="100%">
           <Zone name="background" height="100%" width="100%">
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
@@ -255,18 +255,17 @@ export const App = () => {
         </Box>
         <Box
           name="bottom_hud"
-          rows
           height="15%"
           width="100%"
           y="end"
           style={{
             background: "black",
           }}
-          spacing="xss"
+          innerSpacing="xss"
         >
           <Box
             name="hero_hud"
-            spacing="s"
+            innerSpacing="s"
             width="50%"
             style={{
               border: "2px solid white",

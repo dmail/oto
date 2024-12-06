@@ -89,7 +89,7 @@ export const Zone = ({
       style={{
         ...props.style,
         position: "absolute",
-        display: "inline-block",
+        display: "inline-flex",
         width: widthDependsOnChildren ? "auto" : width,
         height: heightDependsOnChildren ? "auto" : height,
         visibility: visible ? "visible" : "hidden",

@@ -2,15 +2,15 @@ import { useLayoutEffect, useRef } from "preact/hooks";
 
 export const Box = ({
   elementRef = useRef(),
-  rows = false,
+  vertical = false,
   children,
-  spacing,
-  spacingTop,
-  spacingLeft,
-  spacingRight,
-  spacingBottom,
-  width = rows ? "100%" : "auto",
-  height = rows ? "fit-content" : "100%",
+  innerSpacing,
+  innerSpacingTop,
+  innerSpacingLeft,
+  innerSpacingRight,
+  innerSpacingBottom,
+  width = vertical ? "100%" : "auto",
+  height = vertical ? "fit-content" : "100%",
   aspectRatio = 1,
   x = "start",
   y = "start",
@@ -31,7 +31,7 @@ export const Box = ({
   const style = {
     ...props.style,
     display: "inline-flex",
-    flexDirection: rows ? "row" : "column",
+    flexDirection: vertical ? "row" : "column",
     position: "relative",
     width: isFinite(width) ? `${width}px` : width === "..." ? undefined : width,
     height: isFinite(height) ? `${height}px` : height,
@@ -39,31 +39,35 @@ export const Box = ({
     minWidth: height === "..." ? 0 : undefined,
     minHeight: width === "..." ? 0 : undefined,
   };
-  if (spacing) {
+  if (innerSpacing) {
     style.padding =
-      typeof spacing === "number" ? spacing : SPACING_SIZES[spacing];
+      typeof innerSpacing === "number"
+        ? innerSpacing
+        : SPACING_SIZES[innerSpacing];
   }
-  if (spacingTop) {
-    style.paddingTop =
-      typeof spacingTop === "number" ? spacingTop : SPACING_SIZES[spacingTop];
+  if (innerSpacingTop) {
+    style.innerSpacingTop =
+      typeof innerSpacingTop === "number"
+        ? innerSpacingTop
+        : SPACING_SIZES[innerSpacingTop];
   }
-  if (spacingLeft) {
+  if (innerSpacingLeft) {
     style.paddingLeft =
-      typeof spacingLeft === "number"
-        ? spacingLeft
-        : SPACING_SIZES[spacingLeft];
+      typeof innerSpacingLeft === "number"
+        ? innerSpacingLeft
+        : SPACING_SIZES[innerSpacingLeft];
   }
-  if (spacingRight) {
+  if (innerSpacingRight) {
     style.paddingRight =
-      typeof spacingRight === "number"
-        ? spacingRight
-        : SPACING_SIZES[spacingRight];
+      typeof innerSpacingRight === "number"
+        ? innerSpacingRight
+        : SPACING_SIZES[innerSpacingRight];
   }
-  if (spacingBottom) {
+  if (innerSpacingBottom) {
     style.paddingBottom =
-      typeof spacingBottom === "number"
-        ? spacingBottom
-        : SPACING_SIZES[spacingBottom];
+      typeof innerSpacingBottom === "number"
+        ? innerSpacingBottom
+        : SPACING_SIZES[innerSpacingBottom];
   }
   if (height === "..." || width === "...") {
     style.minWidth = 0;
