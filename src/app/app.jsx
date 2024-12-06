@@ -218,17 +218,23 @@ export const App = () => {
               direction="top"
               activity="walking"
             />
-            <Digits
-              name="party_member_digits"
+            <Box
+              name="hero_digits_box"
               elementRef={heroDigitsElementRef}
               visible={heroDamage !== null}
-              x="center"
-              y="end"
-              // for some reason it's better centered with that
-              dx={2}
+              width="100%"
+              height="100%"
             >
-              {heroDamage}
-            </Digits>
+              <Box x="center" y="end" width="fit-content" height="fit-content">
+                <Digits
+                  name="hero_digits"
+                  // for some reason it's better centered with that
+                  dx={2}
+                >
+                  {heroDamage}
+                </Digits>
+              </Box>
+            </Box>
           </Box>
           <Box
             name="bottom_ui"
