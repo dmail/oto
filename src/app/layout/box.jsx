@@ -73,7 +73,7 @@ export const Box = ({
     if (typeof width === "number") {
       widthComputed = width;
     } else if (width === "fit-content") {
-      element.style.width = "auto";
+      element.style.width = "auto"; // important when re-rendering, otherwise the width is fixed
       widthComputed =
         element.clientWidth + borderSizes.left + borderSizes.right;
     } else if (typeof width === "string" && width.endsWith("%")) {
@@ -83,7 +83,7 @@ export const Box = ({
     if (typeof height === "number") {
       heightComputed = height;
     } else if (height === "fit-content") {
-      element.style.height = "auto";
+      element.style.height = "auto"; // important when re-rendering, otherwise the height is fixed
       heightComputed =
         element.clientHeight + borderSizes.top + borderSizes.bottom;
     } else if (typeof height === "string" && height.endsWith("%")) {
