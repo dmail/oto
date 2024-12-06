@@ -21,6 +21,7 @@ import { useBooleanState } from "./hooks/use_boolean_state.js";
 import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
+import { Spacing } from "./layout/spacing.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 import { Digits } from "./text/digits.jsx";
 import { Text } from "./text/text.jsx";
@@ -170,14 +171,15 @@ export const App = () => {
               height="fit-content"
               style={{
                 background: "black",
-                padding: "10px",
                 border: "5px solid white",
                 borderRadius: "10%",
               }}
             >
-              <Text x="center" y="start" color="white">
-                Taurus
-              </Text>
+              <Spacing size="10">
+                <Text x="center" y="start" color="white">
+                  Taurus
+                </Text>
+              </Spacing>
             </Box>
           </Box>
           <Box name="enemy_box" height="40%" x="center" y="20%">
@@ -254,28 +256,28 @@ export const App = () => {
           y="end"
           style={{
             background: "black",
-            padding: "1px",
-            display: "flex",
-            justifyContent: "center",
           }}
         >
-          <Box
-            name="hero_hud"
-            height="100%"
-            width="50%"
-            x="center"
-            style={{
-              border: "2px solid white",
-              padding: "1%",
-            }}
-          >
-            <Box name="lifebar_box" height="80%" width="80%" y="center">
-              <Lifebar value={heroHp} max={heroMaxHp} />
+          <Spacing size="xxs">
+            <Box
+              name="hero_hud"
+              height="100%"
+              width="50%"
+              x="center"
+              style={{
+                border: "2px solid white",
+              }}
+            >
+              <Spacing size="s">
+                <Box name="lifebar_box" height="80%" width="80%" y="center">
+                  <Lifebar value={heroHp} max={heroMaxHp} />
+                </Box>
+                <Box name="weapon_box" x="end" width="20%">
+                  <SwordAIcon />
+                </Box>
+              </Spacing>
             </Box>
-            <Box name="weapon_box" x="end" width="20%">
-              <SwordAIcon />
-            </Box>
-          </Box>
+          </Spacing>
         </Box>
         <PauseDialog visible={pausedSignal.value} />
       </div>
