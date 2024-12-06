@@ -59,6 +59,9 @@ export const Box = ({
     width = "auto";
   }
 
+  const widthDependsOnChildren = width === "fit-content";
+  const heightDependsOnChildren = height === "fit-content";
+
   useLayoutEffect(() => {
     updateDimenionAndPosition({
       element: elementRef.current,
@@ -68,7 +71,17 @@ export const Box = ({
       x,
       y,
     });
-  }, [name, width, height, aspectRatio, x, y, ...toChildArray(children)]);
+  }, [
+    name,
+    width,
+    height,
+    aspectRatio,
+    x,
+    y,
+    ...(widthDependsOnChildren || heightDependsOnChildren
+      ? toChildArray(children)
+      : []),
+  ]);
 
   return (
     <div
@@ -79,8 +92,8 @@ export const Box = ({
         ...props.style,
         position: "absolute",
         display: "inline-block",
-        width: width === "fit-content" ? "auto" : width,
-        height: height === "fit-content" ? "auto" : height,
+        width: widthDependsOnChildren ? "auto" : width,
+        height: heightDependsOnChildren ? "auto" : height,
         visibility: visible ? "visible" : "hidden",
       }}
     >
