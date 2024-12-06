@@ -35,7 +35,7 @@
 import { toChildArray } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 
-export const Box = ({
+export const Zone = ({
   name,
   elementRef = useRef(),
   visible = true,

@@ -20,8 +20,8 @@ import { WhiteCurtain } from "./fight/white_curtain.jsx";
 import { useBooleanState } from "./hooks/use_boolean_state.js";
 import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
-import { Box } from "./layout/box.jsx";
 import { Spacing } from "./layout/spacing.jsx";
+import { Zone } from "./layout/zone.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 import { Digits } from "./text/digits.jsx";
 import { Text } from "./text/text.jsx";
@@ -148,7 +148,7 @@ export const App = () => {
 
   return (
     <div>
-      <Zone
+      <Layout
         rows
         name="screen"
         width="400"
@@ -159,13 +159,13 @@ export const App = () => {
           }
         }}
       >
-        <Zone rows name="game" height="85%" width="100%">
-          <Box name="background" height="100%" width="100%">
+        <Layout rows name="game" height="85%" width="100%">
+          <Zone name="background" height="100%" width="100%">
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
-          </Box>
-          <Zone name="top_ui" height="20%" width="100%">
-            <Zone
+          </Zone>
+          <Layout name="top_ui" height="20%" width="100%">
+            <Layout
               name="text_container"
               x="center"
               y="center"
@@ -182,15 +182,15 @@ export const App = () => {
                   Taurus
                 </Text>
               </Spacing>
-            </Zone>
-          </Zone>
-          <Zone name="enemy_box" height="40%" x="center">
+            </Layout>
+          </Layout>
+          <Layout name="enemy_box" height="40%" x="center">
             <Taurus
               elementRef={enemyElementRef}
               hp={enemyHp}
               hpMax={enemyHpMax}
             />
-            <Box
+            <Zone
               name="weapon_box"
               visible={weaponIsVisible}
               x="center"
@@ -198,39 +198,39 @@ export const App = () => {
               height="50%"
             >
               <SwordA elementRef={weaponElementRef} />
-            </Box>
-            <Box
+            </Zone>
+            <Zone
               name="enemy_digits_box"
               elementRef={enemyDigitsElementRef}
               visible={enemyDamage !== null}
               width="100%"
               height="100%"
             >
-              <Box
+              <Zone
                 x="center"
                 y="center"
                 width="fit-content"
                 height="fit-content"
               >
                 <Digits name="enemy_digits">{enemyDamage}</Digits>
-              </Box>
-            </Box>
-          </Zone>
-          <Zone name="front_line" height="15%" width="100%"></Zone>
-          <Zone name="hero_box" height="10%" x="center">
+              </Zone>
+            </Zone>
+          </Layout>
+          <Layout name="front_line" height="15%" width="100%"></Layout>
+          <Layout name="hero_box" height="10%" x="center">
             <Benjamin
               elementRef={heroElementRef}
               direction="top"
               activity="walking"
             />
-            <Box
+            <Zone
               name="hero_digits_box"
               elementRef={heroDigitsElementRef}
               visible={heroDamage !== null}
               width="100%"
               height="100%"
             >
-              <Box x="center" y="end" width="fit-content" height="fit-content">
+              <Zone x="center" y="end" width="fit-content" height="fit-content">
                 <Digits
                   name="hero_digits"
                   // for some reason it's better centered with that
@@ -238,10 +238,10 @@ export const App = () => {
                 >
                   {heroDamage}
                 </Digits>
-              </Box>
-            </Box>
-          </Zone>
-          <Zone
+              </Zone>
+            </Zone>
+          </Layout>
+          <Layout
             name="bottom_ui"
             height="15%"
             width="100%"
@@ -250,9 +250,9 @@ export const App = () => {
               background: "blue",
               opacity: 0.5,
             }}
-          ></Zone>
-        </Zone>
-        <Zone
+          ></Layout>
+        </Layout>
+        <Layout
           name="bottom_hud"
           rows
           height="15%"
@@ -263,7 +263,7 @@ export const App = () => {
           }}
           spacing="xss"
         >
-          <Zone
+          <Layout
             name="hero_hud"
             spacing="s"
             width="50%"
@@ -271,14 +271,14 @@ export const App = () => {
               border: "2px solid white",
             }}
           >
-            <Zone name="lifebar_box" height="80%" width="80%" y="center">
+            <Layout name="lifebar_box" height="80%" width="80%" y="center">
               <Lifebar value={heroHp} max={heroMaxHp} />
-            </Zone>
-            <Zone name="weapon_box" width="20%">
+            </Layout>
+            <Layout name="weapon_box" width="20%">
               <SwordAIcon />
-            </Zone>
-          </Zone>
-          <Zone
+            </Layout>
+          </Layout>
+          <Layout
             name="ally_hud"
             width="50%"
             style={{
@@ -286,10 +286,10 @@ export const App = () => {
             }}
           >
             Empty
-          </Zone>
-        </Zone>
+          </Layout>
+        </Layout>
         <PauseDialog visible={pausedSignal.value} />
-      </Zone>
+      </Layout>
       <div>
         <button
           onClick={() => {
@@ -308,8 +308,8 @@ export const App = () => {
 };
 
 // to be renamed box later on
-// and Box will be renamed Zone
-const Zone = ({
+// and Box will be renamed Layout
+const Layout = ({
   elementRef = useRef(),
   rows = false,
   children,
