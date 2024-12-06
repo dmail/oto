@@ -71,15 +71,7 @@ export const Zone = ({
       x,
       y,
     });
-  }, [
-    name,
-    width,
-    height,
-    aspectRatio,
-    x,
-    y,
-    ...(widthDependsOnChildren || heightDependsOnChildren ? children : []),
-  ]);
+  }, [name, width, height, aspectRatio, x, y, ...children]);
 
   return (
     <div
