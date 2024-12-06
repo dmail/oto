@@ -148,22 +148,24 @@ export const App = () => {
 
   return (
     <div>
-      <div
+      <Zone
+        rows
         name="screen"
-        style={{ position: "relative", width: "400px", height: "300px" }}
+        width="400"
+        height="300"
         onClick={() => {
           if (turnStateRef.current === "idle" && !pausedSignal.value) {
             startTurn();
           }
         }}
       >
-        <Box name="game" height="85%" width="100%">
+        <Zone rows name="game" height="85%" width="100%">
           <Box name="background" height="100%" width="100%">
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
           </Box>
-          <Box name="top_ui" height="20%" width="100%" y="start">
-            <Box
+          <Zone name="top_ui" height="20%" width="100%">
+            <Zone
               name="text_container"
               x="center"
               y="center"
@@ -180,9 +182,9 @@ export const App = () => {
                   Taurus
                 </Text>
               </Spacing>
-            </Box>
-          </Box>
-          <Box name="enemy_box" height="40%" x="center" y="20%">
+            </Zone>
+          </Zone>
+          <Zone name="enemy_box" height="40%" x="center">
             <Taurus
               elementRef={enemyElementRef}
               hp={enemyHp}
@@ -213,8 +215,9 @@ export const App = () => {
                 <Digits name="enemy_digits">{enemyDamage}</Digits>
               </Box>
             </Box>
-          </Box>
-          <Box name="hero_box" height="10%" x="center" y="70%">
+          </Zone>
+          <Zone name="front_line" height="15%" width="100%"></Zone>
+          <Zone name="hero_box" height="10%" x="center">
             <Benjamin
               elementRef={heroElementRef}
               direction="top"
@@ -237,50 +240,56 @@ export const App = () => {
                 </Digits>
               </Box>
             </Box>
-          </Box>
-          <Box
+          </Zone>
+          <Zone
             name="bottom_ui"
-            height="20%"
+            height="15%"
             width="100%"
             y="end"
             style={{
               background: "blue",
               opacity: 0.5,
             }}
-          ></Box>
-        </Box>
-        <Box
+          ></Zone>
+        </Zone>
+        <Zone
           name="bottom_hud"
+          rows
           height="15%"
           width="100%"
           y="end"
           style={{
             background: "black",
           }}
+          spacing="xss"
         >
-          <Spacing size="xxs">
-            <Box
-              name="hero_hud"
-              height="100%"
-              width="50%"
-              x="center"
-              style={{
-                border: "2px solid white",
-              }}
-            >
-              <Spacing size="s">
-                <Box name="lifebar_box" height="80%" width="80%" y="center">
-                  <Lifebar value={heroHp} max={heroMaxHp} />
-                </Box>
-                <Box name="weapon_box" x="end" width="20%">
-                  <SwordAIcon />
-                </Box>
-              </Spacing>
-            </Box>
-          </Spacing>
-        </Box>
+          <Zone
+            name="hero_hud"
+            spacing="s"
+            width="50%"
+            style={{
+              border: "2px solid white",
+            }}
+          >
+            <Zone name="lifebar_box" height="80%" width="80%" y="center">
+              <Lifebar value={heroHp} max={heroMaxHp} />
+            </Zone>
+            <Zone name="weapon_box" width="20%">
+              <SwordAIcon />
+            </Zone>
+          </Zone>
+          <Zone
+            name="ally_hud"
+            width="50%"
+            style={{
+              border: "2px solid white",
+            }}
+          >
+            Empty
+          </Zone>
+        </Zone>
         <PauseDialog visible={pausedSignal.value} />
-      </div>
+      </Zone>
       <div>
         <button
           onClick={() => {
@@ -296,4 +305,106 @@ export const App = () => {
       </div>
     </div>
   );
+};
+
+// to be renamed box later on
+// and Box will be renamed Zone
+const Zone = ({
+  elementRef = useRef(),
+  rows = false,
+  children,
+  spacing,
+  spacingTop,
+  spacingLeft,
+  spacingRight,
+  spacingBottom,
+  width = rows ? "100%" : "auto",
+  height = rows ? "fit-content" : "100%",
+  aspectRatio = 1,
+  x = "start",
+  y = "start",
+  ...props
+}) => {
+  useLayoutEffect(() => {
+    const element = elementRef.current;
+    if (height === "auto") {
+      const width = height * aspectRatio;
+      element.style.width = `${width}px`;
+    }
+    if (width === "auto") {
+      const height = width / aspectRatio;
+      element.style.height = `${height}px`;
+    }
+  }, [width, height, aspectRatio]);
+
+  const style = {
+    ...props.style,
+    display: "inline-flex",
+    flexDirection: rows ? "row" : "column",
+    position: "relative",
+    width: isFinite(width) ? `${width}px` : width === "..." ? undefined : width,
+    height: isFinite(height) ? `${height}px` : height,
+    flexWrap: "wrap",
+    minWidth: height === "..." ? 0 : undefined,
+    minHeight: width === "..." ? 0 : undefined,
+  };
+  if (spacing) {
+    style.padding =
+      typeof spacing === "number" ? spacing : SPACING_SIZES[spacing];
+  }
+  if (spacingTop) {
+    style.paddingTop =
+      typeof spacingTop === "number" ? spacingTop : SPACING_SIZES[spacingTop];
+  }
+  if (spacingLeft) {
+    style.paddingLeft =
+      typeof spacingLeft === "number"
+        ? spacingLeft
+        : SPACING_SIZES[spacingLeft];
+  }
+  if (spacingRight) {
+    style.paddingRight =
+      typeof spacingRight === "number"
+        ? spacingRight
+        : SPACING_SIZES[spacingRight];
+  }
+  if (spacingBottom) {
+    style.paddingBottom =
+      typeof spacingBottom === "number"
+        ? spacingBottom
+        : SPACING_SIZES[spacingBottom];
+  }
+  if (height === "..." || width === "...") {
+    style.minWidth = 0;
+    style.minHeight = 0;
+    style.flexGrow = 1;
+  }
+  style.alignSelf = {
+    start: "flex-start",
+    center: "center",
+    end: "flex-end",
+  }[y];
+  if (x === "center") {
+    style.marginLeft = "auto";
+    style.marginRight = "auto";
+  }
+  if (y === "center") {
+    style.marginTop = "auto";
+    style.marginBottom = "auto";
+  }
+  return (
+    <div {...props} ref={elementRef} style={style}>
+      {children}
+    </div>
+  );
+};
+
+const SPACING_SIZES = {
+  xxl: 100,
+  xl: 50,
+  l: 20,
+  md: 10,
+  s: 5,
+  xs: 2,
+  xxs: 1,
 };
