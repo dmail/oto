@@ -32,6 +32,7 @@
  * are properly re-rendering children
  */
 
+import { toChildArray } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 
 export const Box = ({
@@ -72,6 +73,7 @@ export const Box = ({
     if (typeof width === "number") {
       widthComputed = width;
     } else if (width === "fit-content") {
+      element.style.width = "auto";
       widthComputed =
         element.clientWidth + borderSizes.left + borderSizes.right;
     } else if (typeof width === "string" && width.endsWith("%")) {
@@ -81,6 +83,7 @@ export const Box = ({
     if (typeof height === "number") {
       heightComputed = height;
     } else if (height === "fit-content") {
+      element.style.height = "auto";
       heightComputed =
         element.clientHeight + borderSizes.top + borderSizes.bottom;
     } else if (typeof height === "string" && height.endsWith("%")) {
@@ -132,7 +135,7 @@ export const Box = ({
     element.style.top = `${yComputed}px`;
     element.style.width = `${widthComputed}px`;
     element.style.height = `${heightComputed}px`;
-  }, [name, width, height, aspectRatio, x, y]);
+  }, [name, width, height, aspectRatio, x, y, ...toChildArray(children)]);
 
   return (
     <div

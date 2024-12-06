@@ -2,7 +2,7 @@ import { toChildArray } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 
 export const Text = ({
-  name,
+  // name,
   elementRef = useRef(),
   width = "auto",
   height = "auto",
@@ -98,7 +98,15 @@ export const Text = ({
         svg.style.height = `${textBBox.height}px`;
       }
     }
-  }, [width, height, outlineColor, letterSpacing, lineHeight, size]);
+  }, [
+    width,
+    height,
+    outlineColor,
+    letterSpacing,
+    lineHeight,
+    size,
+    ...toChildArray(children),
+  ]);
 
   return (
     <svg
