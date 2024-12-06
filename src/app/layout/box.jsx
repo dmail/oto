@@ -9,6 +9,7 @@ export const Box = ({
   innerSpacingLeft,
   innerSpacingRight,
   innerSpacingBottom,
+  outerSpacingTop,
   width = vertical ? "100%" : "auto",
   height = vertical ? "fit-content" : "100%",
   aspectRatio = 1,
@@ -31,7 +32,7 @@ export const Box = ({
   const style = {
     ...props.style,
     display: "inline-flex",
-    flexDirection: vertical ? "row" : "column",
+    flexDirection: vertical ? "column" : "row",
     position: "relative",
     width: isFinite(width) ? `${width}px` : width === "..." ? undefined : width,
     height: isFinite(height) ? `${height}px` : height,
@@ -68,6 +69,12 @@ export const Box = ({
       typeof innerSpacingBottom === "number"
         ? innerSpacingBottom
         : SPACING_SIZES[innerSpacingBottom];
+  }
+  if (outerSpacingTop) {
+    style.marginTop =
+      typeof outerSpacingTop === "number"
+        ? outerSpacingTop
+        : SPACING_SIZES[outerSpacingTop];
   }
   if (height === "..." || width === "...") {
     style.minWidth = 0;

@@ -21,7 +21,6 @@ import { useBooleanState } from "./hooks/use_boolean_state.js";
 import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
-import { Spacing } from "./layout/spacing.jsx";
 import { Zone } from "./layout/zone.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 import { Digits } from "./text/digits.jsx";
@@ -160,7 +159,7 @@ export const App = () => {
           }
         }}
       >
-        <Box vertical name="game" height="85%" width="100%">
+        <Box vertical name="game" height="..." width="100%">
           <Zone name="background" height="100%" width="100%">
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
@@ -177,12 +176,11 @@ export const App = () => {
                 border: "5px solid white",
                 borderRadius: "10%",
               }}
+              innerSpacing="md"
             >
-              <Spacing size="10">
-                <Text x="center" y="start" color="white">
-                  Taurus
-                </Text>
-              </Spacing>
+              <Text x="center" y="start" color="white">
+                Taurus
+              </Text>
             </Box>
           </Box>
           <Box name="enemy_box" height="40%" x="center">
@@ -260,6 +258,7 @@ export const App = () => {
           y="end"
           style={{
             background: "black",
+            maxHeight: "60px",
           }}
           innerSpacing="xss"
         >
