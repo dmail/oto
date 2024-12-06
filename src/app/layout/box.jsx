@@ -61,7 +61,7 @@ export const Box = ({
 
   const widthDependsOnChildren = width === "fit-content";
   const heightDependsOnChildren = height === "fit-content";
-
+  children = toChildArray(children);
   useLayoutEffect(() => {
     updateDimenionAndPosition({
       element: elementRef.current,
@@ -78,9 +78,7 @@ export const Box = ({
     aspectRatio,
     x,
     y,
-    ...(widthDependsOnChildren || heightDependsOnChildren
-      ? toChildArray(children)
-      : []),
+    ...(widthDependsOnChildren || heightDependsOnChildren ? children : []),
   ]);
 
   return (
@@ -97,9 +95,7 @@ export const Box = ({
         visibility: visible ? "visible" : "hidden",
       }}
     >
-      <BeforeChildrenLayoutEffect />
       {children}
-      <AfterChildrenLayoutEffect />
     </div>
   );
 };
@@ -185,14 +181,6 @@ const updateDimenionAndPosition = ({
   element.style.top = `${yComputed}px`;
   element.style.width = `${widthComputed}px`;
   element.style.height = `${heightComputed}px`;
-};
-
-const BeforeChildrenLayoutEffect = () => {
-  return null;
-};
-
-const AfterChildrenLayoutEffect = () => {
-  return null;
 };
 
 const getPaddingAndBorderSizes = (element) => {
