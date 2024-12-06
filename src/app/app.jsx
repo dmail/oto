@@ -255,7 +255,7 @@ export const App = () => {
           name="bottom_hud"
           width="100%"
           height="15%"
-          maxHeight="60"
+          maxHeight="50"
           y="end"
           innerSpacing="xss"
           style={{
@@ -273,7 +273,7 @@ export const App = () => {
             <Box name="lifebar_box" height="80%" width="80%" y="center">
               <Lifebar value={heroHp} max={heroMaxHp} />
             </Box>
-            <Box name="weapon_box" width="20%" height="auto" x="end">
+            <Box name="weapon_box" width="20%" height="auto" x="end" y="center">
               <SwordAIcon />
             </Box>
           </Box>

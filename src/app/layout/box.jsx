@@ -20,6 +20,9 @@ export const Box = ({
   y = "start",
   ...props
 }) => {
+  // todo: ratio should be re-updated when parent is resized
+  // can be tested by increasing the game height
+  // we can see the ratio becomes incorrect
   useLayoutEffect(() => {
     if (width !== "auto" && height !== "auto") {
       return;
@@ -67,7 +70,7 @@ export const Box = ({
         ? undefined
         : height,
     maxWidth,
-    maxHeight,
+    maxHeight: isFinite(maxHeight) ? `${maxHeight}px` : maxHeight,
   };
   if (innerSpacing) {
     style.padding =
