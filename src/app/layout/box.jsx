@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from "preact/hooks";
 
 export const Box = ({
+  name,
   elementRef = useRef(),
   vertical = false,
   children,
@@ -11,21 +12,45 @@ export const Box = ({
   innerSpacingBottom,
   outerSpacingTop,
   width = vertical ? "100%" : "auto",
-  height = vertical ? "fit-content" : "100%",
+  height = vertical ? "auto" : "100%",
+  maxHeight,
   aspectRatio = 1,
   x = "start",
   y = "start",
   ...props
 }) => {
   useLayoutEffect(() => {
+    if (width !== "auto" && height !== "auto") {
+      return;
+    }
     const element = elementRef.current;
+    const offsetParent = element.offsetParent;
+    const { paddingSizes } = getPaddingAndBorderSizes(offsetParent);
+    const { borderSizes } = getPaddingAndBorderSizes(element);
+    let availableWidth = offsetParent.clientWidth;
+    let availableHeight = offsetParent.clientHeight;
+    availableWidth -= paddingSizes.left + paddingSizes.right;
+    availableHeight -= paddingSizes.top + paddingSizes.bottom;
     if (height === "auto") {
-      const width = height * aspectRatio;
-      element.style.width = `${width}px`;
+      const width = element.clientWidth + borderSizes.left + borderSizes.right;
+      const height = width / aspectRatio;
+      if (height > availableHeight) {
+        element.style.height = `${availableHeight}px`;
+        element.style.width = `${availableHeight * aspectRatio}px`;
+      } else {
+        element.style.height = `${height}px`;
+      }
     }
     if (width === "auto") {
-      const height = width / aspectRatio;
-      element.style.height = `${height}px`;
+      const height =
+        element.clientHeight + borderSizes.top + borderSizes.bottom;
+      const width = height * aspectRatio;
+      if (width > availableWidth) {
+        element.style.width = `${availableWidth}px`;
+        element.style.height = `${availableWidth / aspectRatio}px`;
+      } else {
+        element.style.width = `${width}px`;
+      }
     }
   }, [width, height, aspectRatio]);
 
@@ -36,6 +61,7 @@ export const Box = ({
     position: "relative",
     width: isFinite(width) ? `${width}px` : width === "..." ? undefined : width,
     height: isFinite(height) ? `${height}px` : height,
+    maxHeight,
     flexWrap: "wrap",
     minWidth: height === "..." ? 0 : undefined,
     minHeight: width === "..." ? 0 : undefined,
@@ -86,16 +112,25 @@ export const Box = ({
     center: "center",
     end: "flex-end",
   }[y];
-  if (x === "center") {
+  if (x === "start") {
+    style.marginRight = "auto";
+  } else if (x === "center") {
     style.marginLeft = "auto";
     style.marginRight = "auto";
+  } else if (x === "end") {
+    style.marginLeft = "auto";
   }
-  if (y === "center") {
+
+  if (y === "start") {
+    style.marginBottom = "auto";
+  } else if (y === "center") {
     style.marginTop = "auto";
     style.marginBottom = "auto";
+  } else if (y === "end") {
+    style.marginTop = "auto";
   }
   return (
-    <div {...props} ref={elementRef} style={style}>
+    <div {...props} ref={elementRef} name={name} style={style}>
       {children}
     </div>
   );
@@ -109,4 +144,31 @@ const SPACING_SIZES = {
   s: 5,
   xs: 2,
   xxs: 1,
+};
+
+const getPaddingAndBorderSizes = (element) => {
+  const {
+    paddingLeft,
+    paddingRight,
+    paddingTop,
+    paddingBottom,
+    borderLeftWidth,
+    borderRightWidth,
+    borderTopWidth,
+    borderBottomWidth,
+  } = window.getComputedStyle(element, null);
+  return {
+    paddingSizes: {
+      left: parseFloat(paddingLeft),
+      right: parseFloat(paddingRight),
+      top: parseFloat(paddingTop),
+      bottom: parseFloat(paddingBottom),
+    },
+    borderSizes: {
+      left: parseFloat(borderLeftWidth),
+      right: parseFloat(borderRightWidth),
+      top: parseFloat(borderTopWidth),
+      bottom: parseFloat(borderBottomWidth),
+    },
+  };
 };

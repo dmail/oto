@@ -273,7 +273,7 @@ export const App = () => {
             <Box name="lifebar_box" height="80%" width="80%" y="center">
               <Lifebar value={heroHp} max={heroMaxHp} />
             </Box>
-            <Box name="weapon_box" width="20%">
+            <Box name="weapon_box" width="20%" height="auto" x="end">
               <SwordAIcon />
             </Box>
           </Box>
