@@ -20,6 +20,7 @@ import { WhiteCurtain } from "./fight/white_curtain.jsx";
 import { useBooleanState } from "./hooks/use_boolean_state.js";
 import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
+import { Box } from "./layout/box.jsx";
 import { Spacing } from "./layout/spacing.jsx";
 import { Zone } from "./layout/zone.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
@@ -148,7 +149,7 @@ export const App = () => {
 
   return (
     <div>
-      <Layout
+      <Box
         rows
         name="screen"
         width="400"
@@ -159,13 +160,13 @@ export const App = () => {
           }
         }}
       >
-        <Layout rows name="game" height="85%" width="100%">
+        <Box rows name="game" height="85%" width="100%">
           <Zone name="background" height="100%" width="100%">
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
           </Zone>
-          <Layout name="top_ui" height="20%" width="100%">
-            <Layout
+          <Box name="top_ui" height="20%" width="100%">
+            <Box
               name="text_container"
               x="center"
               y="center"
@@ -182,9 +183,9 @@ export const App = () => {
                   Taurus
                 </Text>
               </Spacing>
-            </Layout>
-          </Layout>
-          <Layout name="enemy_box" height="40%" x="center">
+            </Box>
+          </Box>
+          <Box name="enemy_box" height="40%" x="center">
             <Taurus
               elementRef={enemyElementRef}
               hp={enemyHp}
@@ -215,9 +216,9 @@ export const App = () => {
                 <Digits name="enemy_digits">{enemyDamage}</Digits>
               </Zone>
             </Zone>
-          </Layout>
-          <Layout name="front_line" height="15%" width="100%"></Layout>
-          <Layout name="hero_box" height="10%" x="center">
+          </Box>
+          <Box name="front_line" height="15%" width="100%"></Box>
+          <Box name="hero_box" height="10%" x="center">
             <Benjamin
               elementRef={heroElementRef}
               direction="top"
@@ -240,8 +241,8 @@ export const App = () => {
                 </Digits>
               </Zone>
             </Zone>
-          </Layout>
-          <Layout
+          </Box>
+          <Box
             name="bottom_ui"
             height="15%"
             width="100%"
@@ -250,9 +251,9 @@ export const App = () => {
               background: "blue",
               opacity: 0.5,
             }}
-          ></Layout>
-        </Layout>
-        <Layout
+          ></Box>
+        </Box>
+        <Box
           name="bottom_hud"
           rows
           height="15%"
@@ -263,7 +264,7 @@ export const App = () => {
           }}
           spacing="xss"
         >
-          <Layout
+          <Box
             name="hero_hud"
             spacing="s"
             width="50%"
@@ -271,14 +272,14 @@ export const App = () => {
               border: "2px solid white",
             }}
           >
-            <Layout name="lifebar_box" height="80%" width="80%" y="center">
+            <Box name="lifebar_box" height="80%" width="80%" y="center">
               <Lifebar value={heroHp} max={heroMaxHp} />
-            </Layout>
-            <Layout name="weapon_box" width="20%">
+            </Box>
+            <Box name="weapon_box" width="20%">
               <SwordAIcon />
-            </Layout>
-          </Layout>
-          <Layout
+            </Box>
+          </Box>
+          <Box
             name="ally_hud"
             width="50%"
             style={{
@@ -286,10 +287,10 @@ export const App = () => {
             }}
           >
             Empty
-          </Layout>
-        </Layout>
+          </Box>
+        </Box>
         <PauseDialog visible={pausedSignal.value} />
-      </Layout>
+      </Box>
       <div>
         <button
           onClick={() => {
@@ -305,106 +306,4 @@ export const App = () => {
       </div>
     </div>
   );
-};
-
-// to be renamed box later on
-// and Box will be renamed Layout
-const Layout = ({
-  elementRef = useRef(),
-  rows = false,
-  children,
-  spacing,
-  spacingTop,
-  spacingLeft,
-  spacingRight,
-  spacingBottom,
-  width = rows ? "100%" : "auto",
-  height = rows ? "fit-content" : "100%",
-  aspectRatio = 1,
-  x = "start",
-  y = "start",
-  ...props
-}) => {
-  useLayoutEffect(() => {
-    const element = elementRef.current;
-    if (height === "auto") {
-      const width = height * aspectRatio;
-      element.style.width = `${width}px`;
-    }
-    if (width === "auto") {
-      const height = width / aspectRatio;
-      element.style.height = `${height}px`;
-    }
-  }, [width, height, aspectRatio]);
-
-  const style = {
-    ...props.style,
-    display: "inline-flex",
-    flexDirection: rows ? "row" : "column",
-    position: "relative",
-    width: isFinite(width) ? `${width}px` : width === "..." ? undefined : width,
-    height: isFinite(height) ? `${height}px` : height,
-    flexWrap: "wrap",
-    minWidth: height === "..." ? 0 : undefined,
-    minHeight: width === "..." ? 0 : undefined,
-  };
-  if (spacing) {
-    style.padding =
-      typeof spacing === "number" ? spacing : SPACING_SIZES[spacing];
-  }
-  if (spacingTop) {
-    style.paddingTop =
-      typeof spacingTop === "number" ? spacingTop : SPACING_SIZES[spacingTop];
-  }
-  if (spacingLeft) {
-    style.paddingLeft =
-      typeof spacingLeft === "number"
-        ? spacingLeft
-        : SPACING_SIZES[spacingLeft];
-  }
-  if (spacingRight) {
-    style.paddingRight =
-      typeof spacingRight === "number"
-        ? spacingRight
-        : SPACING_SIZES[spacingRight];
-  }
-  if (spacingBottom) {
-    style.paddingBottom =
-      typeof spacingBottom === "number"
-        ? spacingBottom
-        : SPACING_SIZES[spacingBottom];
-  }
-  if (height === "..." || width === "...") {
-    style.minWidth = 0;
-    style.minHeight = 0;
-    style.flexGrow = 1;
-  }
-  style.alignSelf = {
-    start: "flex-start",
-    center: "center",
-    end: "flex-end",
-  }[y];
-  if (x === "center") {
-    style.marginLeft = "auto";
-    style.marginRight = "auto";
-  }
-  if (y === "center") {
-    style.marginTop = "auto";
-    style.marginBottom = "auto";
-  }
-  return (
-    <div {...props} ref={elementRef} style={style}>
-      {children}
-    </div>
-  );
-};
-
-const SPACING_SIZES = {
-  xxl: 100,
-  xl: 50,
-  l: 20,
-  md: 10,
-  s: 5,
-  xs: 2,
-  xxs: 1,
 };
