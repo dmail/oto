@@ -60,81 +60,14 @@ export const Box = ({
   }
 
   useLayoutEffect(() => {
-    const element = elementRef.current;
-    const offsetParent = element.offsetParent;
-    let availableWidth = offsetParent.clientWidth;
-    let availableHeight = offsetParent.clientHeight;
-    const { paddingSizes } = getPaddingAndBorderSizes(offsetParent);
-    const { borderSizes } = getPaddingAndBorderSizes(element);
-    availableWidth -= paddingSizes.left + paddingSizes.right;
-    availableHeight -= paddingSizes.top + paddingSizes.bottom;
-
-    let widthComputed;
-    if (typeof width === "number") {
-      widthComputed = width;
-    } else if (width === "fit-content") {
-      element.style.width = "auto"; // important when re-rendering, otherwise the width is fixed
-      widthComputed =
-        element.clientWidth + borderSizes.left + borderSizes.right;
-    } else if (typeof width === "string" && width.endsWith("%")) {
-      widthComputed = availableWidth * (parseInt(width) / 100);
-    }
-    let heightComputed;
-    if (typeof height === "number") {
-      heightComputed = height;
-    } else if (height === "fit-content") {
-      element.style.height = "auto"; // important when re-rendering, otherwise the height is fixed
-      heightComputed =
-        element.clientHeight + borderSizes.top + borderSizes.bottom;
-    } else if (typeof height === "string" && height.endsWith("%")) {
-      heightComputed = availableHeight * (parseInt(height) / 100);
-    }
-    if (width === "auto") {
-      widthComputed = heightComputed * aspectRatio;
-      if (widthComputed > availableWidth) {
-        // ensure cannot exceed available width
-        widthComputed = availableWidth;
-        heightComputed = widthComputed / aspectRatio;
-      }
-    }
-    if (height === "auto") {
-      heightComputed = widthComputed / aspectRatio;
-      if (heightComputed > availableHeight) {
-        // ensure cannot exceed available height
-        heightComputed = availableHeight;
-        widthComputed = heightComputed * aspectRatio;
-      }
-    }
-    let xComputed;
-    if (x === "start") {
-      xComputed = 0;
-    } else if (x === "center") {
-      xComputed = (availableWidth - widthComputed) / 2;
-    } else if (x === "end") {
-      xComputed = availableWidth - widthComputed;
-    } else if (typeof x === "number") {
-      xComputed = x;
-    } else if (typeof x === "string" && x.endsWith("%")) {
-      xComputed = availableWidth * (parseInt(x) / 100);
-    }
-    xComputed += paddingSizes.left;
-    let yComputed;
-    if (y === "start") {
-      yComputed = 0;
-    } else if (y === "center") {
-      yComputed = (availableHeight - heightComputed) / 2;
-    } else if (y === "end") {
-      yComputed = availableHeight - heightComputed;
-    } else if (typeof y === "number") {
-      yComputed = y;
-    } else if (typeof y === "string" && y.endsWith("%")) {
-      yComputed = availableHeight * (parseInt(y) / 100);
-    }
-    yComputed += paddingSizes.top;
-    element.style.left = `${xComputed}px`;
-    element.style.top = `${yComputed}px`;
-    element.style.width = `${widthComputed}px`;
-    element.style.height = `${heightComputed}px`;
+    updateDimenionAndPosition({
+      element: elementRef.current,
+      width,
+      height,
+      aspectRatio,
+      x,
+      y,
+    });
   }, [name, width, height, aspectRatio, x, y, ...toChildArray(children)]);
 
   return (
@@ -156,6 +89,89 @@ export const Box = ({
       <AfterChildrenLayoutEffect />
     </div>
   );
+};
+
+const updateDimenionAndPosition = ({
+  element,
+  width,
+  height,
+  aspectRatio,
+  x,
+  y,
+}) => {
+  const offsetParent = element.offsetParent;
+  let availableWidth = offsetParent.clientWidth;
+  let availableHeight = offsetParent.clientHeight;
+  const { paddingSizes } = getPaddingAndBorderSizes(offsetParent);
+  const { borderSizes } = getPaddingAndBorderSizes(element);
+  availableWidth -= paddingSizes.left + paddingSizes.right;
+  availableHeight -= paddingSizes.top + paddingSizes.bottom;
+
+  let widthComputed;
+  if (typeof width === "number") {
+    widthComputed = width;
+  } else if (width === "fit-content") {
+    element.style.width = "auto"; // important when re-rendering, otherwise the width is fixed
+    widthComputed = element.clientWidth + borderSizes.left + borderSizes.right;
+  } else if (typeof width === "string" && width.endsWith("%")) {
+    widthComputed = availableWidth * (parseInt(width) / 100);
+  }
+  let heightComputed;
+  if (typeof height === "number") {
+    heightComputed = height;
+  } else if (height === "fit-content") {
+    element.style.height = "auto"; // important when re-rendering, otherwise the height is fixed
+    heightComputed =
+      element.clientHeight + borderSizes.top + borderSizes.bottom;
+  } else if (typeof height === "string" && height.endsWith("%")) {
+    heightComputed = availableHeight * (parseInt(height) / 100);
+  }
+  if (width === "auto") {
+    widthComputed = heightComputed * aspectRatio;
+    if (widthComputed > availableWidth) {
+      // ensure cannot exceed available width
+      widthComputed = availableWidth;
+      heightComputed = widthComputed / aspectRatio;
+    }
+  }
+  if (height === "auto") {
+    heightComputed = widthComputed / aspectRatio;
+    if (heightComputed > availableHeight) {
+      // ensure cannot exceed available height
+      heightComputed = availableHeight;
+      widthComputed = heightComputed * aspectRatio;
+    }
+  }
+  let xComputed;
+  if (x === "start") {
+    xComputed = 0;
+  } else if (x === "center") {
+    xComputed = (availableWidth - widthComputed) / 2;
+  } else if (x === "end") {
+    xComputed = availableWidth - widthComputed;
+  } else if (typeof x === "number") {
+    xComputed = x;
+  } else if (typeof x === "string" && x.endsWith("%")) {
+    xComputed = availableWidth * (parseInt(x) / 100);
+  }
+  xComputed += paddingSizes.left;
+  let yComputed;
+  if (y === "start") {
+    yComputed = 0;
+  } else if (y === "center") {
+    yComputed = (availableHeight - heightComputed) / 2;
+  } else if (y === "end") {
+    yComputed = availableHeight - heightComputed;
+  } else if (typeof y === "number") {
+    yComputed = y;
+  } else if (typeof y === "string" && y.endsWith("%")) {
+    yComputed = availableHeight * (parseInt(y) / 100);
+  }
+  yComputed += paddingSizes.top;
+  element.style.left = `${xComputed}px`;
+  element.style.top = `${yComputed}px`;
+  element.style.width = `${widthComputed}px`;
+  element.style.height = `${heightComputed}px`;
 };
 
 const BeforeChildrenLayoutEffect = () => {
