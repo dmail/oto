@@ -146,7 +146,7 @@ export const App = () => {
   };
 
   return (
-    <div>
+    <div style="font-size: 16px;">
       <Box
         vertical
         name="screen"
@@ -230,8 +230,7 @@ export const App = () => {
               <Box x="center" y="end">
                 <Digits
                   name="hero_digits"
-                  // for some reason it's better centered with that
-                  dx={2}
+                  dx={2} // for some reason it's better centered with that
                 >
                   {heroDamage}
                 </Digits>

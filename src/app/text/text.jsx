@@ -11,7 +11,7 @@ export const Text = ({
   dx = 0,
   dy = 0,
   fontFamily = "goblin",
-  size = 10,
+  size = "0.7em",
   weight,
   children,
   color,
@@ -21,6 +21,8 @@ export const Text = ({
   visible = true,
   ...props
 }) => {
+  const defaultSize = 10;
+
   children = toChildArray(children);
   const lines = [];
   let currentLineChildren = [];
@@ -62,17 +64,17 @@ export const Text = ({
     tspanAttributes.y = "0";
   } else if (y === "center") {
     tspanAttributes.y = "50%";
-    dy -= 0.5 * size;
+    dy -= 0.5 * defaultSize;
   } else if (y === "end") {
     tspanAttributes.y = "100%";
-    dy -= size;
+    dy -= defaultSize;
   }
   for (const lineChildren of lines) {
     textChildren.push(
       <tspan
         {...tspanAttributes}
         dx={dx}
-        dy={dy + lineHeight * size * lineIndex}
+        dy={dy + lineHeight * defaultSize * lineIndex}
       >
         {lineChildren}
       </tspan>,

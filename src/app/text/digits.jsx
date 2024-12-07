@@ -3,7 +3,7 @@ import { Text } from "./text.jsx";
 export const Digits = ({ children, ...props }) => {
   return (
     <Text
-      size={7}
+      size="0.5em"
       color="white"
       fontFamily="goblin"
       // weight="bold"
