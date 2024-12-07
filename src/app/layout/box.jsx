@@ -1,9 +1,13 @@
+import { toChildArray } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
 
 export const Box = ({
+  NodeName = "div",
   name,
   elementRef = useRef(),
   vertical = false,
+  absolute = false,
+  hidden = false,
   children,
   innerSpacing,
   innerSpacingTop,
@@ -93,7 +97,7 @@ export const Box = ({
     maxHeight,
     innerSpacing,
     outerSpacingTop,
-    // ...toChildArray(children),
+    ...toChildArray(children),
   ]);
 
   const style = {
@@ -111,6 +115,12 @@ export const Box = ({
     maxWidth: isFinite(maxWidth) ? `${maxWidth}px` : maxWidth,
     maxHeight: isFinite(maxHeight) ? `${maxHeight}px` : maxHeight,
   };
+  if (absolute) {
+    style.position = "absolute";
+  }
+  if (hidden) {
+    style.visibility = "hidden";
+  }
   if (innerSpacing) {
     style.padding =
       typeof innerSpacing === "number"
@@ -163,10 +173,17 @@ export const Box = ({
   }
 
   return (
-    <div {...props} ref={elementRef} name={name} style={style}>
+    <NodeName {...props} ref={elementRef} name={name} style={style}>
       {children}
-    </div>
+    </NodeName>
   );
+};
+
+Box.div = (props) => {
+  return <Box NodeName="div" {...props} />;
+};
+Box.canvas = (props) => {
+  return <Box NodeName="canvas" {...props} />;
 };
 
 const SPACING_SIZES = {

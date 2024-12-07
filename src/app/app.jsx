@@ -21,7 +21,6 @@ import { useBooleanState } from "./hooks/use_boolean_state.js";
 import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
-import { Zone } from "./layout/zone.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 import { Digits } from "./text/digits.jsx";
 import { Text } from "./text/text.jsx";
@@ -160,10 +159,10 @@ export const App = () => {
         }}
       >
         <Box vertical name="game" width="100%" height="...">
-          <Zone name="background" width="100%" height="100%">
+          <Box name="background" absolute width="100%" height="100%">
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
-          </Zone>
+          </Box>
           <Box name="top_ui" width="100%" height="20%">
             <Box
               name="text_container"
@@ -189,32 +188,29 @@ export const App = () => {
               hp={enemyHp}
               hpMax={enemyHpMax}
             />
-            <Zone
+            <Box
               name="weapon_box"
-              visible={weaponIsVisible}
+              absolute
+              hidden={!weaponIsVisible}
+              ratio="1/1"
+              height="50%"
               x="center"
               y="center"
-              height="50%"
-              width="ratio"
             >
               <SwordA elementRef={weaponElementRef} />
-            </Zone>
-            <Zone
+            </Box>
+            <Box
               name="enemy_digits_box"
+              absolute
               elementRef={enemyDigitsElementRef}
-              visible={enemyDamage !== null}
+              hidden={enemyDamage === null}
               width="100%"
               height="100%"
             >
-              <Zone
-                x="center"
-                y="center"
-                width="fit-content"
-                height="fit-content"
-              >
+              <Box x="center" y="center">
                 <Digits name="enemy_digits">{enemyDamage}</Digits>
-              </Zone>
-            </Zone>
+              </Box>
+            </Box>
           </Box>
           <Box name="front_line" width="100%" height="15%"></Box>
           <Box name="hero_box" ratio="1/1" height="10%" x="center">
@@ -223,14 +219,15 @@ export const App = () => {
               direction="top"
               activity="walking"
             />
-            <Zone
+            <Box
               name="hero_digits_box"
+              absolute
               elementRef={heroDigitsElementRef}
-              visible={heroDamage !== null}
+              hidden={heroDamage === null}
               width="100%"
               height="100%"
             >
-              <Zone x="center" y="end" width="fit-content" height="fit-content">
+              <Box x="center" y="end">
                 <Digits
                   name="hero_digits"
                   // for some reason it's better centered with that
@@ -238,8 +235,8 @@ export const App = () => {
                 >
                   {heroDamage}
                 </Digits>
-              </Zone>
-            </Zone>
+              </Box>
+            </Box>
           </Box>
           <Box
             name="bottom_ui"
