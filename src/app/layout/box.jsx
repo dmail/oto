@@ -122,10 +122,9 @@ export const Box = ({
     style.visibility = "hidden";
   }
   if (innerSpacing) {
-    style.padding =
-      typeof innerSpacing === "number"
-        ? innerSpacing
-        : SPACING_SIZES[innerSpacing];
+    style.padding = isFinite(innerSpacing)
+      ? parseInt(innerSpacing)
+      : SPACING_SIZES[innerSpacing] || innerSpacing;
   }
   if (innerSpacingTop) {
     style.innerSpacingTop =

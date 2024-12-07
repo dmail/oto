@@ -168,14 +168,12 @@ export const App = () => {
               name="text_container"
               x="center"
               y="center"
-              width="fit-content"
-              height="fit-content"
               style={{
                 background: "black",
                 border: "5px solid white",
                 borderRadius: "10%",
               }}
-              innerSpacing="md"
+              innerSpacing="0.7em"
             >
               <Text x="center" y="start" color="white">
                 Taurus
