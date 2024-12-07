@@ -12,18 +12,15 @@ export const Box = ({
   innerSpacingBottom,
   outerSpacing,
   outerSpacingTop,
-  width = vertical ? "100%" : "auto",
-  height = vertical ? "auto" : "100%",
-  maxWidth,
-  maxHeight,
-  aspectRatio = 1,
+  ratio,
+  width = "auto",
+  height = "auto",
+  maxWidth = ratio && height !== "auto" ? "100%" : undefined,
+  maxHeight = ratio && width !== "auto" ? "100%" : undefined,
   x = "start",
   y = "start",
   ...props
 }) => {
-  // todo: ratio should be re-updated when parent is resized
-  // can be tested by increasing the game height
-  // we can see the ratio becomes incorrect
   useLayoutEffect(() => {
     const element = elementRef.current;
     const offsetParent = element.parentNode;
@@ -33,30 +30,6 @@ export const Box = ({
     let availableHeight = offsetParent.clientHeight;
     availableWidth -= paddingSizes.left + paddingSizes.right;
     availableHeight -= paddingSizes.top + paddingSizes.bottom;
-    if (width === "ratio" || height === "ratio") {
-      if (width === "ratio") {
-        const elementHeight =
-          element.clientHeight + borderSizes.top + borderSizes.bottom;
-        const elementWidth = elementHeight * aspectRatio;
-        if (elementWidth > availableWidth) {
-          element.style.width = `${availableWidth}px`;
-          element.style.height = `${availableWidth / aspectRatio}px`;
-        } else {
-          element.style.width = `${elementWidth}px`;
-        }
-      }
-      if (height === "ratio") {
-        const elementWidth =
-          element.clientWidth + borderSizes.left + borderSizes.right;
-        const elementHeight = elementWidth / aspectRatio;
-        if (elementHeight > availableHeight) {
-          element.style.height = `${availableHeight}px`;
-          element.style.width = `${availableHeight * aspectRatio}px`;
-        } else {
-          element.style.height = `${elementHeight}px`;
-        }
-      }
-    }
 
     if (x === "start") {
       if (vertical) {
@@ -110,12 +83,14 @@ export const Box = ({
       element.style.marginTop = `${parseInt(y)}px`;
     }
   }, [
+    x,
+    y,
     vertical,
     width,
     height,
-    aspectRatio,
-    x,
-    y,
+    ratio,
+    maxWidth,
+    maxHeight,
     innerSpacing,
     outerSpacingTop,
     // ...toChildArray(children),
@@ -125,6 +100,7 @@ export const Box = ({
     ...props.style,
     display: "inline-flex",
     flexDirection: vertical ? "column" : "row",
+    alignItems: "flex-start", // or aspectRatio is ignored, see https://stackoverflow.com/questions/68739963/why-is-aspect-ratio-css-property-inside-flexbox-sometimes-ignored/68740146
     position: "relative",
     width: isFinite(width) ? `${width}px` : width === "..." ? undefined : width,
     height: isFinite(height)
@@ -132,7 +108,7 @@ export const Box = ({
       : height === "..."
         ? undefined
         : height,
-    maxWidth,
+    maxWidth: isFinite(maxWidth) ? `${maxWidth}px` : maxWidth,
     maxHeight: isFinite(maxHeight) ? `${maxHeight}px` : maxHeight,
   };
   if (innerSpacing) {
@@ -181,6 +157,9 @@ export const Box = ({
     style.minWidth = 0;
     style.minHeight = 0;
     style.flexGrow = 1;
+  }
+  if (ratio) {
+    style.aspectRatio = ratio;
   }
 
   return (

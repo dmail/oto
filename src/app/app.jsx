@@ -159,12 +159,12 @@ export const App = () => {
           }
         }}
       >
-        <Box vertical name="game" height="..." width="100%">
-          <Zone name="background" height="100%" width="100%">
+        <Box vertical name="game" width="100%" height="...">
+          <Zone name="background" width="100%" height="100%">
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
           </Zone>
-          <Box name="top_ui" height="20%" width="100%">
+          <Box name="top_ui" width="100%" height="20%">
             <Box
               name="text_container"
               x="center"
@@ -183,7 +183,7 @@ export const App = () => {
               </Text>
             </Box>
           </Box>
-          <Box name="enemy_box" height="40%" width="ratio" x="center">
+          <Box name="enemy_box" ratio="1/1" height="40%" x="center">
             <Taurus
               elementRef={enemyElementRef}
               hp={enemyHp}
@@ -216,8 +216,8 @@ export const App = () => {
               </Zone>
             </Zone>
           </Box>
-          <Box name="front_line" height="15%" width="100%"></Box>
-          <Box name="hero_box" height="10%" width="ratio" x="center">
+          <Box name="front_line" width="100%" height="15%"></Box>
+          <Box name="hero_box" ratio="1/1" height="10%" x="center">
             <Benjamin
               elementRef={heroElementRef}
               direction="top"
@@ -243,8 +243,8 @@ export const App = () => {
           </Box>
           <Box
             name="bottom_ui"
-            height="15%"
             width="100%"
+            height="15%"
             y="end"
             style={{
               background: "blue",
@@ -265,22 +265,25 @@ export const App = () => {
         >
           <Box
             name="hero_hud"
-            innerSpacing="s"
             width="50%"
+            height="100%"
+            maxHeight="100%"
+            innerSpacing="s"
             style={{
               border: "2px solid white",
             }}
           >
-            <Box name="lifebar_box" height="80%" width="80%" y="center">
+            <Box name="lifebar_box" ratio="120/100" width="80%" y="center">
               <Lifebar value={heroHp} max={heroMaxHp} />
             </Box>
-            <Box name="weapon_box" width="20%" height="auto" x="end" y="center">
+            <Box name="weapon_box" ratio="1/1" width="20%" x="end" y="center">
               <SwordAIcon />
             </Box>
           </Box>
           <Box
             name="ally_hud"
             width="50%"
+            height="100%"
             style={{
               border: "2px solid white",
             }}

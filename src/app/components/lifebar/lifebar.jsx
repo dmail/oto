@@ -123,9 +123,12 @@ const LifebarSvg = ({
       viewBox={`0 0 ${totalWidth} 100`}
       xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="none"
-      width="100%"
-      height="100%"
-      style="display: block"
+      style={{
+        display: "block",
+        height: "100%",
+        maxWidth: "100%",
+        aspectRatio: `10/1`,
+      }}
     >
       <g>
         {bars.map((bar, index) => {
