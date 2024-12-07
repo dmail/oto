@@ -10,6 +10,7 @@ export const Box = ({
   innerSpacingLeft,
   innerSpacingRight,
   innerSpacingBottom,
+  outerSpacing,
   outerSpacingTop,
   width = vertical ? "100%" : "auto",
   height = vertical ? "auto" : "100%",
@@ -24,39 +25,101 @@ export const Box = ({
   // can be tested by increasing the game height
   // we can see the ratio becomes incorrect
   useLayoutEffect(() => {
-    if (width !== "auto" && height !== "auto") {
-      return;
-    }
     const element = elementRef.current;
-    const offsetParent = element.offsetParent;
+    const offsetParent = element.parentNode;
     const { paddingSizes } = getPaddingAndBorderSizes(offsetParent);
     const { borderSizes } = getPaddingAndBorderSizes(element);
     let availableWidth = offsetParent.clientWidth;
     let availableHeight = offsetParent.clientHeight;
     availableWidth -= paddingSizes.left + paddingSizes.right;
     availableHeight -= paddingSizes.top + paddingSizes.bottom;
-    if (height === "auto") {
-      const width = element.clientWidth + borderSizes.left + borderSizes.right;
-      const height = width / aspectRatio;
-      if (height > availableHeight) {
-        element.style.height = `${availableHeight}px`;
-        element.style.width = `${availableHeight * aspectRatio}px`;
-      } else {
-        element.style.height = `${height}px`;
+    if (width === "ratio" || height === "ratio") {
+      if (width === "ratio") {
+        const elementHeight =
+          element.clientHeight + borderSizes.top + borderSizes.bottom;
+        const elementWidth = elementHeight * aspectRatio;
+        if (elementWidth > availableWidth) {
+          element.style.width = `${availableWidth}px`;
+          element.style.height = `${availableWidth / aspectRatio}px`;
+        } else {
+          element.style.width = `${elementWidth}px`;
+        }
+      }
+      if (height === "ratio") {
+        const elementWidth =
+          element.clientWidth + borderSizes.left + borderSizes.right;
+        const elementHeight = elementWidth / aspectRatio;
+        if (elementHeight > availableHeight) {
+          element.style.height = `${availableHeight}px`;
+          element.style.width = `${availableHeight * aspectRatio}px`;
+        } else {
+          element.style.height = `${elementHeight}px`;
+        }
       }
     }
-    if (width === "auto") {
-      const height =
-        element.clientHeight + borderSizes.top + borderSizes.bottom;
-      const width = height * aspectRatio;
-      if (width > availableWidth) {
-        element.style.width = `${availableWidth}px`;
-        element.style.height = `${availableWidth / aspectRatio}px`;
+
+    if (x === "start") {
+      if (vertical) {
+        element.style.alignSelf = "flex-start";
       } else {
-        element.style.width = `${width}px`;
+        element.style.marginLeft = "0";
+        element.style.marginRight = undefined;
       }
+    } else if (x === "center") {
+      if (vertical) {
+        element.style.alignSelf = "center";
+      } else {
+        const elementWidth =
+          element.clientWidth + borderSizes.left + borderSizes.right;
+        const halfWidth = (availableWidth - elementWidth) / 2;
+        element.style.marginLeft = `${halfWidth}px`;
+        element.style.marginRight = `${halfWidth}px`;
+      }
+    } else if (x === "end") {
+      if (vertical) {
+        element.style.alignSelf = "flex-end";
+      } else {
+        element.style.marginLeft = "auto";
+        element.style.marginRight = undefined;
+      }
+    } else if (isFinite(x)) {
+      element.style.marginLeft = `${parseInt(x)}px`;
     }
-  }, [width, height, aspectRatio, innerSpacing, outerSpacingTop]);
+
+    if (y === "start") {
+      if (vertical) {
+        element.style.marginTop = "0";
+      } else {
+        element.style.alignSelf = "flex-start";
+      }
+    } else if (y === "center") {
+      if (vertical) {
+        const elementHeight =
+          element.clientHeight + borderSizes.top + borderSizes.bottom;
+        element.style.marginTop = `${(availableHeight - elementHeight) / 2}px`;
+      } else {
+        element.style.alignSelf = "center";
+      }
+    } else if (y === "end") {
+      if (vertical) {
+        element.style.marginTop = "auto";
+      } else {
+        element.style.alignSelf = "flex-end";
+      }
+    } else if (isFinite(y)) {
+      element.style.marginTop = `${parseInt(y)}px`;
+    }
+  }, [
+    vertical,
+    width,
+    height,
+    aspectRatio,
+    x,
+    y,
+    innerSpacing,
+    outerSpacingTop,
+    // ...toChildArray(children),
+  ]);
 
   const style = {
     ...props.style,
@@ -102,6 +165,12 @@ export const Box = ({
         ? innerSpacingBottom
         : SPACING_SIZES[innerSpacingBottom];
   }
+  if (outerSpacing) {
+    style.margin =
+      typeof outerSpacing === "number"
+        ? outerSpacing
+        : SPACING_SIZES[outerSpacing];
+  }
   if (outerSpacingTop) {
     style.marginTop =
       typeof outerSpacingTop === "number"
@@ -113,28 +182,7 @@ export const Box = ({
     style.minHeight = 0;
     style.flexGrow = 1;
   }
-  style.alignSelf = {
-    start: "flex-start",
-    center: "center",
-    end: "flex-end",
-  }[y];
-  if (x === "start") {
-    style.marginRight = "auto";
-  } else if (x === "center") {
-    style.marginLeft = "auto";
-    style.marginRight = "auto";
-  } else if (x === "end") {
-    style.marginLeft = "auto";
-  }
 
-  if (y === "start") {
-    style.marginBottom = "auto";
-  } else if (y === "center") {
-    style.marginTop = "auto";
-    style.marginBottom = "auto";
-  } else if (y === "end") {
-    style.marginTop = "auto";
-  }
   return (
     <div {...props} ref={elementRef} name={name} style={style}>
       {children}

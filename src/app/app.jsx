@@ -183,7 +183,7 @@ export const App = () => {
               </Text>
             </Box>
           </Box>
-          <Box name="enemy_box" height="40%" x="center">
+          <Box name="enemy_box" height="40%" width="ratio" x="center">
             <Taurus
               elementRef={enemyElementRef}
               hp={enemyHp}
@@ -195,6 +195,7 @@ export const App = () => {
               x="center"
               y="center"
               height="50%"
+              width="ratio"
             >
               <SwordA elementRef={weaponElementRef} />
             </Zone>
@@ -216,7 +217,7 @@ export const App = () => {
             </Zone>
           </Box>
           <Box name="front_line" height="15%" width="100%"></Box>
-          <Box name="hero_box" height="10%" x="center">
+          <Box name="hero_box" height="10%" width="ratio" x="center">
             <Benjamin
               elementRef={heroElementRef}
               direction="top"
