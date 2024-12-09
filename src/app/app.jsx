@@ -148,17 +148,7 @@ export const App = () => {
 
   return (
     <div style="font-size: 16px;">
-      <Box
-        vertical
-        name="screen"
-        width="400"
-        height="400"
-        onClick={() => {
-          if (turnStateRef.current === "idle" && !pausedSignal.value) {
-            startTurn();
-          }
-        }}
-      >
+      <Box vertical name="screen" width="400" height="400">
         <Box vertical name="game" width="100%" height="...">
           <Box name="background" absolute width="100%" height="100%">
             <MountainAndSkyBattleBackground />
@@ -205,7 +195,7 @@ export const App = () => {
               </Box>
             </Box>
           </Box>
-          <Box name="front_line" width="100%" height="15%"></Box>
+          <Box name="front_line" width="100%" height="10%"></Box>
           <Box name="hero_box" ratio="1/1" height="10%" x="center">
             <Benjamin
               elementRef={heroElementRef}
@@ -234,15 +224,17 @@ export const App = () => {
             name="bottom_ui"
             width="100%"
             height="..."
-            style={{
-              background: "blue",
-              opacity: 0.5,
-            }}
             contentX="center"
             contentY="end"
             innerSpacingBottom="0.5em"
           >
-            <MenuFight></MenuFight>
+            <MenuFight
+              onAttack={() => {
+                if (turnStateRef.current === "idle" && !pausedSignal.value) {
+                  startTurn();
+                }
+              }}
+            ></MenuFight>
           </Box>
         </Box>
         <Box

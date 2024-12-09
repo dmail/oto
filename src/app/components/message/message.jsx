@@ -1,7 +1,7 @@
 import { Box } from "/app/layout/box.jsx";
 import { Text } from "/app/text/text.jsx";
 
-export const Message = ({ children, ...props }) => {
+export const Message = ({ children, color = "white", ...props }) => {
   return (
     <Box
       x="center"
@@ -12,11 +12,13 @@ export const Message = ({ children, ...props }) => {
         border: "0.2em solid white",
         borderRadius: "0.1em",
         outline: "1px solid black",
+        userSelect: "none",
       }}
-      innerSpacing="0.2em"
+      innerSpacing="0.4em"
+      cursor="default"
       {...props}
     >
-      <Text color="white">{children}</Text>
+      <Text color={color}>{children}</Text>
     </Box>
   );
 };

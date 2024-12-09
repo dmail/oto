@@ -83,6 +83,7 @@ export const Text = ({
   }
 
   const textRef = useRef();
+  const textOutlineRef = useRef();
 
   const thickness = weight === "bold" ? 1 : 0;
   if (weight === "bold") {
@@ -92,16 +93,18 @@ export const Text = ({
   useLayoutEffect(() => {
     if (width === "auto" || height === "auto") {
       const svg = elementRef.current;
-      const textBBox = textRef.current.getBBox({ stroke: true });
-      // if (children[0] === "Attaque" && textBBox.width > 0) {
-      //   debugger;
-      // }
+      const textOutline = textOutlineRef.current;
+      const text = textRef.current;
+      const textBBox = textOutline
+        ? textOutline.getBBox({ stroke: true })
+        : text.getBBox();
       if (width === "auto") {
         svg.style.width = `${textBBox.width}px`;
       }
       if (height === "auto") {
         svg.style.height = `${textBBox.height}px`;
       }
+      svg.style.position = "";
     }
   }, [
     width,
@@ -129,12 +132,13 @@ export const Text = ({
         overflow: "visible",
         fontSize: size,
         fontFamily,
-        width: width === "auto" ? 0 : width,
-        height: height === "auto" ? 0 : height,
+        position:
+          width === "auto" || height === "auto" ? "absolute" : "relative",
       }}
     >
       {outlineColor && (
         <text
+          ref={textOutlineRef}
           fill="none"
           font-family={fontFamily}
           stroke={outlineColor}

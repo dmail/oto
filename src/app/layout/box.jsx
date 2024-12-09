@@ -36,6 +36,7 @@ export const Box = ({
   y = "start",
   contentX = "start",
   contentY = "start",
+  cursor,
   ...props
 }) => {
   useLayoutEffect(() => {
@@ -127,6 +128,7 @@ export const Box = ({
     maxWidth: isFinite(maxWidth) ? `${maxWidth}px` : maxWidth,
     maxHeight: isFinite(maxHeight) ? `${maxHeight}px` : maxHeight,
     border,
+    cursor,
     ...props.style,
   };
   if (absolute) {
