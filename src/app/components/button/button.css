@@ -1,0 +1,29 @@
+button {
+  position: relative;
+  outline: none;
+}
+
+button:focus {
+  box-shadow: 0em -0.1em 0.5em 0.2em lightblue;
+}
+
+/* button:focus-visible {
+  outline: 5px dashed #ff00df;
+} */
+
+.focus_ring,
+.active_ring {
+  color: transparent;
+  position: absolute;
+  inset: 0;
+  overflow: visible; /* Override user agent styles setting overflow:hidden on svgs (cuts off edges) */
+}
+:focus-visible > .focus_ring {
+  color: yellow;
+}
+@media (hover: hover) {
+  :hover > .active_ring,
+  :active > .active_ring {
+    color: rgba(255, 255, 255, 0.2);
+  }
+}
