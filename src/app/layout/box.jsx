@@ -1,5 +1,15 @@
 import { toChildArray } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
+import boxStylesheet from "./box.css" with { type: "css" };
+
+document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
+      (s) => s !== boxStylesheet,
+    );
+  });
+}
 
 export const Box = ({
   NodeName = "div",
@@ -9,7 +19,7 @@ export const Box = ({
   absolute = false,
   hidden = false,
   children,
-  innerSpacing,
+  innerSpacing = 0,
   innerSpacingTop,
   innerSpacingLeft,
   innerSpacingRight,
@@ -17,12 +27,15 @@ export const Box = ({
   outerSpacing,
   outerSpacingTop,
   ratio,
+  border,
   width = "auto",
   height = "auto",
   maxWidth = ratio && height !== "auto" ? "100%" : undefined,
   maxHeight = ratio && width !== "auto" ? "100%" : undefined,
   x = "start",
   y = "start",
+  contentX = "start",
+  contentY = "start",
   ...props
 }) => {
   useLayoutEffect(() => {
@@ -101,27 +114,25 @@ export const Box = ({
   ]);
 
   const style = {
-    ...props.style,
-    display: "inline-flex",
-    flexDirection: vertical ? "column" : "row",
-    alignItems: "flex-start", // or aspectRatio is ignored, see https://stackoverflow.com/questions/68739963/why-is-aspect-ratio-css-property-inside-flexbox-sometimes-ignored/68740146
-    position: "relative",
-    width: isFinite(width) ? `${width}px` : width === "..." ? undefined : width,
+    width: isFinite(width)
+      ? `${width}px`
+      : width === "..." || width === "auto"
+        ? undefined
+        : width,
     height: isFinite(height)
       ? `${height}px`
-      : height === "..."
+      : height === "..." || height === "auto"
         ? undefined
         : height,
     maxWidth: isFinite(maxWidth) ? `${maxWidth}px` : maxWidth,
     maxHeight: isFinite(maxHeight) ? `${maxHeight}px` : maxHeight,
+    border,
+    ...props.style,
   };
   if (absolute) {
     style.position = "absolute";
   }
-  if (hidden) {
-    style.visibility = "hidden";
-  }
-  if (innerSpacing) {
+  if (innerSpacing !== undefined) {
     style.padding = isFinite(innerSpacing)
       ? parseInt(innerSpacing)
       : SPACING_SIZES[innerSpacing] || innerSpacing;
@@ -145,10 +156,9 @@ export const Box = ({
         : SPACING_SIZES[innerSpacingRight];
   }
   if (innerSpacingBottom) {
-    style.paddingBottom =
-      typeof innerSpacingBottom === "number"
-        ? innerSpacingBottom
-        : SPACING_SIZES[innerSpacingBottom];
+    style.paddingBottom = isFinite(innerSpacingBottom)
+      ? parseInt(innerSpacingBottom)
+      : SPACING_SIZES[innerSpacingBottom] || innerSpacingBottom;
   }
   if (outerSpacing) {
     style.margin = isFinite(outerSpacing)
@@ -169,9 +179,55 @@ export const Box = ({
   if (ratio) {
     style.aspectRatio = ratio;
   }
+  if (contentX === "start") {
+    if (vertical) {
+      style.alignItems = "flex-start";
+    } else {
+      style.justifyContent = "flex-start";
+    }
+  } else if (contentX === "center") {
+    if (vertical) {
+      style.alignItems = "center";
+    } else {
+      style.justifyContent = "center";
+    }
+  } else if (contentX === "end") {
+    if (vertical) {
+      style.alignItems = "flex-end";
+    } else {
+      style.justifyContent = "flex-end";
+    }
+  }
+  if (contentY === "start") {
+    if (vertical) {
+      style.justifyContent = "flex-start";
+    } else {
+      style.alignItems = "flex-start";
+    }
+  } else if (contentY === "center") {
+    if (vertical) {
+      style.justifyContent = "center";
+    } else {
+      style.alignItems = "center";
+    }
+  } else if (contentY === "end") {
+    if (vertical) {
+      style.justifyContent = "flex-end";
+    } else {
+      style.alignItems = "flex-end";
+    }
+  }
 
   return (
-    <NodeName {...props} ref={elementRef} name={name} style={style}>
+    <NodeName
+      {...props}
+      className="box"
+      data-vertical={vertical || undefined}
+      data-hidden={hidden || undefined}
+      ref={elementRef}
+      name={name}
+      style={style}
+    >
       {children}
     </NodeName>
   );
@@ -182,6 +238,9 @@ Box.div = (props) => {
 };
 Box.canvas = (props) => {
   return <Box NodeName="canvas" {...props} />;
+};
+Box.button = (props) => {
+  return <Box NodeName="button" {...props} />;
 };
 
 const SPACING_SIZES = {

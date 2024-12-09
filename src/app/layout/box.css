@@ -1,0 +1,14 @@
+.box {
+  display: inline-flex;
+  align-items: flex-start; /* # or aspectRatio is ignored, see https://stackoverflow.com/questions/68739963/why-is-aspect-ratio-css-property-inside-flexbox-sometimes-ignored/68740146 */
+  position: relative;
+  border: none;
+  padding: 0;
+}
+
+.box[data-vertical] {
+  flex-direction: column;
+}
+.box[data-hidden] {
+  visibility: hidden;
+}

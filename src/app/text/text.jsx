@@ -92,7 +92,10 @@ export const Text = ({
   useLayoutEffect(() => {
     if (width === "auto" || height === "auto") {
       const svg = elementRef.current;
-      const textBBox = textRef.current.getBBox();
+      const textBBox = textRef.current.getBBox({ stroke: true });
+      // if (children[0] === "Attaque" && textBBox.width > 0) {
+      //   debugger;
+      // }
       if (width === "auto") {
         svg.style.width = `${textBBox.width}px`;
       }

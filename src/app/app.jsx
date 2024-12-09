@@ -13,7 +13,9 @@ import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
 import { Lifebar } from "./components/lifebar/lifebar.jsx";
+import { Message } from "./components/message/message.jsx";
 import { Taurus } from "./enemy/taurus.jsx";
+import { MenuFight } from "./fight/menu_fight.jsx";
 import { SwordA, SwordAIcon } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
 import { WhiteCurtain } from "./fight/white_curtain.jsx";
@@ -23,7 +25,6 @@ import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 import { Digits } from "./text/digits.jsx";
-import { Text } from "./text/text.jsx";
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -165,20 +166,7 @@ export const App = () => {
           </Box>
           <Box vertical name="enemy_box" width="100%" height="55%" x="center">
             <Box name="top_ui" width="100%" innerSpacing="0.5em">
-              <Box
-                name="enemy_name_box"
-                x="center"
-                y="center"
-                height="100%"
-                style={{
-                  background: "black",
-                  border: "5px solid white",
-                  borderRadius: "10%",
-                }}
-                innerSpacing="0.7em"
-              >
-                <Text color="white">Taurus</Text>
-              </Box>
+              <Message innerSpacing="0.7em">Taurus</Message>
             </Box>
             <Box ratio="1/1" height="..." x="center">
               <Taurus
@@ -240,12 +228,16 @@ export const App = () => {
             name="bottom_ui"
             width="100%"
             height="..."
-            y="end"
             style={{
               background: "blue",
               opacity: 0.5,
             }}
-          ></Box>
+            contentX="center"
+            contentY="end"
+            innerSpacingBottom="0.5em"
+          >
+            <MenuFight></MenuFight>
+          </Box>
         </Box>
         <Box
           name="bottom_hud"
