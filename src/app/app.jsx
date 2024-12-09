@@ -18,6 +18,7 @@ import { Message } from "./components/message/message.jsx";
 import { Enemy } from "./enemy/enemy.jsx";
 import { taurus } from "./enemy/taurus.js";
 import { MenuFight } from "./fight/menu_fight.jsx";
+import { Selector } from "./fight/selector.jsx";
 import { SwordA, SwordAIcon } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
 import { WhiteCurtain } from "./fight/white_curtain.jsx";
@@ -146,7 +147,6 @@ export const App = () => {
   });
 
   const [isSelectingTarget, isSelectingTargetSetter] = useState(false);
-  const targetRef = useRef(null);
 
   useKeyEffect(
     "Escape",
@@ -215,6 +215,19 @@ export const App = () => {
               x="center"
               innerSpacing="10"
             >
+              <div
+                style={{
+                  position: "absolute",
+                  visibility: isSelectingTarget ? "visible" : "hidden",
+                  pointerEvents: isSelectingTarget ? "auto" : "none",
+                  left: "-10px",
+                  top: "-10px",
+                  right: "-10px",
+                  bottom: "-10px",
+                }}
+              >
+                <Selector />
+              </div>
               <Enemy
                 elementRef={enemyElementRef}
                 url={enemyPropsFromState.url || enemyImageUrl}

@@ -11,6 +11,7 @@ export const Enemy = ({
   width = 62,
   height = 62,
   transparentColor,
+
   ...props
 }) => {
   const sprite = useSprite({
