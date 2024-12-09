@@ -151,10 +151,9 @@ export const Box = ({
         : SPACING_SIZES[innerSpacingBottom];
   }
   if (outerSpacing) {
-    style.margin =
-      typeof outerSpacing === "number"
-        ? outerSpacing
-        : SPACING_SIZES[outerSpacing];
+    style.margin = isFinite(outerSpacing)
+      ? parseInt(outerSpacing)
+      : SPACING_SIZES[outerSpacing] || outerSpacing;
   }
   if (outerSpacingTop) {
     style.marginTop =

@@ -151,7 +151,7 @@ export const App = () => {
         vertical
         name="screen"
         width="400"
-        height="300"
+        height="400"
         onClick={() => {
           if (turnStateRef.current === "idle" && !pausedSignal.value) {
             startTurn();
@@ -163,50 +163,51 @@ export const App = () => {
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
           </Box>
-          <Box name="top_ui" width="100%" height="20%">
-            <Box
-              name="text_container"
-              x="center"
-              y="center"
-              style={{
-                background: "black",
-                border: "5px solid white",
-                borderRadius: "10%",
-              }}
-              innerSpacing="0.7em"
-            >
-              <Text x="center" y="start" color="white">
-                Taurus
-              </Text>
+          <Box vertical name="enemy_box" width="100%" height="55%" x="center">
+            <Box name="top_ui" width="100%" innerSpacing="0.5em">
+              <Box
+                name="enemy_name_box"
+                x="center"
+                y="center"
+                height="100%"
+                style={{
+                  background: "black",
+                  border: "5px solid white",
+                  borderRadius: "10%",
+                }}
+                innerSpacing="0.7em"
+              >
+                <Text color="white">Taurus</Text>
+              </Box>
             </Box>
-          </Box>
-          <Box name="enemy_box" ratio="1/1" height="40%" x="center">
-            <Taurus
-              elementRef={enemyElementRef}
-              hp={enemyHp}
-              hpMax={enemyHpMax}
-            />
-            <Box
-              name="weapon_box"
-              absolute
-              hidden={!weaponIsVisible}
-              ratio="1/1"
-              height="50%"
-              x="center"
-              y="center"
-            >
-              <SwordA elementRef={weaponElementRef} />
-            </Box>
-            <Box
-              name="enemy_digits_box"
-              absolute
-              elementRef={enemyDigitsElementRef}
-              hidden={enemyDamage === null}
-              width="100%"
-              height="100%"
-            >
-              <Box x="center" y="center">
-                <Digits name="enemy_digits">{enemyDamage}</Digits>
+            <Box ratio="1/1" height="..." x="center">
+              <Taurus
+                elementRef={enemyElementRef}
+                hp={enemyHp}
+                hpMax={enemyHpMax}
+              />
+              <Box
+                name="weapon_box"
+                absolute
+                hidden={!weaponIsVisible}
+                ratio="1/1"
+                height="50%"
+                x="center"
+                y="center"
+              >
+                <SwordA elementRef={weaponElementRef} />
+              </Box>
+              <Box
+                name="enemy_digits_box"
+                absolute
+                elementRef={enemyDigitsElementRef}
+                hidden={enemyDamage === null}
+                width="100%"
+                height="100%"
+              >
+                <Box x="center" y="center">
+                  <Digits name="enemy_digits">{enemyDamage}</Digits>
+                </Box>
               </Box>
             </Box>
           </Box>
@@ -238,7 +239,7 @@ export const App = () => {
           <Box
             name="bottom_ui"
             width="100%"
-            height="15%"
+            height="..."
             y="end"
             style={{
               background: "blue",
