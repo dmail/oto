@@ -3,7 +3,7 @@ import { useMemo } from "preact/hooks";
 import { useImage } from "./use_image.js";
 
 export const useSprite = ({
-  id,
+  name,
   url,
   x,
   y,
@@ -86,7 +86,7 @@ export const useSprite = ({
       context.putImageData(imageData, 0, 0);
     }
     return canvas;
-  }, [id, image, mirrorX, mirrorY, shouldReplace, x, y, width, height]);
+  }, [name, image, mirrorX, mirrorY, shouldReplace, x, y, width, height]);
 
   return imageTransformed;
 };

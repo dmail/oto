@@ -1,3 +1,4 @@
+import { computed, signal } from "@preact/signals";
 import {
   useCallback,
   useEffect,
@@ -14,7 +15,8 @@ import { MountainAndSkyBattleBackground } from "./battle_background/battle_backg
 import { Benjamin } from "./character/benjamin.jsx";
 import { Lifebar } from "./components/lifebar/lifebar.jsx";
 import { Message } from "./components/message/message.jsx";
-import { Taurus } from "./enemy/taurus.jsx";
+import { Enemy } from "./enemy/enemy.jsx";
+import { taurus } from "./enemy/taurus.js";
 import { MenuFight } from "./fight/menu_fight.jsx";
 import { SwordA, SwordAIcon } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
@@ -25,6 +27,15 @@ import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 import { Digits } from "./text/digits.jsx";
+
+const enemySignal = signal(taurus);
+const enemyImageUrlSignal = computed(() => enemySignal.value.url);
+const enemyImageTransparentColorSignal = computed(
+  () => enemySignal.value.transparentColor,
+);
+const enemyNameSignal = computed(() => enemySignal.value.name);
+const enemyHpMaxSignal = computed(() => enemySignal.value.hp);
+const enmyStatesSignal = computed(() => enemySignal.value.states);
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -42,12 +53,29 @@ export const App = () => {
   const weaponElementRef = useRef();
   const enemyElementRef = useRef();
 
-  const [enemyHp, enemyHpSetter] = useState(100);
+  const enemyHpMax = enemyHpMaxSignal.value;
+  const enemyStates = enmyStatesSignal.value;
+  const [enemyHp, enemyHpSetter] = useState(enemyHpMax);
+  const enemyStateKey = enemyStates
+    ? Object.keys(enemyStates).find((key) => {
+        const { conditions } = enemyStates[key];
+        if (
+          conditions.hp &&
+          conditions.hp({ hp: enemyHp, hpMax: enemyHpMax })
+        ) {
+          return true;
+        }
+        return false;
+      })
+    : null;
+  const enemyPropsFromState = enemyStateKey ? enemyStates[enemyStateKey] : {};
+  const enemyImageUrl = enemyImageUrlSignal.value;
+  const enemyImageTransparentColor = enemyImageTransparentColorSignal.value;
+
   const [enemyDamage, enemyDamageSetter] = useState(null);
   const decreaseEnemyHp = useCallback((value) => {
     enemyHpSetter((hp) => hp - value);
   }, []);
-  const [enemyHpMax] = useState(100);
   const [heroHp, heroHpSetter] = useState(40);
   const [heroDamage, heroDamageSetter] = useState(null);
   const decreaseHeroHp = useCallback((value) => {
@@ -117,6 +145,18 @@ export const App = () => {
     toY: -1.2,
   });
 
+  const [isSelectingTarget, isSelectingTargetSetter] = useState(false);
+  const targetRef = useRef(null);
+
+  useKeyEffect(
+    "Escape",
+    useCallback(() => {
+      if (isSelectingTarget) {
+        isSelectingTargetSetter(false);
+      }
+    }, [isSelectingTarget]),
+  );
+
   const turnStateRef = useRef("idle");
   const startTurn = async () => {
     turnStateRef.current = "running";
@@ -146,6 +186,8 @@ export const App = () => {
     turnStateRef.current = "idle";
   };
 
+  const [targets, targetsSetter] = useState([]);
+
   return (
     <div style="font-size: 16px;">
       <Box vertical name="screen" width="400" height="400">
@@ -162,13 +204,23 @@ export const App = () => {
             x="center"
           >
             <Box name="top_ui" width="100%" innerSpacing="0.5em">
-              <Message innerSpacing="0.7em">Taurus</Message>
+              <Message hidden={isSelectingTarget} innerSpacing="0.7em">
+                {enemyNameSignal.value}
+              </Message>
             </Box>
-            <Box name="enemy_box" ratio="1/1" height="..." x="center">
-              <Taurus
+            <Box
+              name="enemy_box"
+              ratio="1/1"
+              height="..."
+              x="center"
+              innerSpacing="10"
+            >
+              <Enemy
                 elementRef={enemyElementRef}
-                hp={enemyHp}
-                hpMax={enemyHpMax}
+                url={enemyPropsFromState.url || enemyImageUrl}
+                transparentColor={enemyImageTransparentColor}
+                x={enemyPropsFromState.x}
+                y={enemyPropsFromState.y}
               />
               <Box
                 name="weapon_box"
@@ -227,11 +279,12 @@ export const App = () => {
             contentX="center"
             contentY="end"
             innerSpacingBottom="0.5em"
+            hidden={isSelectingTarget}
           >
             <MenuFight
               onAttack={() => {
                 if (turnStateRef.current === "idle" && !pausedSignal.value) {
-                  startTurn();
+                  isSelectingTargetSetter(true);
                 }
               }}
             ></MenuFight>
@@ -293,4 +346,19 @@ export const App = () => {
       </div>
     </div>
   );
+};
+
+const useKeyEffect = (key, callback) => {
+  useEffect(() => {
+    const onKeyDown = (event) => {
+      if (event.key === key) {
+        event.preventDefault();
+        callback();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [key, callback]);
 };

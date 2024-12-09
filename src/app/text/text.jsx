@@ -126,7 +126,6 @@ export const Text = ({
         // width: width === "100%" ? width : undefined,
         // height: height === "100%" ? height : undefined,
         display: "block",
-        visibility: visible ? "visible" : "hidden",
         pointerEvents: visible ? "auto" : "none",
         dominantBaseline: "text-before-edge",
         overflow: "visible",
