@@ -129,6 +129,8 @@ export const Text = ({
         overflow: "visible",
         fontSize: size,
         fontFamily,
+        width: width === "auto" ? 0 : width,
+        height: height === "auto" ? 0 : height,
       }}
     >
       {outlineColor && (

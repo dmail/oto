@@ -164,11 +164,17 @@ export const App = () => {
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
           </Box>
-          <Box vertical name="enemy_box" width="100%" height="55%" x="center">
+          <Box
+            vertical
+            name="enemy_container_box"
+            width="100%"
+            height="55%"
+            x="center"
+          >
             <Box name="top_ui" width="100%" innerSpacing="0.5em">
               <Message innerSpacing="0.7em">Taurus</Message>
             </Box>
-            <Box ratio="1/1" height="..." x="center">
+            <Box name="enemy_box" ratio="1/1" height="..." x="center">
               <Taurus
                 elementRef={enemyElementRef}
                 hp={enemyHp}

@@ -220,12 +220,12 @@ export const Box = ({
 
   return (
     <NodeName
+      name={name}
       {...props}
       className="box"
       data-vertical={vertical || undefined}
       data-hidden={hidden || undefined}
       ref={elementRef}
-      name={name}
       style={style}
     >
       {children}
