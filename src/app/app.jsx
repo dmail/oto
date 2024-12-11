@@ -54,25 +54,21 @@ export const App = () => {
       );
     };
   }, []);
-  const heroElementRef = useRef();
   const enemyHpMax = enemyHpMaxSignal.value;
   const enemyStates = enmyStatesSignal.value;
+  const oponentRef = useRef();
+  const [enemyHp, enemyHpSetter] = useState(enemyHpMax);
+  const decreaseEnemyHp = useCallback((value) => {
+    enemyHpSetter((hp) => hp - value);
+  }, []);
+  const heroRef = useRef();
 
   const [heroHp, heroHpSetter] = useState(40);
-  const [heroDamage, heroDamageSetter] = useState(null);
   const decreaseHeroHp = useCallback((value) => {
     heroHpSetter((hp) => hp - value);
   }, []);
   const [heroMaxHp] = useState(40);
 
-  const [playHeroMoveToAct] = useElementAnimation({
-    id: "hero_move_to_act",
-    elementRef: heroElementRef,
-    to: {
-      y: -20,
-    },
-    duration: 200,
-  });
   const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   useEffect(() => {
@@ -81,26 +77,6 @@ export const App = () => {
       clearTimeout(timeout);
     };
   }, [whiteCurtain]);
-  const [playPartyMemberMoveBackToPosition] = useElementAnimation({
-    id: "party_member_move_back_to_position",
-    elementRef: heroElementRef,
-    to: {
-      y: 0,
-    },
-    duration: 200,
-  });
-
-  const heroDigitsElementRef = useRef();
-
-  const [playPartyMemberHit] = usePartyMemberHitAnimation({
-    elementRef: heroElementRef,
-    duration: 500,
-  });
-  const [playPartyMemberDamage] = useDigitsDisplayAnimation({
-    elementRef: heroDigitsElementRef,
-    duration: 300,
-    toY: -1.2,
-  });
 
   const [isSelectingTarget, isSelectingTargetSetter] = useState(false);
 
@@ -116,12 +92,13 @@ export const App = () => {
   const startTurn = async () => {
     turnStateRef.current = "running";
     // here we could display a message saying what attack hero performs
-    await playHeroMoveToAct();
+    await heroRef.current.playHeroMoveToAct();
     showWhiteCurtain();
     swordSound.currentTime = 0.15;
     swordSound.play();
     await oponentRef.current.playWeaponTranslation();
-    const moveBackToPositionPromise = playPartyMemberMoveBackToPosition();
+    const moveBackToPositionPromise =
+      heroRef.current.playPartyMemberMoveBackToPosition();
     await new Promise((resolve) => setTimeout(resolve, 200));
     await Promise.all([
       oponentRef.current.playEnemyDamage(25),
@@ -131,20 +108,12 @@ export const App = () => {
     // here we could display a message saying what attack enemy performs
     await new Promise((resolve) => setTimeout(resolve, 150));
     await oponentRef.current.playEnemyGlow();
-    await playPartyMemberHit();
+    await heroRef.current.playPartyMemberHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
-    heroDamageSetter(15);
-    await playPartyMemberDamage();
-    heroDamageSetter(null);
+    await heroRef.current.playPartyMemberDamage(15);
     decreaseHeroHp(15);
     turnStateRef.current = "idle";
   };
-
-  const oponentRef = useRef();
-  const [enemyHp, enemyHpSetter] = useState(enemyHpMax);
-  const decreaseEnemyHp = useCallback((value) => {
-    enemyHpSetter((hp) => hp - value);
-  }, []);
 
   return (
     <div style="font-size: 16px;">
@@ -168,29 +137,8 @@ export const App = () => {
             />
           </Box>
           <Box name="front_line" width="100%" height="10%"></Box>
-          <Box name="hero_box" ratio="1/1" height="10%" x="center">
-            <Benjamin
-              elementRef={heroElementRef}
-              direction="top"
-              activity="walking"
-            />
-            <Box
-              name="hero_digits_box"
-              absolute
-              elementRef={heroDigitsElementRef}
-              hidden={heroDamage === null}
-              width="100%"
-              height="100%"
-            >
-              <Box x="center" y="end">
-                <Digits
-                  name="hero_digits"
-                  dx={2} // for some reason it's better centered with that
-                >
-                  {heroDamage}
-                </Digits>
-              </Box>
-            </Box>
+          <Box name="allies_box" height="10%" width="100%">
+            <Ally ref={heroRef} />
           </Box>
           <Box
             name="bottom_ui"
@@ -267,6 +215,75 @@ export const App = () => {
     </div>
   );
 };
+
+const Ally = forwardRef((props, ref) => {
+  const elementRef = useRef();
+  const [heroDamage, heroDamageSetter] = useState(null);
+
+  const [playHeroMoveToAct] = useElementAnimation({
+    id: "hero_move_to_act",
+    elementRef,
+    to: {
+      y: -20,
+    },
+    duration: 200,
+  });
+  const [playPartyMemberMoveBackToPosition] = useElementAnimation({
+    id: "party_member_move_back_to_position",
+    elementRef,
+    to: {
+      y: 0,
+    },
+    duration: 200,
+  });
+
+  const heroDigitsElementRef = useRef();
+  const [playPartyMemberHit] = usePartyMemberHitAnimation({
+    elementRef,
+    duration: 500,
+  });
+  const [playPartyMemberDamage] = useDigitsDisplayAnimation({
+    elementRef: heroDigitsElementRef,
+    duration: 300,
+    toY: -1.2,
+  });
+
+  useImperativeHandle(ref, () => {
+    return {
+      playHeroMoveToAct,
+      playPartyMemberMoveBackToPosition,
+      playPartyMemberHit,
+      playPartyMemberDamage: async (value) => {
+        heroDamageSetter(value);
+        await playPartyMemberDamage();
+        heroDamageSetter(null);
+      },
+    };
+  });
+
+  return (
+    <Box name="ally_box" ratio="1/1" height="100%" x="center">
+      <Benjamin elementRef={elementRef} direction="top" activity="walking" />
+      <Box
+        name="hero_digits_box"
+        absolute
+        elementRef={heroDigitsElementRef}
+        hidden={heroDamage === null}
+        width="100%"
+        height="100%"
+      >
+        <Box x="center" y="end">
+          <Digits
+            name="hero_digits"
+            dx={2} // for some reason it's better centered with that
+          >
+            {heroDamage}
+          </Digits>
+        </Box>
+      </Box>
+    </Box>
+  );
+});
 
 const Opponent = forwardRef(
   (
