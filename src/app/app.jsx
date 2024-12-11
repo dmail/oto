@@ -78,41 +78,38 @@ export const App = () => {
     };
   }, [whiteCurtain]);
 
-  const [isSelectingTarget, isSelectingTargetSetter] = useState(false);
-
+  const [turnState, turnStateSetter] = useState("");
   useKeyEffect({
     Escape: useCallback(() => {
-      if (isSelectingTarget) {
-        isSelectingTargetSetter(false);
+      if (turnState === "player_is_selecting_target") {
+        turnStateSetter("");
       }
-    }, [isSelectingTarget]),
+    }, [turnState]),
   });
 
-  const turnStateRef = useRef("idle");
   const startTurn = async () => {
-    turnStateRef.current = "running";
+    turnStateSetter("running");
     // here we could display a message saying what attack hero performs
-    await heroRef.current.playHeroMoveToAct();
+    await heroRef.current.moveToAct();
     showWhiteCurtain();
     swordSound.currentTime = 0.15;
     swordSound.play();
-    await oponentRef.current.playWeaponTranslation();
-    const moveBackToPositionPromise =
-      heroRef.current.playPartyMemberMoveBackToPosition();
+    await oponentRef.current.playWeaponAnimation();
+    const moveBackToPositionPromise = heroRef.current.moveBackToPosition();
     await new Promise((resolve) => setTimeout(resolve, 200));
     await Promise.all([
-      oponentRef.current.playEnemyDamage(25),
+      oponentRef.current.displayDamage(25),
       moveBackToPositionPromise,
     ]);
     decreaseEnemyHp(25);
     // here we could display a message saying what attack enemy performs
     await new Promise((resolve) => setTimeout(resolve, 150));
-    await oponentRef.current.playEnemyGlow();
-    await heroRef.current.playPartyMemberHit();
+    await oponentRef.current.glow();
+    await heroRef.current.recoilAfterHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
-    await heroRef.current.playPartyMemberDamage(15);
+    await heroRef.current.displayDamage(15);
     decreaseHeroHp(15);
-    turnStateRef.current = "idle";
+    turnStateSetter("");
   };
 
   return (
@@ -126,12 +123,11 @@ export const App = () => {
           <Box name="enemies_box" width="100%" height="55%">
             <Opponent
               ref={oponentRef}
-              isSelectingTarget={isSelectingTarget}
+              turnState={turnState}
               enemyHp={enemyHp}
               enemyHpMax={enemyHpMax}
               enemyStates={enemyStates}
               onSelect={() => {
-                isSelectingTargetSetter(false);
                 startTurn();
               }}
             />
@@ -147,12 +143,12 @@ export const App = () => {
             contentX="center"
             contentY="end"
             innerSpacingBottom="0.5em"
-            hidden={isSelectingTarget}
+            hidden={turnState !== ""}
           >
             <MenuFight
               onAttack={() => {
-                if (turnStateRef.current === "idle" && !pausedSignal.value) {
-                  isSelectingTargetSetter(true);
+                if (turnState === "" && !pausedSignal.value) {
+                  turnStateSetter("player_is_selecting_target");
                 }
               }}
             ></MenuFight>
@@ -220,16 +216,16 @@ const Ally = forwardRef((props, ref) => {
   const elementRef = useRef();
   const [heroDamage, heroDamageSetter] = useState(null);
 
-  const [playHeroMoveToAct] = useElementAnimation({
-    id: "hero_move_to_act",
+  const [moveToAct] = useElementAnimation({
+    id: "ally_move_to_act",
     elementRef,
     to: {
       y: -20,
     },
     duration: 200,
   });
-  const [playPartyMemberMoveBackToPosition] = useElementAnimation({
-    id: "party_member_move_back_to_position",
+  const [moveBackToPosition] = useElementAnimation({
+    id: "ally_move_back_to_position",
     elementRef,
     to: {
       y: 0,
@@ -238,11 +234,11 @@ const Ally = forwardRef((props, ref) => {
   });
 
   const heroDigitsElementRef = useRef();
-  const [playPartyMemberHit] = usePartyMemberHitAnimation({
+  const [recoilAfterHit] = usePartyMemberHitAnimation({
     elementRef,
     duration: 500,
   });
-  const [playPartyMemberDamage] = useDigitsDisplayAnimation({
+  const [displayDamage] = useDigitsDisplayAnimation({
     elementRef: heroDigitsElementRef,
     duration: 300,
     toY: -1.2,
@@ -250,12 +246,12 @@ const Ally = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => {
     return {
-      playHeroMoveToAct,
-      playPartyMemberMoveBackToPosition,
-      playPartyMemberHit,
-      playPartyMemberDamage: async (value) => {
+      moveToAct,
+      moveBackToPosition,
+      recoilAfterHit,
+      displayDamage: async (value) => {
         heroDamageSetter(value);
-        await playPartyMemberDamage();
+        await displayDamage();
         heroDamageSetter(null);
       },
     };
@@ -289,7 +285,7 @@ const Opponent = forwardRef(
   (
     {
       // name,
-      isSelectingTarget,
+      turnState,
       enemyHp,
       enemyHpMax,
       enemyStates,
@@ -298,7 +294,7 @@ const Opponent = forwardRef(
     ref,
   ) => {
     const elementRef = useRef();
-    const [playEnemyGlow] = useCanvasGlowAnimation({
+    const [glow] = useCanvasGlowAnimation({
       id: "enemy_glow",
       elementRef,
       from: "black",
@@ -307,13 +303,13 @@ const Opponent = forwardRef(
     });
 
     const enemyDigitsElementRef = useRef();
-    const [playEnemyDamage] = useDigitsDisplayAnimation({
+    const [displayDamage] = useDigitsDisplayAnimation({
       elementRef: enemyDigitsElementRef,
       duration: 300,
     });
     const weaponElementRef = useRef();
-    const [playWeaponTranslation] = useElementAnimation({
-      id: "weapon_translation",
+    const [playWeaponAnimation] = useElementAnimation({
+      id: "weapon_animation",
       elementRef: weaponElementRef,
       from: {
         x: 25,
@@ -345,15 +341,15 @@ const Opponent = forwardRef(
 
     useImperativeHandle(ref, () => {
       return {
-        playEnemyGlow,
-        playWeaponTranslation: async () => {
+        glow,
+        playWeaponAnimation: async () => {
           weaponIsVisibleSetter(true);
-          await playWeaponTranslation();
+          await playWeaponAnimation();
           weaponIsVisibleSetter(false);
         },
-        playEnemyDamage: async (value) => {
+        displayDamage: async (value) => {
           enemyDamageSetter(value);
-          await playEnemyDamage();
+          await displayDamage();
           enemyDamageSetter(null);
         },
       };
@@ -368,7 +364,7 @@ const Opponent = forwardRef(
         x="center"
       >
         <Box name="top_ui" width="100%" innerSpacing="0.5em">
-          <Message hidden={isSelectingTarget} innerSpacing="0.7em">
+          <Message hidden={turnState !== ""} innerSpacing="0.7em">
             {enemyNameSignal.value}
           </Message>
         </Box>
@@ -380,7 +376,7 @@ const Opponent = forwardRef(
           innerSpacing="10"
         >
           <Selector
-            hidden={!isSelectingTarget}
+            hidden={turnState !== "player_is_selecting_target"}
             onClick={() => {
               onSelect();
             }}
