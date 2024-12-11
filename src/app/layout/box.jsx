@@ -230,7 +230,25 @@ export const Box = ({
       ref={elementRef}
       style={style}
     >
-      {children}
+      {/*
+       * This wrapper div ensure children takes dimension - padding into account when
+       * they positions and dimensions themselves
+       */}
+      {innerSpacing ? (
+        <div
+          name="spacing_container"
+          style={{
+            display: "inline-flex",
+            width: "100%",
+            height: "100%",
+            position: "relative",
+          }}
+        >
+          {children}
+        </div>
+      ) : (
+        children
+      )}
     </NodeName>
   );
 };

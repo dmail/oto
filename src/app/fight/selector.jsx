@@ -29,6 +29,7 @@ export const Selector = ({ hidden, ...props }) => {
       style={{
         ...props.style,
         position: "absolute",
+        cursor: hidden ? "" : "pointer",
         visibility: hidden ? "hidden" : "",
         pointerEvents: hidden ? "none" : "auto",
         left: "-10px",
