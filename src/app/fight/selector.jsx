@@ -4,7 +4,7 @@
 // and we might want to draw it differently
 import { useLayoutEffect, useRef } from "preact/hooks";
 
-export const Selector = () => {
+export const Selector = ({ hidden }) => {
   const ref = useRef();
 
   useLayoutEffect(() => {
@@ -24,15 +24,27 @@ export const Selector = () => {
     context.fill();
   }, []);
   return (
-    <canvas
-      ref={ref}
-      width="100"
-      height="100"
+    <div
       style={{
-        width: "100%",
-        height: "100%",
+        position: "absolute",
+        visibility: hidden ? "hidden" : "",
+        pointerEvents: hidden ? "none" : "auto",
+        left: "-10px",
+        top: "-10px",
+        right: "-10px",
+        bottom: "-10px",
       }}
-    ></canvas>
+    >
+      <canvas
+        ref={ref}
+        width="100"
+        height="100"
+        style={{
+          width: "100%",
+          height: "100%",
+        }}
+      ></canvas>
+    </div>
   );
 };
 

@@ -1,7 +1,9 @@
 import { computed, signal } from "@preact/signals";
+import { forwardRef } from "preact/compat";
 import {
   useCallback,
   useEffect,
+  useImperativeHandle,
   useLayoutEffect,
   useRef,
   useState,
@@ -29,6 +31,7 @@ import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 import { Digits } from "./text/digits.jsx";
 
+// const enemiesSignal = signal([taurus]);
 const enemySignal = signal(taurus);
 const enemyImageUrlSignal = computed(() => enemySignal.value.url);
 const enemyImageTransparentColorSignal = computed(
@@ -51,32 +54,9 @@ export const App = () => {
     };
   }, []);
   const heroElementRef = useRef();
-  const weaponElementRef = useRef();
-  const enemyElementRef = useRef();
-
   const enemyHpMax = enemyHpMaxSignal.value;
   const enemyStates = enmyStatesSignal.value;
-  const [enemyHp, enemyHpSetter] = useState(enemyHpMax);
-  const enemyStateKey = enemyStates
-    ? Object.keys(enemyStates).find((key) => {
-        const { conditions } = enemyStates[key];
-        if (
-          conditions.hp &&
-          conditions.hp({ hp: enemyHp, hpMax: enemyHpMax })
-        ) {
-          return true;
-        }
-        return false;
-      })
-    : null;
-  const enemyPropsFromState = enemyStateKey ? enemyStates[enemyStateKey] : {};
-  const enemyImageUrl = enemyImageUrlSignal.value;
-  const enemyImageTransparentColor = enemyImageTransparentColorSignal.value;
 
-  const [enemyDamage, enemyDamageSetter] = useState(null);
-  const decreaseEnemyHp = useCallback((value) => {
-    enemyHpSetter((hp) => hp - value);
-  }, []);
   const [heroHp, heroHpSetter] = useState(40);
   const [heroDamage, heroDamageSetter] = useState(null);
   const decreaseHeroHp = useCallback((value) => {
@@ -100,17 +80,6 @@ export const App = () => {
       clearTimeout(timeout);
     };
   }, [whiteCurtain]);
-  const [playWeaponTranslation] = useElementAnimation({
-    id: "weapon_translation",
-    elementRef: weaponElementRef,
-    from: {
-      x: 25,
-    },
-    to: {
-      x: -15,
-    },
-    duration: 200,
-  });
   const [playPartyMemberMoveBackToPosition] = useElementAnimation({
     id: "party_member_move_back_to_position",
     elementRef: heroElementRef,
@@ -119,23 +88,9 @@ export const App = () => {
     },
     duration: 200,
   });
-  const [playEnemyGlow] = useCanvasGlowAnimation({
-    id: "enemy_glow",
-    elementRef: enemyElementRef,
-    from: "black",
-    to: "white",
-    duration: 300,
-    onFinish: useCallback(() => {
-      playPartyMemberHit();
-    }, []),
-  });
-  const enemyDigitsElementRef = useRef();
+
   const heroDigitsElementRef = useRef();
-  const [weaponIsVisible, weaponIsVisibleSetter] = useState(false);
-  const [playEnemyDamage] = useDigitsDisplayAnimation({
-    elementRef: enemyDigitsElementRef,
-    duration: 300,
-  });
+
   const [playPartyMemberHit] = usePartyMemberHitAnimation({
     elementRef: heroElementRef,
     duration: 500,
@@ -165,18 +120,17 @@ export const App = () => {
     showWhiteCurtain();
     swordSound.currentTime = 0.15;
     swordSound.play();
-    weaponIsVisibleSetter(true);
-    await playWeaponTranslation();
-    weaponIsVisibleSetter(false);
+    await oponentRef.current.playWeaponTranslation();
     const moveBackToPositionPromise = playPartyMemberMoveBackToPosition();
     await new Promise((resolve) => setTimeout(resolve, 200));
-    enemyDamageSetter(25);
-    await Promise.all([playEnemyDamage(), moveBackToPositionPromise]);
-    enemyDamageSetter(null);
+    await Promise.all([
+      oponentRef.current.playEnemyDamage(25),
+      moveBackToPositionPromise,
+    ]);
     decreaseEnemyHp(25);
     // here we could display a message saying what attack enemy performs
     await new Promise((resolve) => setTimeout(resolve, 150));
-    await playEnemyGlow();
+    await oponentRef.current.playEnemyGlow();
     await playPartyMemberHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
     heroDamageSetter(15);
@@ -186,7 +140,11 @@ export const App = () => {
     turnStateRef.current = "idle";
   };
 
-  const [targets, targetsSetter] = useState([]);
+  const oponentRef = useRef();
+  const [enemyHp, enemyHpSetter] = useState(enemyHpMax);
+  const decreaseEnemyHp = useCallback((value) => {
+    enemyHpSetter((hp) => hp - value);
+  }, []);
 
   return (
     <div style="font-size: 16px;">
@@ -196,69 +154,14 @@ export const App = () => {
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
           </Box>
-          <Box
-            vertical
-            name="enemy_container_box"
-            width="100%"
-            height="55%"
-            x="center"
-          >
-            <Box name="top_ui" width="100%" innerSpacing="0.5em">
-              <Message hidden={isSelectingTarget} innerSpacing="0.7em">
-                {enemyNameSignal.value}
-              </Message>
-            </Box>
-            <Box
-              name="enemy_box"
-              ratio="1/1"
-              height="..."
-              x="center"
-              innerSpacing="10"
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  visibility: isSelectingTarget ? "visible" : "hidden",
-                  pointerEvents: isSelectingTarget ? "auto" : "none",
-                  left: "-10px",
-                  top: "-10px",
-                  right: "-10px",
-                  bottom: "-10px",
-                }}
-              >
-                <Selector />
-              </div>
-              <Enemy
-                elementRef={enemyElementRef}
-                url={enemyPropsFromState.url || enemyImageUrl}
-                transparentColor={enemyImageTransparentColor}
-                x={enemyPropsFromState.x}
-                y={enemyPropsFromState.y}
-              />
-              <Box
-                name="weapon_box"
-                absolute
-                hidden={!weaponIsVisible}
-                ratio="1/1"
-                height="50%"
-                x="center"
-                y="center"
-              >
-                <SwordA elementRef={weaponElementRef} />
-              </Box>
-              <Box
-                name="enemy_digits_box"
-                absolute
-                elementRef={enemyDigitsElementRef}
-                hidden={enemyDamage === null}
-                width="100%"
-                height="100%"
-              >
-                <Box x="center" y="center">
-                  <Digits name="enemy_digits">{enemyDamage}</Digits>
-                </Box>
-              </Box>
-            </Box>
+          <Box name="enemies_box" width="100%" height="55%">
+            <Opponent
+              ref={oponentRef}
+              isSelectingTarget={isSelectingTarget}
+              enemyHp={enemyHp}
+              enemyHpMax={enemyHpMax}
+              enemyStates={enemyStates}
+            />
           </Box>
           <Box name="front_line" width="100%" height="10%"></Box>
           <Box name="hero_box" ratio="1/1" height="10%" x="center">
@@ -360,6 +263,130 @@ export const App = () => {
     </div>
   );
 };
+
+const Opponent = forwardRef(
+  (
+    {
+      // name,
+      isSelectingTarget,
+      enemyHp,
+      enemyHpMax,
+      enemyStates,
+    },
+    ref,
+  ) => {
+    const elementRef = useRef();
+    const [playEnemyGlow] = useCanvasGlowAnimation({
+      id: "enemy_glow",
+      elementRef,
+      from: "black",
+      to: "white",
+      duration: 300,
+    });
+
+    const enemyDigitsElementRef = useRef();
+    const [playEnemyDamage] = useDigitsDisplayAnimation({
+      elementRef: enemyDigitsElementRef,
+      duration: 300,
+    });
+    const weaponElementRef = useRef();
+    const [playWeaponTranslation] = useElementAnimation({
+      id: "weapon_translation",
+      elementRef: weaponElementRef,
+      from: {
+        x: 25,
+      },
+      to: {
+        x: -15,
+      },
+      duration: 200,
+    });
+    const [weaponIsVisible, weaponIsVisibleSetter] = useState(false);
+
+    const enemyStateKey = enemyStates
+      ? Object.keys(enemyStates).find((key) => {
+          const { conditions } = enemyStates[key];
+          if (
+            conditions.hp &&
+            conditions.hp({ hp: enemyHp, hpMax: enemyHpMax })
+          ) {
+            return true;
+          }
+          return false;
+        })
+      : null;
+    const enemyPropsFromState = enemyStateKey ? enemyStates[enemyStateKey] : {};
+    const enemyImageUrl = enemyImageUrlSignal.value;
+    const enemyImageTransparentColor = enemyImageTransparentColorSignal.value;
+
+    const [enemyDamage, enemyDamageSetter] = useState(null);
+
+    useImperativeHandle(ref, () => {
+      return {
+        playEnemyGlow,
+        playWeaponTranslation: async () => {
+          weaponIsVisibleSetter(true);
+          await playWeaponTranslation();
+          weaponIsVisibleSetter(false);
+        },
+        playEnemyDamage: async (value) => {
+          enemyDamageSetter(value);
+          await playEnemyDamage();
+          enemyDamageSetter(null);
+        },
+      };
+    });
+
+    return (
+      <Box vertical name="enemy_container_box" x="center">
+        <Box name="top_ui" width="100%" innerSpacing="0.5em">
+          <Message hidden={isSelectingTarget} innerSpacing="0.7em">
+            {enemyNameSignal.value}
+          </Message>
+        </Box>
+        <Box
+          name="enemy_box"
+          ratio="1/1"
+          height="..."
+          x="center"
+          innerSpacing="10"
+        >
+          <Selector hidden={!isSelectingTarget} />
+          <Enemy
+            elementRef={elementRef}
+            url={enemyPropsFromState.url || enemyImageUrl}
+            transparentColor={enemyImageTransparentColor}
+            x={enemyPropsFromState.x}
+            y={enemyPropsFromState.y}
+          />
+          <Box
+            name="weapon_box"
+            absolute
+            hidden={!weaponIsVisible}
+            ratio="1/1"
+            height="50%"
+            x="center"
+            y="center"
+          >
+            <SwordA elementRef={weaponElementRef} />
+          </Box>
+          <Box
+            name="enemy_digits_box"
+            absolute
+            elementRef={enemyDigitsElementRef}
+            hidden={enemyDamage === null}
+            width="100%"
+            height="100%"
+          >
+            <Box x="center" y="center">
+              <Digits name="enemy_digits">{enemyDamage}</Digits>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    );
+  },
+);
 
 const useKeyEffect = (key, callback) => {
   useEffect(() => {
