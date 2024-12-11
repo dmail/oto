@@ -4,7 +4,7 @@
 // and we might want to draw it differently
 import { useLayoutEffect, useRef } from "preact/hooks";
 
-export const Selector = ({ hidden }) => {
+export const Selector = ({ hidden, ...props }) => {
   const ref = useRef();
 
   useLayoutEffect(() => {
@@ -25,7 +25,9 @@ export const Selector = ({ hidden }) => {
   }, []);
   return (
     <div
+      {...props}
       style={{
+        ...props.style,
         position: "absolute",
         visibility: hidden ? "hidden" : "",
         pointerEvents: hidden ? "none" : "auto",

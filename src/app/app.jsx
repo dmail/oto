@@ -25,6 +25,7 @@ import { SwordA, SwordAIcon } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
 import { WhiteCurtain } from "./fight/white_curtain.jsx";
 import { useBooleanState } from "./hooks/use_boolean_state.js";
+import { useKeyEffect } from "./hooks/use_key_effect.js";
 import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
@@ -103,14 +104,13 @@ export const App = () => {
 
   const [isSelectingTarget, isSelectingTargetSetter] = useState(false);
 
-  useKeyEffect(
-    "Escape",
-    useCallback(() => {
+  useKeyEffect({
+    Escape: useCallback(() => {
       if (isSelectingTarget) {
         isSelectingTargetSetter(false);
       }
     }, [isSelectingTarget]),
-  );
+  });
 
   const turnStateRef = useRef("idle");
   const startTurn = async () => {
@@ -161,6 +161,10 @@ export const App = () => {
               enemyHp={enemyHp}
               enemyHpMax={enemyHpMax}
               enemyStates={enemyStates}
+              onSelect={() => {
+                isSelectingTargetSetter(false);
+                startTurn();
+              }}
             />
           </Box>
           <Box name="front_line" width="100%" height="10%"></Box>
@@ -272,6 +276,7 @@ const Opponent = forwardRef(
       enemyHp,
       enemyHpMax,
       enemyStates,
+      onSelect,
     },
     ref,
   ) => {
@@ -338,7 +343,13 @@ const Opponent = forwardRef(
     });
 
     return (
-      <Box vertical name="enemy_container_box" x="center">
+      <Box
+        vertical
+        name="enemy_container_box"
+        width="100%"
+        height="100%"
+        x="center"
+      >
         <Box name="top_ui" width="100%" innerSpacing="0.5em">
           <Message hidden={isSelectingTarget} innerSpacing="0.7em">
             {enemyNameSignal.value}
@@ -351,7 +362,12 @@ const Opponent = forwardRef(
           x="center"
           innerSpacing="10"
         >
-          <Selector hidden={!isSelectingTarget} />
+          <Selector
+            hidden={!isSelectingTarget}
+            onClick={() => {
+              onSelect();
+            }}
+          />
           <Enemy
             elementRef={elementRef}
             url={enemyPropsFromState.url || enemyImageUrl}
@@ -387,18 +403,3 @@ const Opponent = forwardRef(
     );
   },
 );
-
-const useKeyEffect = (key, callback) => {
-  useEffect(() => {
-    const onKeyDown = (event) => {
-      if (event.key === key) {
-        event.preventDefault();
-        callback();
-      }
-    };
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [key, callback]);
-};
