@@ -10,7 +10,6 @@ ptet un [dialog, displayDialog] = useDialogText()
 aui retourne une fonction qui se resolve dans un cas précis
 
 */
-
 import { render } from "preact";
 import { forwardRef } from "preact/compat";
 import {
@@ -95,7 +94,6 @@ const measureText = (text) => {
 
 const startFill = (text, textContainer) => {
   const [availableWidth, availableHeight] = getAvailableSize(textContainer);
-  console.log({ availableWidth, availableHeight });
   const lines = splitLines(text);
   // keep adding characters until there is no more room
   // then go to next line

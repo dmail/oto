@@ -1,4 +1,4 @@
-import { render, toChildArray } from "preact";
+import { toChildArray } from "preact";
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 
@@ -147,26 +147,6 @@ const TextComponent = (
 };
 
 export const Text = forwardRef(TextComponent);
-
-export const measureText = (
-  text,
-  { fontFamily = "goblin", fontSize = "0.7em" } = {},
-) => {
-  const div = document.createElement("div");
-  div.style.position = "absolute";
-  div.style.visibility = "hidden";
-  document.body.appendChild(div);
-  render(
-    <Text fontFamily={fontFamily} fontSize={fontSize}>
-      {text}
-    </Text>,
-    div,
-  );
-  const svg = div.querySelector("svg");
-  const { width, height } = svg.getBBox();
-  document.body.removeChild(div);
-  return [width, height];
-};
 
 export const splitLines = (text, maxLines) => {
   const lines = [];

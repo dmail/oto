@@ -1,10 +1,17 @@
+- afficher des boite de dialogue lorsqu'on attaque / enemie attaque
+  pour dialogue text box
+  - vérif qu'on peut afficher sur plusieurs lignes
+  - on peut appuyer sur enter/space pour passer a la suite du text
+  - on peut aussi cliquer dessus
+  - <Bold> devient <Text.bold> et on doit s'assurer 
+  de le traiter différement de maintenant pour render un tspan avec le font-weight bold
+
 - remplacer outline avec un truc (surement svg)
   parce que la taille est mal prise en compte en plus
   et puis on veut le inner+outer border color 
   donc il faut autre chose
   on fera surement un border transparent de la bonne taille (pour que la taille soit correcte)
   mais on affichera cela avec du svg
-- afficher des boite de dialogue lorsqu'on attaque / enemie attaque
 - animation mort du monstre
 - écran de game over (choix retry/revenir a la carte du monde)
 - faire la carte du monde
