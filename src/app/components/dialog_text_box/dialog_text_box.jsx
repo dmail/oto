@@ -46,6 +46,9 @@ const DialogTextBoxComponent = (
     const fillNext = startFill(text, messageElementRef.current);
     const textFitting = fillNext();
     textSetter(textFitting);
+    setTimeout(() => {
+      textSetter("");
+    }, 100);
   };
 
   useLayoutEffect(() => {
@@ -62,11 +65,10 @@ const DialogTextBoxComponent = (
 
   return (
     <Message
-      absolute
       ref={messageElementRef}
       color={color}
       backgroundColor={backgroundColor}
-      hidden={!text}
+      invisible={!text}
       width="100%"
       height="100%"
       maxWidth="100%"
@@ -93,6 +95,7 @@ const measureText = (text) => {
 
 const startFill = (text, textContainer) => {
   const [availableWidth, availableHeight] = getAvailableSize(textContainer);
+  console.log({ availableWidth, availableHeight });
   const lines = splitLines(text);
   // keep adding characters until there is no more room
   // then go to next line

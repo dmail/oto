@@ -56,9 +56,9 @@ export const Ally = forwardRef((props, ref) => {
     <Box name="ally_box" ratio="1/1" height="100%" x="center">
       <Benjamin elementRef={elementRef} direction="top" activity="walking" />
       <Box
+        ref={heroDigitsElementRef}
         name="hero_digits_box"
         absolute
-        elementRef={heroDigitsElementRef}
         hidden={heroDamage === null}
         width="100%"
         height="100%"

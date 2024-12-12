@@ -171,11 +171,11 @@ export const App = () => {
           </Box>
           <Box name="bottom_ui" width="100%" height="...">
             <Box
+              absolute
               width="100%"
-              height="100%"
+              height="95%"
               contentX="center"
               contentY="end"
-              innerSpacingBottom="0.5em"
               hidden={turnState !== ""}
             >
               <MenuFight
@@ -187,8 +187,16 @@ export const App = () => {
               ></MenuFight>
             </Box>
             <DialogTextBox
-              width="100%"
-              innerSpacingBottom="0.5em"
+              absolute
+              width="90%"
+              height="80%"
+              contentX="center"
+              contentY="end"
+              x="center"
+              y="center"
+              style={{
+                pointerEvents: "none",
+              }}
               ref={dialogRef}
             ></DialogTextBox>
           </Box>

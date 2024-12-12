@@ -27,17 +27,18 @@ const MessageComponent = (
       x="center"
       y="center"
       height="100%"
+      innerSpacing="0.4em"
+      maxWidth="100%"
+      cursor="default"
+      {...props}
       style={{
         backgroundColor,
         border: `0.2em solid ${borderColor}`,
         borderRadius: "0.1em",
         outline: `1px solid ${outlineColor}`,
         userSelect: "none",
+        ...props.style,
       }}
-      innerSpacing="0.4em"
-      maxWidth="100%"
-      cursor="default"
-      {...props}
     >
       <Text color={color} maxLines={maxLines}>
         {children}

@@ -10,6 +10,7 @@ export const useDigitsDisplayAnimation = ({
   ...props
 }) => {
   const animate = useCallback(() => {
+    console.log("digits", elementRef.current);
     return animateDigitsDisplay(elementRef.current, {
       duration,
       playbackRate,

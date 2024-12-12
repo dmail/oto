@@ -191,43 +191,49 @@ const BoxComponent = (
   if (ratio) {
     style.aspectRatio = ratio;
   }
+
+  const styleForContentPosition = {};
   if (contentX === "start") {
     if (vertical) {
-      style.alignItems = "flex-start";
+      styleForContentPosition.alignItems = "flex-start";
     } else {
-      style.justifyContent = "flex-start";
+      styleForContentPosition.justifyContent = "flex-start";
     }
   } else if (contentX === "center") {
     if (vertical) {
-      style.alignItems = "center";
+      styleForContentPosition.alignItems = "center";
     } else {
-      style.justifyContent = "center";
+      styleForContentPosition.justifyContent = "center";
     }
   } else if (contentX === "end") {
     if (vertical) {
-      style.alignItems = "flex-end";
+      styleForContentPosition.alignItems = "flex-end";
     } else {
-      style.justifyContent = "flex-end";
+      styleForContentPosition.justifyContent = "flex-end";
     }
   }
   if (contentY === "start") {
     if (vertical) {
-      style.justifyContent = "flex-start";
+      styleForContentPosition.justifyContent = "flex-start";
     } else {
-      style.alignItems = "flex-start";
+      styleForContentPosition.alignItems = "flex-start";
     }
   } else if (contentY === "center") {
     if (vertical) {
-      style.justifyContent = "center";
+      styleForContentPosition.justifyContent = "center";
     } else {
-      style.alignItems = "center";
+      styleForContentPosition.alignItems = "center";
     }
   } else if (contentY === "end") {
     if (vertical) {
-      style.justifyContent = "flex-end";
+      styleForContentPosition.justifyContent = "flex-end";
     } else {
-      style.alignItems = "flex-end";
+      styleForContentPosition.alignItems = "flex-end";
     }
+  }
+  const needsSpacingContainer = Boolean(innerSpacing || innerSpacingBottom);
+  if (!needsSpacingContainer) {
+    Object.assign(style, styleForContentPosition);
   }
 
   return (
@@ -245,10 +251,11 @@ const BoxComponent = (
        * This wrapper div ensure children takes dimension - padding into account when
        * they positions and dimensions themselves
        */}
-      {innerSpacing ? (
+      {needsSpacingContainer ? (
         <div
           name="spacing_container"
           style={{
+            ...styleForContentPosition,
             display: "inline-flex",
             width: "100%",
             height: "100%",

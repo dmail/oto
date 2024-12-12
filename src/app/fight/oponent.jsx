@@ -129,9 +129,9 @@ export const Opponent = forwardRef(
             <SwordA elementRef={weaponElementRef} />
           </Box>
           <Box
+            ref={enemyDigitsElementRef}
             name="enemy_digits_box"
             absolute
-            elementRef={enemyDigitsElementRef}
             hidden={enemyDamage === null}
             width="100%"
             height="100%"
