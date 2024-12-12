@@ -23,7 +23,6 @@ const MessageComponent = (
 ) => {
   return (
     <Box
-      ref={ref}
       x="center"
       y="center"
       height="100%"
@@ -35,10 +34,11 @@ const MessageComponent = (
         userSelect: "none",
       }}
       innerSpacing="0.4em"
+      maxWidth="100%"
       cursor="default"
       {...props}
     >
-      <Text color={color} maxLines={maxLines}>
+      <Text ref={ref} color={color} maxLines={maxLines}>
         {children}
       </Text>
     </Box>

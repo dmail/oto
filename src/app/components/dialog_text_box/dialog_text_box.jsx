@@ -21,13 +21,14 @@ import {
 import { useKeyEffect } from "../../hooks/use_key_effect.js";
 import { Box } from "../../layout/box.jsx";
 import { Message } from "../message/message.jsx";
+import { measureText } from "/app/text/text.jsx";
 import { getAvailableSize } from "/app/utils/get_available_size.js";
 
 const DialogTextBoxComponent = (
-  { color = "white", backgroundColor = "blue", ...props },
+  { color = "white", backgroundColor = "blue", children, ...props },
   ref,
 ) => {
-  const [text, textSetter] = useState("");
+  const [text, textSetter] = useState(children);
   const messageElementRef = useRef();
 
   useKeyEffect({
@@ -48,8 +49,12 @@ const DialogTextBoxComponent = (
     const messageElement = messageElementRef.current;
     // one I have the text I compute the available width/height
     // I use it to determine the text I can display in the box
+    messageElement.style.width = "100vw";
     const [availableWidth, availableHeight] = getAvailableSize(messageElement);
-    console.log({ availableWidth, availableHeight });
+    // now I should update again the text to display actually what I can display
+
+    const [textWidth, textHeight] = measureText(text, { fontSize: 10 });
+    console.log({ availableWidth, availableHeight, textWidth, textHeight });
   }, [text]);
 
   useImperativeHandle(ref, () => {

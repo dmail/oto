@@ -1,29 +1,35 @@
 import { render, toChildArray } from "preact";
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { forwardRef } from "preact/compat";
+import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 import { splitLines } from "./text_utils.js";
 
-export const Text = ({
-  // name,
-  elementRef = useRef(),
-  width = "auto",
-  height = "auto",
-  x = "start",
-  y = "start",
-  dx = 0,
-  dy = 0,
-  fontFamily = "goblin",
-  size = "0.7em",
-  weight,
-  children,
-  color,
-  outlineColor,
-  letterSpacing,
-  lineHeight = 1.4,
-  maxLines,
-  visible = true,
-  ...props
-}) => {
-  const defaultSize = 10;
+const TextComponent = (
+  {
+    // name,
+    width = "auto",
+    height = "auto",
+    x = "start",
+    y = "start",
+    dx = 0,
+    dy = 0,
+    fontFamily = "goblin",
+    fontSize = "0.7em",
+    weight,
+    children,
+    color,
+    outlineColor,
+    letterSpacing,
+    lineHeight = 1.4,
+    maxLines,
+    visible = true,
+    ...props
+  },
+  ref,
+) => {
+  const innerRef = useRef();
+  useImperativeHandle(ref, () => innerRef.current);
+
+  const fontSizeBase = 10;
 
   children = toChildArray(children);
 
@@ -45,10 +51,10 @@ export const Text = ({
     tspanAttributes.y = "0";
   } else if (y === "center") {
     tspanAttributes.y = "50%";
-    dy -= 0.5 * defaultSize;
+    dy -= 0.5 * fontSizeBase;
   } else if (y === "end") {
     tspanAttributes.y = "100%";
-    dy -= defaultSize;
+    dy -= fontSizeBase;
   }
   const lines = splitLines(children, maxLines);
   for (const lineChildren of lines) {
@@ -56,7 +62,7 @@ export const Text = ({
       <tspan
         {...tspanAttributes}
         dx={dx}
-        dy={dy + lineHeight * defaultSize * lineIndex}
+        dy={dy + lineHeight * fontSizeBase * lineIndex}
       >
         {lineChildren}
       </tspan>,
@@ -74,7 +80,7 @@ export const Text = ({
 
   useLayoutEffect(() => {
     if (width === "auto" || height === "auto") {
-      const svg = elementRef.current;
+      const svg = innerRef.current;
       const textOutline = textOutlineRef.current;
       const text = textRef.current;
       const textBBox = textOutline
@@ -94,14 +100,14 @@ export const Text = ({
     outlineColor,
     letterSpacing,
     lineHeight,
-    size,
+    fontSize,
     ...toChildArray(children),
   ]);
 
   return (
     <svg
       {...props}
-      ref={elementRef}
+      ref={innerRef}
       xmlns="http://www.w3.org/2000/svg"
       style={{
         ...props.style,
@@ -111,7 +117,7 @@ export const Text = ({
         pointerEvents: visible ? "auto" : "none",
         dominantBaseline: "text-before-edge",
         overflow: "visible",
-        fontSize: size,
+        fontSize: isFinite(fontSize) ? `${parseInt(fontSize)}px` : fontSize,
         fontFamily,
         position:
           width === "auto" || height === "auto" ? "absolute" : "relative",
@@ -142,15 +148,21 @@ export const Text = ({
   );
 };
 
-export const measureText = (text, { fontFamily, size }) => {
+export const Text = forwardRef(TextComponent);
+
+export const measureText = (
+  text,
+  { fontFamily = "goblin", fontSize = "0.7em" } = {},
+) => {
   const div = document.createElement("div");
   render(
-    <Text fontFamily={fontFamily} size={size}>
+    <Text fontFamily={fontFamily} fontSize={fontSize}>
       {text}
     </Text>,
     div,
   );
   const svg = div.querySelector("svg");
+  debugger;
   const { width, height } = svg.getBBox();
   return [width, height];
 };

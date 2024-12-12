@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>Dialog text box</title>
+  </head>
+  <body>
+    <div id="root" style="position: relative"></div>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+    </style>
+    <script type="module" jsenv-type="module/jsx">
+      /* eslint-disable no-unused-vars */
+      import { render } from "preact";
+      import { useState, useRef } from "preact/hooks";
+      import { DialogTextBox } from "./dialog_text_box.jsx";
+
+      const App = () => {
+        const dialogRef = useRef();
+        const defaultValue = "Hello world !";
+
+        return (
+          <div>
+            <div style="display: flex;">
+              <DialogTextBox ref={dialogRef}>{defaultValue}</DialogTextBox>
+            </div>
+            <br />
+            <input
+              type="text"
+              onInput={(e) => {
+                dialogRef.current.alert(e.target.value);
+              }}
+              value={defaultValue}
+            />
+          </div>
+        );
+      };
+
+      render(<App />, document.querySelector("#root"));
+    </script>
+  </body>
+</html>
