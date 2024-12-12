@@ -124,9 +124,11 @@ const LifebarSvg = ({
       xmlns="http://www.w3.org/2000/svg"
       preserveAspectRatio="none"
       style={{
-        display: "block",
+        display: "flex",
+        alignSelf: "center",
         height: "100%",
         maxWidth: "100%",
+        maxHeight: "30px",
         aspectRatio: `10/1`,
       }}
     >
