@@ -1,22 +1,17 @@
 import { computed, signal } from "@preact/signals";
-import { forwardRef } from "preact/compat";
 import {
   useCallback,
   useEffect,
-  useImperativeHandle,
   useLayoutEffect,
   useRef,
   useState,
 } from "preact/hooks";
-import { useDigitsDisplayAnimation } from "./animations/use_digits_display_animation.js";
-import { useElementAnimation } from "./animations/use_element_animation.js";
-import { usePartyMemberHitAnimation } from "./animations/use_party_member_hit_animation.js";
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
-import { Benjamin } from "./character/benjamin.jsx";
 import { DialogTextBox } from "./components/dialog_text_box/dialog_text_box.jsx";
 import { Lifebar } from "./components/lifebar/lifebar.jsx";
 import { taurus } from "./enemy/taurus.js";
+import { Ally } from "./fight/ally.jsx";
 import { MenuFight } from "./fight/menu_fight.jsx";
 import { Opponent } from "./fight/oponent.jsx";
 import { SwordAIcon } from "./fight/sword_a.jsx";
@@ -28,7 +23,6 @@ import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
 import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
-import { Digits } from "./text/digits.jsx";
 
 // const enemiesSignal = signal([taurus]);
 const enemySignal = signal(taurus);
@@ -256,72 +250,3 @@ export const App = () => {
     </div>
   );
 };
-
-const Ally = forwardRef((props, ref) => {
-  const elementRef = useRef();
-  const [heroDamage, heroDamageSetter] = useState(null);
-
-  const [moveToAct] = useElementAnimation({
-    id: "ally_move_to_act",
-    elementRef,
-    to: {
-      y: -20,
-    },
-    duration: 200,
-  });
-  const [moveBackToPosition] = useElementAnimation({
-    id: "ally_move_back_to_position",
-    elementRef,
-    to: {
-      y: 0,
-    },
-    duration: 200,
-  });
-
-  const heroDigitsElementRef = useRef();
-  const [recoilAfterHit] = usePartyMemberHitAnimation({
-    elementRef,
-    duration: 500,
-  });
-  const [displayDamage] = useDigitsDisplayAnimation({
-    elementRef: heroDigitsElementRef,
-    duration: 300,
-    toY: -1.2,
-  });
-
-  useImperativeHandle(ref, () => {
-    return {
-      moveToAct,
-      moveBackToPosition,
-      recoilAfterHit,
-      displayDamage: async (value) => {
-        heroDamageSetter(value);
-        await displayDamage();
-        heroDamageSetter(null);
-      },
-    };
-  });
-
-  return (
-    <Box name="ally_box" ratio="1/1" height="100%" x="center">
-      <Benjamin elementRef={elementRef} direction="top" activity="walking" />
-      <Box
-        name="hero_digits_box"
-        absolute
-        elementRef={heroDigitsElementRef}
-        hidden={heroDamage === null}
-        width="100%"
-        height="100%"
-      >
-        <Box x="center" y="end">
-          <Digits
-            name="hero_digits"
-            dx={2} // for some reason it's better centered with that
-          >
-            {heroDamage}
-          </Digits>
-        </Box>
-      </Box>
-    </Box>
-  );
-});
