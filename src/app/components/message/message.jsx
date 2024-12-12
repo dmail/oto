@@ -23,6 +23,7 @@ const MessageComponent = (
 ) => {
   return (
     <Box
+      ref={ref}
       x="center"
       y="center"
       height="100%"
@@ -38,7 +39,7 @@ const MessageComponent = (
       cursor="default"
       {...props}
     >
-      <Text ref={ref} color={color} maxLines={maxLines}>
+      <Text color={color} maxLines={maxLines}>
         {children}
       </Text>
     </Box>

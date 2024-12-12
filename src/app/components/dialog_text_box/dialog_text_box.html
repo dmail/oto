@@ -21,11 +21,11 @@
 
       const App = () => {
         const dialogRef = useRef();
-        const defaultValue = "Hello world !";
+        const defaultValue = "Hello world, I am not";
 
         return (
           <div>
-            <div style="display: flex; width: 200px; border: 1px solid black; padding: 10px;">
+            <div style="display: flex; width: 100px; height: 60px; border: 1px solid black; background: green">
               <DialogTextBox ref={dialogRef}>{defaultValue}</DialogTextBox>
             </div>
             <br />

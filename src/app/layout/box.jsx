@@ -53,7 +53,9 @@ const BoxComponent = (
   useLayoutEffect(() => {
     const element = innerRef.current;
     const { borderSizes } = getPaddingAndBorderSizes(element);
-    const [availableWidth, availableHeight] = getAvailableSize(element);
+    const [availableWidth, availableHeight] = getAvailableSize(
+      element.parentNode,
+    );
 
     if (x === "start") {
       if (vertical) {
@@ -63,7 +65,8 @@ const BoxComponent = (
         element.style.marginRight = undefined;
       }
     } else if (x === "center") {
-      if (vertical) {
+      if (width === "..." || width === "100%") {
+      } else if (vertical) {
         element.style.alignSelf = "center";
       } else {
         const elementWidth =
@@ -90,7 +93,8 @@ const BoxComponent = (
         element.style.alignSelf = "flex-start";
       }
     } else if (y === "center") {
-      if (vertical) {
+      if (height === "..." || height === "100%") {
+      } else if (vertical) {
         const elementHeight =
           element.clientHeight + borderSizes.top + borderSizes.bottom;
         element.style.marginTop = `${(availableHeight - elementHeight) / 2}px`;

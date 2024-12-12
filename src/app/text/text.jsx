@@ -1,7 +1,6 @@
 import { render, toChildArray } from "preact";
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
-import { splitLines } from "./text_utils.js";
 
 const TextComponent = (
   {
@@ -26,11 +25,11 @@ const TextComponent = (
   },
   ref,
 ) => {
+  const lines = splitLines(children, maxLines);
   const innerRef = useRef();
   useImperativeHandle(ref, () => innerRef.current);
 
   const fontSizeBase = 10;
-
   children = toChildArray(children);
 
   const textChildren = [];
@@ -56,7 +55,6 @@ const TextComponent = (
     tspanAttributes.y = "100%";
     dy -= fontSizeBase;
   }
-  const lines = splitLines(children, maxLines);
   for (const lineChildren of lines) {
     textChildren.push(
       <tspan
@@ -168,4 +166,41 @@ export const measureText = (
   const { width, height } = svg.getBBox();
   document.body.removeChild(div);
   return [width, height];
+};
+
+export const splitLines = (text, maxLines) => {
+  const lines = [];
+  let currentLineChildren = [];
+  let someChildNotAString = false;
+  for (const child of text) {
+    if (typeof child === "string") {
+      for (const char of child.split("")) {
+        if (char === "\n") {
+          lines.push(currentLineChildren);
+          currentLineChildren = [];
+          someChildNotAString = false;
+          continue;
+        }
+        currentLineChildren.push(char);
+      }
+    } else if (child.type === "br") {
+      lines.push(currentLineChildren);
+      currentLineChildren = [];
+      someChildNotAString = true;
+    } else {
+      currentLineChildren.push(child);
+      someChildNotAString = true;
+    }
+    if (maxLines && lines.length >= maxLines) {
+      break;
+    }
+  }
+  if (currentLineChildren.length && (!maxLines || lines.length < maxLines)) {
+    if (someChildNotAString) {
+      lines.push(currentLineChildren);
+    } else {
+      lines.push(currentLineChildren.join(""));
+    }
+  }
+  return lines;
 };

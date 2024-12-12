@@ -1,8 +1,8 @@
 export const getAvailableSize = (element) => {
-  const offsetParent = element.parentNode;
-  const { paddingSizes } = getPaddingAndBorderSizes(offsetParent);
-  let availableWidth = offsetParent.clientWidth;
-  let availableHeight = offsetParent.clientHeight;
+  const { paddingSizes } = getPaddingAndBorderSizes(element);
+  const boundingClientRect = element.getBoundingClientRect();
+  let availableWidth = boundingClientRect.width;
+  let availableHeight = boundingClientRect.height;
   availableWidth -= paddingSizes.left + paddingSizes.right;
   availableHeight -= paddingSizes.top + paddingSizes.bottom;
   return [availableWidth, availableHeight];
