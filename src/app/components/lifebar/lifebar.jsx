@@ -113,7 +113,7 @@ const LifebarSvg = ({
   bars,
   maxBars,
   barSpacing = 1,
-  fullColor = "yellow",
+  fullColor = "seagreen",
   emptyColor = "red",
 }) => {
   const totalWidth = maxBars * (barWidth + barSpacing);

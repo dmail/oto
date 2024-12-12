@@ -35,7 +35,7 @@ export const Button = ({ children, ...props }) => {
       }}
       {...props}
     >
-      <Message color={hovered ? "yellow" : undefined} cursor="pointer">
+      <Message color={hovered ? "dodgerblue" : undefined} cursor="pointer">
         {children}
       </Message>
     </Box.button>

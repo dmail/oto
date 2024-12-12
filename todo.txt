@@ -1,2 +1,14 @@
 - le personne doit avoir des caracs (atq/def/pv)
 - le monstre doit avoir de caracs (atq/def/pv)
+- changer d'arme pour attaquer au poing (image + clic sur arme change)
+- afficher des boite de dialogue lorsqu'on attaque / enemie attaque
+- possibilité de s'attaquer soi meme
+- lorsqu'on se cible le perso a une goute sueur qui apparait
+- lorsqu'on confirme vouloir s'attaquer une popup de confirmation s'affiche
+- si on fait ça on affiche une anim de confusion sur l'ennemie + boite de dialogue qui dit
+ "Taurus est confus" "Tarus s'attaque lui-meme"
+ et cela le one-shot
+- animation mort du monstre
+- animation mort du héros (il faut qu'il reste sur le terrain, un jour il y aura "vie")
+- écran de game over (choix retry/revenir a la carte du monde)
+- faire la carte du monde

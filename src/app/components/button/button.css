@@ -4,7 +4,7 @@ button {
 }
 
 button:focus {
-  box-shadow: 0em -0.1em 0.5em 0.2em lightblue;
+  box-shadow: 0em -0.1em 0.5em 0.2em dodgerblue;
 }
 
 /* button:focus-visible {

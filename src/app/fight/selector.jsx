@@ -4,9 +4,13 @@
 // and we might want to draw it differently
 import { useLayoutEffect, useRef } from "preact/hooks";
 
-export const Selector = ({ hidden, ...props }) => {
+export const Selector = ({
+  hidden,
+  color = "dodgerblue",
+  outlineColor = "black",
+  ...props
+}) => {
   const ref = useRef();
-
   useLayoutEffect(() => {
     const canvas = ref.current;
     const context = canvas.getContext("2d");
@@ -18,11 +22,11 @@ export const Selector = ({ hidden, ...props }) => {
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.closePath();
     context.stroke();
-    context.strokeColor = "black";
-
-    context.fillStyle = "yellow";
+    context.strokeColor = outlineColor;
+    context.fillStyle = color;
     context.fill();
-  }, []);
+  }, [color, outlineColor]);
+
   return (
     <div
       {...props}
