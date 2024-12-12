@@ -18,6 +18,7 @@ export const Box = ({
   vertical = false,
   absolute = false,
   hidden = false,
+  invisible = false,
   children,
   innerSpacing = 0,
   innerSpacingTop,
@@ -227,6 +228,7 @@ export const Box = ({
       className="box"
       data-vertical={vertical || undefined}
       data-hidden={hidden || undefined}
+      data-invisible={invisible || undefined}
       ref={elementRef}
       style={style}
     >

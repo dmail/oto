@@ -3,18 +3,27 @@ import { useEffect } from "preact/hooks";
 export const useKeyEffect = (keyCallbacks) => {
   const deps = [];
   const keys = Object.keys(keyCallbacks);
+  const effects = {};
   for (const key of keys) {
-    const keyCallback = keyCallbacks[key];
-    deps.push(key, keyCallback);
+    deps.push(key);
+    const keyEffect = keyCallbacks[key];
+    if (typeof keyEffect === "function") {
+      deps.push(keyEffect);
+      effects[key] = { enabled: true, callback: keyEffect };
+    } else {
+      const { enabled, callback } = keyEffect;
+      deps.push(enabled, callback);
+      effects[key] = keyEffect;
+    }
   }
 
   useEffect(() => {
     const onKeyDown = (event) => {
       const eventKey = event.key;
-      const keyCallback = keyCallbacks[eventKey];
-      if (keyCallback) {
+      const keyEffect = keyCallbacks[eventKey];
+      if (keyEffect?.enabled) {
         event.preventDefault();
-        keyCallback();
+        keyEffect.callback();
       }
     };
     document.addEventListener("keydown", onKeyDown);

@@ -8,8 +8,11 @@
 .box[data-vertical] {
   flex-direction: column;
 }
-.box[data-hidden] {
+.box[data-invisible] {
   visibility: hidden;
+}
+.box[data-hidden] {
+  display: none;
 }
 
 button.box {

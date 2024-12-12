@@ -18,34 +18,14 @@ export const Text = ({
   outlineColor,
   letterSpacing,
   lineHeight = 1.4,
+  maxLines,
   visible = true,
   ...props
 }) => {
   const defaultSize = 10;
 
   children = toChildArray(children);
-  const lines = [];
-  let currentLineChildren = [];
-  for (const child of children) {
-    if (typeof child === "string") {
-      for (const char of child.split("")) {
-        if (char === "\n") {
-          lines.push(currentLineChildren);
-          currentLineChildren = [];
-          continue;
-        }
-        currentLineChildren.push(char);
-      }
-    } else if (child.type === "br") {
-      lines.push(currentLineChildren);
-      currentLineChildren = [];
-    } else {
-      currentLineChildren.push(child);
-    }
-  }
-  if (currentLineChildren.length) {
-    lines.push(currentLineChildren);
-  }
+
   const textChildren = [];
   let lineIndex = 0;
   const tspanAttributes = {};
@@ -69,6 +49,7 @@ export const Text = ({
     tspanAttributes.y = "100%";
     dy -= defaultSize;
   }
+  const lines = splitLines(children, maxLines);
   for (const lineChildren of lines) {
     textChildren.push(
       <tspan
@@ -158,4 +139,33 @@ export const Text = ({
       </text>
     </svg>
   );
+};
+
+const splitLines = (text, maxLines) => {
+  const lines = [];
+  let currentLineChildren = [];
+  for (const child of text) {
+    if (typeof child === "string") {
+      for (const char of child.split("")) {
+        if (char === "\n") {
+          lines.push(currentLineChildren);
+          currentLineChildren = [];
+          continue;
+        }
+        currentLineChildren.push(char);
+      }
+    } else if (child.type === "br") {
+      lines.push(currentLineChildren);
+      currentLineChildren = [];
+    } else {
+      currentLineChildren.push(child);
+    }
+    if (maxLines && lines.length >= maxLines) {
+      break;
+    }
+  }
+  if ((currentLineChildren.length && !maxLines) || lines.length < maxLines) {
+    lines.push(currentLineChildren);
+  }
+  return lines;
 };

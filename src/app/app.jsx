@@ -15,6 +15,7 @@ import { usePartyMemberHitAnimation } from "./animations/use_party_member_hit_an
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { Benjamin } from "./character/benjamin.jsx";
+import { DialogTextBox } from "./components/dialog_text_box/dialog_text_box.jsx";
 import { Lifebar } from "./components/lifebar/lifebar.jsx";
 import { Message } from "./components/message/message.jsx";
 import { Enemy } from "./enemy/enemy.jsx";
@@ -102,13 +103,14 @@ export const App = () => {
     }, [turnState]),
   });
 
+  const dialogRef = useRef();
+
   const performEnemyTurn = async () => {
     let damage = enemyAttack - heroDefense;
     if (damage < 0) {
       damage = 0;
     }
-    // here we could display a message saying what attack enemy performs
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    await dialogRef.current.alert("Taurus attaque avec Cornes");
     await oponentRef.current.glow();
     await heroRef.current.recoilAfterHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
@@ -116,6 +118,7 @@ export const App = () => {
     decreaseHeroHp(15);
   };
   const performHeroTurn = async () => {
+    await dialogRef.current.alert("Hero attaque avec Epée -A-");
     let damage = heroAttack + weaponAttack - enemyDefense;
     if (damage < 0) {
       damage = 0;
@@ -170,22 +173,28 @@ export const App = () => {
           <Box name="allies_box" height="10%" width="100%">
             <Ally ref={heroRef} />
           </Box>
-          <Box
-            name="bottom_ui"
-            width="100%"
-            height="..."
-            contentX="center"
-            contentY="end"
-            innerSpacingBottom="0.5em"
-            hidden={turnState !== ""}
-          >
-            <MenuFight
-              onAttack={() => {
-                if (turnState === "" && !pausedSignal.value) {
-                  turnStateSetter("player_is_selecting_target");
-                }
-              }}
-            ></MenuFight>
+          <Box name="bottom_ui" width="100%" height="...">
+            <Box
+              width="100%"
+              height="100%"
+              contentX="center"
+              contentY="end"
+              innerSpacingBottom="0.5em"
+              hidden={turnState !== ""}
+            >
+              <MenuFight
+                onAttack={() => {
+                  if (turnState === "" && !pausedSignal.value) {
+                    turnStateSetter("player_is_selecting_target");
+                  }
+                }}
+              ></MenuFight>
+            </Box>
+            <DialogTextBox
+              width="100%"
+              innerSpacingBottom="0.5em"
+              ref={dialogRef}
+            ></DialogTextBox>
           </Box>
         </Box>
         <Box
@@ -398,7 +407,7 @@ const Opponent = forwardRef(
         x="center"
       >
         <Box name="top_ui" width="100%" innerSpacing="0.5em">
-          <Message hidden={turnState !== ""} innerSpacing="0.7em">
+          <Message invisible={turnState !== ""} innerSpacing="0.7em">
             {enemyNameSignal.value}
           </Message>
         </Box>
