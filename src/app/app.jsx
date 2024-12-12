@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
 } from "preact/hooks";
-import { useCanvasGlowAnimation } from "./animations/use_canvas_glow_animation.js";
 import { useDigitsDisplayAnimation } from "./animations/use_digits_display_animation.js";
 import { useElementAnimation } from "./animations/use_element_animation.js";
 import { usePartyMemberHitAnimation } from "./animations/use_party_member_hit_animation.js";
@@ -17,12 +16,10 @@ import { MountainAndSkyBattleBackground } from "./battle_background/battle_backg
 import { Benjamin } from "./character/benjamin.jsx";
 import { DialogTextBox } from "./components/dialog_text_box/dialog_text_box.jsx";
 import { Lifebar } from "./components/lifebar/lifebar.jsx";
-import { Message } from "./components/message/message.jsx";
-import { Enemy } from "./enemy/enemy.jsx";
 import { taurus } from "./enemy/taurus.js";
 import { MenuFight } from "./fight/menu_fight.jsx";
-import { Selector } from "./fight/selector.jsx";
-import { SwordA, SwordAIcon } from "./fight/sword_a.jsx";
+import { Opponent } from "./fight/oponent.jsx";
+import { SwordAIcon } from "./fight/sword_a.jsx";
 import { swordASoundUrl } from "./fight/sword_sound_url.js";
 import { WhiteCurtain } from "./fight/white_curtain.jsx";
 import { useBooleanState } from "./hooks/use_boolean_state.js";
@@ -161,9 +158,14 @@ export const App = () => {
             <Opponent
               ref={oponentRef}
               turnState={turnState}
+              enemyName={enemyNameSignal.value}
               enemyHp={enemyHp}
               enemyHpMax={enemyHpMax}
               enemyStates={enemyStates}
+              enemyImageUrl={enemyImageUrlSignal.value}
+              enemyImageTransparentColor={
+                enemyImageTransparentColorSignal.value
+              }
               onSelect={() => {
                 startTurn();
               }}
@@ -323,139 +325,3 @@ const Ally = forwardRef((props, ref) => {
     </Box>
   );
 });
-
-const Opponent = forwardRef(
-  (
-    {
-      // name,
-      turnState,
-      enemyHp,
-      enemyHpMax,
-      enemyStates,
-      onSelect,
-    },
-    ref,
-  ) => {
-    const elementRef = useRef();
-    const [glow] = useCanvasGlowAnimation({
-      id: "enemy_glow",
-      elementRef,
-      from: "black",
-      to: "white",
-      duration: 300,
-    });
-
-    const enemyDigitsElementRef = useRef();
-    const [displayDamage] = useDigitsDisplayAnimation({
-      elementRef: enemyDigitsElementRef,
-      duration: 300,
-    });
-    const weaponElementRef = useRef();
-    const [playWeaponAnimation] = useElementAnimation({
-      id: "weapon_animation",
-      elementRef: weaponElementRef,
-      from: {
-        x: 25,
-      },
-      to: {
-        x: -15,
-      },
-      duration: 200,
-    });
-    const [weaponIsVisible, weaponIsVisibleSetter] = useState(false);
-
-    const enemyStateKey = enemyStates
-      ? Object.keys(enemyStates).find((key) => {
-          const { conditions } = enemyStates[key];
-          if (
-            conditions.hp &&
-            conditions.hp({ hp: enemyHp, hpMax: enemyHpMax })
-          ) {
-            return true;
-          }
-          return false;
-        })
-      : null;
-    const enemyPropsFromState = enemyStateKey ? enemyStates[enemyStateKey] : {};
-    const enemyImageUrl = enemyImageUrlSignal.value;
-    const enemyImageTransparentColor = enemyImageTransparentColorSignal.value;
-
-    const [enemyDamage, enemyDamageSetter] = useState(null);
-
-    useImperativeHandle(ref, () => {
-      return {
-        glow,
-        playWeaponAnimation: async () => {
-          weaponIsVisibleSetter(true);
-          await playWeaponAnimation();
-          weaponIsVisibleSetter(false);
-        },
-        displayDamage: async (value) => {
-          enemyDamageSetter(value);
-          await displayDamage();
-          enemyDamageSetter(null);
-        },
-      };
-    });
-
-    return (
-      <Box
-        vertical
-        name="enemy_container_box"
-        width="100%"
-        height="100%"
-        x="center"
-      >
-        <Box name="top_ui" width="100%" innerSpacing="0.5em">
-          <Message invisible={turnState !== ""} innerSpacing="0.7em">
-            {enemyNameSignal.value}
-          </Message>
-        </Box>
-        <Box
-          name="enemy_box"
-          ratio="1/1"
-          height="..."
-          x="center"
-          innerSpacing="10"
-        >
-          <Selector
-            hidden={turnState !== "player_is_selecting_target"}
-            onClick={() => {
-              onSelect();
-            }}
-          />
-          <Enemy
-            elementRef={elementRef}
-            url={enemyPropsFromState.url || enemyImageUrl}
-            transparentColor={enemyImageTransparentColor}
-            x={enemyPropsFromState.x}
-            y={enemyPropsFromState.y}
-          />
-          <Box
-            name="weapon_box"
-            absolute
-            hidden={!weaponIsVisible}
-            ratio="1/1"
-            height="50%"
-            x="center"
-            y="center"
-          >
-            <SwordA elementRef={weaponElementRef} />
-          </Box>
-          <Box
-            name="enemy_digits_box"
-            absolute
-            elementRef={enemyDigitsElementRef}
-            hidden={enemyDamage === null}
-            width="100%"
-            height="100%"
-          >
-            <Box x="center" y="center">
-              <Digits name="enemy_digits">{enemyDamage}</Digits>
-            </Box>
-          </Box>
-        </Box>
-      </Box>
-    );
-  },
-);
