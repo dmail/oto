@@ -23,47 +23,54 @@ import { Box } from "../../layout/box.jsx";
 import { Message } from "../message/message.jsx";
 import { getAvailableSize } from "/app/utils/get_available_size.js";
 
-export const DialogTextBox = forwardRef(
-  ({ color = "white", backgroundColor = "blue", ...props }, ref) => {
-    const [text, textSetter] = useState("");
-    const boxRef = useRef();
+const DialogTextBoxComponent = (
+  { color = "white", backgroundColor = "blue", ...props },
+  ref,
+) => {
+  const [text, textSetter] = useState("");
+  const messageElementRef = useRef();
 
-    useKeyEffect({
-      Enter: {
-        enabled: Boolean(text),
-        callback: () => {},
+  useKeyEffect({
+    Enter: {
+      enabled: Boolean(text),
+      callback: () => {},
+    },
+    Space: {
+      enabled: Boolean(text),
+      callback: () => {},
+    },
+  });
+
+  useLayoutEffect(() => {
+    if (!text) {
+      return;
+    }
+    const messageElement = messageElementRef.current;
+    // one I have the text I compute the available width/height
+    // I use it to determine the text I can display in the box
+    const [availableWidth, availableHeight] = getAvailableSize(messageElement);
+    console.log({ availableWidth, availableHeight });
+  }, [text]);
+
+  useImperativeHandle(ref, () => {
+    return {
+      alert: async (text) => {
+        textSetter(text);
       },
-      Space: {
-        enabled: Boolean(text),
-        callback: () => {},
-      },
-    });
+    };
+  });
 
-    useLayoutEffect(() => {
-      if (!text) {
-        return;
-      }
-      const boxElement = boxRef.current;
-      // one I have the text I compute the available width/height
-      // I use it to determine the text I can display in the box
-      const [availableWidth, availableHeight] = getAvailableSize(boxElement);
-      console.log({ availableWidth, availableHeight });
-    }, [text]);
+  return (
+    <Box {...props} hidden={!text}>
+      <Message
+        ref={messageElementRef}
+        color={color}
+        backgroundColor={backgroundColor}
+      >
+        {text}
+      </Message>
+    </Box>
+  );
+};
 
-    useImperativeHandle(ref, () => {
-      return {
-        alert: async (text) => {
-          textSetter(text);
-        },
-      };
-    });
-
-    return (
-      <Box {...props} ref={boxRef} hidden={!text}>
-        <Message color={color} backgroundColor={backgroundColor}>
-          {text}
-        </Message>
-      </Box>
-    );
-  },
-);
+export const DialogTextBox = forwardRef(DialogTextBoxComponent);

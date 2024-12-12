@@ -5,20 +5,25 @@
 // donc a priori du svg la dedans
 */
 
+import { forwardRef } from "preact/compat";
 import { Box } from "/app/layout/box.jsx";
 import { Text } from "/app/text/text.jsx";
 
-export const Message = ({
-  children,
-  backgroundColor = "black",
-  borderColor = "white",
-  outlineColor = "black",
-  color = "white",
-  maxLines,
-  ...props
-}) => {
+const MessageComponent = (
+  {
+    children,
+    backgroundColor = "black",
+    borderColor = "white",
+    outlineColor = "black",
+    color = "white",
+    maxLines,
+    ...props
+  },
+  ref,
+) => {
   return (
     <Box
+      ref={ref}
       x="center"
       y="center"
       height="100%"
@@ -39,3 +44,5 @@ export const Message = ({
     </Box>
   );
 };
+
+export const Message = forwardRef(MessageComponent);

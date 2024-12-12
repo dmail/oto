@@ -140,6 +140,10 @@ export const App = () => {
     turnStateSetter("");
   };
 
+  // setTimeout(() => {
+  //   dialogRef.current.alert("coucou");
+  // }, 200);
+
   return (
     <div style="font-size: 16px;">
       <Box vertical name="screen" width="400" height="400">

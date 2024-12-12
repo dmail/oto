@@ -1,5 +1,6 @@
 import { toChildArray } from "preact";
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { forwardRef } from "preact/compat";
+import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 import {
   getAvailableSize,
   getPaddingAndBorderSizes,
@@ -15,37 +16,42 @@ if (import.meta.hot) {
   });
 }
 
-export const Box = ({
-  NodeName = "div",
-  name,
-  elementRef = useRef(),
-  vertical = false,
-  absolute = false,
-  hidden = false,
-  invisible = false,
-  children,
-  innerSpacing = 0,
-  innerSpacingTop,
-  innerSpacingLeft,
-  innerSpacingRight,
-  innerSpacingBottom,
-  outerSpacing,
-  outerSpacingTop,
-  ratio,
-  border,
-  width = "auto",
-  height = "auto",
-  maxWidth = ratio && height !== "auto" ? "100%" : undefined,
-  maxHeight = ratio && width !== "auto" ? "100%" : undefined,
-  x = "start",
-  y = "start",
-  contentX = "start",
-  contentY = "start",
-  cursor,
-  ...props
-}) => {
+const BoxComponent = (
+  {
+    NodeName = "div",
+    name,
+    vertical = false,
+    absolute = false,
+    hidden = false,
+    invisible = false,
+    children,
+    innerSpacing = 0,
+    innerSpacingTop,
+    innerSpacingLeft,
+    innerSpacingRight,
+    innerSpacingBottom,
+    outerSpacing,
+    outerSpacingTop,
+    ratio,
+    border,
+    width = "auto",
+    height = "auto",
+    maxWidth = ratio && height !== "auto" ? "100%" : undefined,
+    maxHeight = ratio && width !== "auto" ? "100%" : undefined,
+    x = "start",
+    y = "start",
+    contentX = "start",
+    contentY = "start",
+    cursor,
+    ...props
+  },
+  ref,
+) => {
+  const innerRef = useRef();
+  useImperativeHandle(ref, () => innerRef.current);
+
   useLayoutEffect(() => {
-    const element = elementRef.current;
+    const element = innerRef.current;
     const { borderSizes } = getPaddingAndBorderSizes(element);
     const [availableWidth, availableHeight] = getAvailableSize(element);
 
@@ -222,13 +228,13 @@ export const Box = ({
 
   return (
     <NodeName
+      ref={innerRef}
       name={name}
       {...props}
       className="box"
       data-vertical={vertical || undefined}
       data-hidden={hidden || undefined}
       data-invisible={invisible || undefined}
-      ref={elementRef}
       style={style}
     >
       {/*
@@ -253,6 +259,8 @@ export const Box = ({
     </NodeName>
   );
 };
+
+export const Box = forwardRef(BoxComponent);
 
 Box.div = (props) => {
   return <Box NodeName="div" {...props} />;
