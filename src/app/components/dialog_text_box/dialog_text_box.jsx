@@ -12,14 +12,21 @@ aui retourne une fonction qui se resolve dans un cas précis
 */
 
 import { forwardRef } from "preact/compat";
-import { useImperativeHandle, useState } from "preact/hooks";
+import {
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "preact/hooks";
 import { useKeyEffect } from "../../hooks/use_key_effect.js";
 import { Box } from "../../layout/box.jsx";
 import { Message } from "../message/message.jsx";
+import { getAvailableSize } from "/app/utils/get_available_size.js";
 
 export const DialogTextBox = forwardRef(
   ({ color = "white", backgroundColor = "blue", ...props }, ref) => {
     const [text, textSetter] = useState("");
+    const boxRef = useRef();
 
     useKeyEffect({
       Enter: {
@@ -32,6 +39,17 @@ export const DialogTextBox = forwardRef(
       },
     });
 
+    useLayoutEffect(() => {
+      if (!text) {
+        return;
+      }
+      const boxElement = boxRef.current;
+      // one I have the text I compute the available width/height
+      // I use it to determine the text I can display in the box
+      const [availableWidth, availableHeight] = getAvailableSize(boxElement);
+      console.log({ availableWidth, availableHeight });
+    }, [text]);
+
     useImperativeHandle(ref, () => {
       return {
         alert: async (text) => {
@@ -41,7 +59,7 @@ export const DialogTextBox = forwardRef(
     });
 
     return (
-      <Box {...props} hidden={!text}>
+      <Box {...props} ref={boxRef} hidden={!text}>
         <Message color={color} backgroundColor={backgroundColor}>
           {text}
         </Message>

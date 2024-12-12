@@ -1,5 +1,6 @@
-import { toChildArray } from "preact";
+import { render, toChildArray } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
+import { splitLines } from "./text_utils.js";
 
 export const Text = ({
   // name,
@@ -141,31 +142,15 @@ export const Text = ({
   );
 };
 
-const splitLines = (text, maxLines) => {
-  const lines = [];
-  let currentLineChildren = [];
-  for (const child of text) {
-    if (typeof child === "string") {
-      for (const char of child.split("")) {
-        if (char === "\n") {
-          lines.push(currentLineChildren);
-          currentLineChildren = [];
-          continue;
-        }
-        currentLineChildren.push(char);
-      }
-    } else if (child.type === "br") {
-      lines.push(currentLineChildren);
-      currentLineChildren = [];
-    } else {
-      currentLineChildren.push(child);
-    }
-    if (maxLines && lines.length >= maxLines) {
-      break;
-    }
-  }
-  if ((currentLineChildren.length && !maxLines) || lines.length < maxLines) {
-    lines.push(currentLineChildren);
-  }
-  return lines;
+export const measureText = (text, { fontFamily, size }) => {
+  const div = document.createElement("div");
+  render(
+    <Text fontFamily={fontFamily} size={size}>
+      {text}
+    </Text>,
+    div,
+  );
+  const svg = div.querySelector("svg");
+  const { width, height } = svg.getBBox();
+  return [width, height];
 };

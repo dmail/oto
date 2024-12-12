@@ -1,5 +1,9 @@
 import { toChildArray } from "preact";
 import { useLayoutEffect, useRef } from "preact/hooks";
+import {
+  getAvailableSize,
+  getPaddingAndBorderSizes,
+} from "../utils/get_available_size.js";
 import boxStylesheet from "./box.css" with { type: "css" };
 
 document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];
@@ -42,13 +46,8 @@ export const Box = ({
 }) => {
   useLayoutEffect(() => {
     const element = elementRef.current;
-    const offsetParent = element.parentNode;
-    const { paddingSizes } = getPaddingAndBorderSizes(offsetParent);
     const { borderSizes } = getPaddingAndBorderSizes(element);
-    let availableWidth = offsetParent.clientWidth;
-    let availableHeight = offsetParent.clientHeight;
-    availableWidth -= paddingSizes.left + paddingSizes.right;
-    availableHeight -= paddingSizes.top + paddingSizes.bottom;
+    const [availableWidth, availableHeight] = getAvailableSize(element);
 
     if (x === "start") {
       if (vertical) {
@@ -273,31 +272,4 @@ const SPACING_SIZES = {
   s: 5,
   xs: 2,
   xxs: 1,
-};
-
-const getPaddingAndBorderSizes = (element) => {
-  const {
-    paddingLeft,
-    paddingRight,
-    paddingTop,
-    paddingBottom,
-    borderLeftWidth,
-    borderRightWidth,
-    borderTopWidth,
-    borderBottomWidth,
-  } = window.getComputedStyle(element, null);
-  return {
-    paddingSizes: {
-      left: parseFloat(paddingLeft),
-      right: parseFloat(paddingRight),
-      top: parseFloat(paddingTop),
-      bottom: parseFloat(paddingBottom),
-    },
-    borderSizes: {
-      left: parseFloat(borderLeftWidth),
-      right: parseFloat(borderRightWidth),
-      top: parseFloat(borderTopWidth),
-      bottom: parseFloat(borderBottomWidth),
-    },
-  };
 };
