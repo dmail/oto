@@ -172,6 +172,15 @@ export const splitLines = (text, maxLines) => {
   const lines = [];
   let currentLineChildren = [];
   let someChildNotAString = false;
+  if (text === null) {
+    return [];
+  }
+  if (typeof text === "number") {
+    text = String(text).split("");
+  }
+  if (typeof text === "string") {
+    text = text.split("");
+  }
   for (const child of text) {
     if (typeof child === "string") {
       for (const char of child.split("")) {

@@ -62,10 +62,11 @@ const DialogTextBoxComponent = (
 
   return (
     <Message
+      absolute
       ref={messageElementRef}
       color={color}
       backgroundColor={backgroundColor}
-      // invisible={!text}
+      hidden={!text}
       width="100%"
       height="100%"
       maxWidth="100%"
