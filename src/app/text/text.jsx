@@ -155,6 +155,9 @@ export const measureText = (
   { fontFamily = "goblin", fontSize = "0.7em" } = {},
 ) => {
   const div = document.createElement("div");
+  div.style.position = "absolute";
+  div.style.visibility = "hidden";
+  document.body.appendChild(div);
   render(
     <Text fontFamily={fontFamily} fontSize={fontSize}>
       {text}
@@ -162,7 +165,7 @@ export const measureText = (
     div,
   );
   const svg = div.querySelector("svg");
-  debugger;
   const { width, height } = svg.getBBox();
+  document.body.removeChild(div);
   return [width, height];
 };

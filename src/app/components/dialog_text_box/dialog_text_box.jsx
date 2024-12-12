@@ -49,7 +49,7 @@ const DialogTextBoxComponent = (
     const messageElement = messageElementRef.current;
     // one I have the text I compute the available width/height
     // I use it to determine the text I can display in the box
-    messageElement.style.width = "100vw";
+    // messageElement.style.width = "100vw";
     const [availableWidth, availableHeight] = getAvailableSize(messageElement);
     // now I should update again the text to display actually what I can display
 
