@@ -9,7 +9,12 @@ const hpAbove =
 
 export const taurus = {
   name: "Taurus",
-  hp: 100,
+  attributes: {
+    hp: 100,
+    attack: 10,
+    defense: 0,
+    speed: 0,
+  },
   transparentColor: [0, 202, 202],
   states: {
     full_life: {

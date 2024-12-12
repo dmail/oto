@@ -39,8 +39,16 @@ const enemyImageTransparentColorSignal = computed(
   () => enemySignal.value.transparentColor,
 );
 const enemyNameSignal = computed(() => enemySignal.value.name);
-const enemyHpMaxSignal = computed(() => enemySignal.value.hp);
+const enemyHpMaxSignal = computed(() => enemySignal.value.attributes.hp);
+const enemyAttackSignal = computed(() => enemySignal.value.attributes.attack);
+const enemyDefenseSignal = computed(() => enemySignal.value.attributes.defense);
+const enemySpeedSignal = computed(() => enemySignal.value.attributes.speed);
 const enmyStatesSignal = computed(() => enemySignal.value.states);
+
+const heroSpeedSignal = signal(1);
+const heroAttackSignal = signal(1);
+const heroDefenseSignal = signal(1);
+const weaponAttackSignal = signal(20);
 
 export const App = () => {
   useLayoutEffect(() => {
@@ -54,6 +62,9 @@ export const App = () => {
       );
     };
   }, []);
+  const enemyAttack = enemyAttackSignal.value;
+  const enemyDefense = enemyDefenseSignal.value;
+  const enemySpeed = enemySpeedSignal.value;
   const enemyHpMax = enemyHpMaxSignal.value;
   const enemyStates = enmyStatesSignal.value;
   const oponentRef = useRef();
@@ -62,6 +73,10 @@ export const App = () => {
     enemyHpSetter((hp) => hp - value);
   }, []);
   const heroRef = useRef();
+  const heroAttack = heroAttackSignal.value;
+  const heroDefense = heroDefenseSignal.value;
+  const heroSpeed = heroSpeedSignal.value;
+  const weaponAttack = weaponAttackSignal.value;
 
   const [heroHp, heroHpSetter] = useState(40);
   const decreaseHeroHp = useCallback((value) => {
@@ -87,9 +102,24 @@ export const App = () => {
     }, [turnState]),
   });
 
-  const startTurn = async () => {
-    turnStateSetter("running");
-    // here we could display a message saying what attack hero performs
+  const performEnemyTurn = async () => {
+    let damage = enemyAttack - heroDefense;
+    if (damage < 0) {
+      damage = 0;
+    }
+    // here we could display a message saying what attack enemy performs
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await oponentRef.current.glow();
+    await heroRef.current.recoilAfterHit();
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    await heroRef.current.displayDamage(damage);
+    decreaseHeroHp(15);
+  };
+  const performHeroTurn = async () => {
+    let damage = heroAttack + weaponAttack - enemyDefense;
+    if (damage < 0) {
+      damage = 0;
+    }
     await heroRef.current.moveToAct();
     showWhiteCurtain();
     swordSound.currentTime = 0.15;
@@ -98,17 +128,21 @@ export const App = () => {
     const moveBackToPositionPromise = heroRef.current.moveBackToPosition();
     await new Promise((resolve) => setTimeout(resolve, 200));
     await Promise.all([
-      oponentRef.current.displayDamage(25),
+      oponentRef.current.displayDamage(damage),
       moveBackToPositionPromise,
     ]);
-    decreaseEnemyHp(25);
-    // here we could display a message saying what attack enemy performs
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    await oponentRef.current.glow();
-    await heroRef.current.recoilAfterHit();
-    await new Promise((resolve) => setTimeout(resolve, 150));
-    await heroRef.current.displayDamage(15);
-    decreaseHeroHp(15);
+    decreaseEnemyHp(damage);
+  };
+  const startTurn = async () => {
+    turnStateSetter("running");
+    if (enemySpeed > heroSpeed) {
+      await performEnemyTurn();
+      await performHeroTurn();
+      turnStateSetter("");
+      return;
+    }
+    await performHeroTurn();
+    await performEnemyTurn();
     turnStateSetter("");
   };
 
