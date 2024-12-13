@@ -5,7 +5,7 @@ import { useStructuredMemo } from "/app/hooks/use_structured_memo.js";
 import { getAvailableSize } from "/app/utils/get_available_size.js";
 
 export const useTextController = () => {
-  const [index, indexSetter] = useState(0);
+  const [index, indexSetter] = useState(-1);
   const [paragraphs, paragraphsSetter] = useState([]);
   const hasPrev = index > 0 && paragraphs.length > 0;
   const hasNext = index !== paragraphs.length - 1 && paragraphs.length > 0;
@@ -21,6 +21,7 @@ export const useTextController = () => {
   }, [hasNext]);
 
   const onParagraphChange = useCallback((paragraphs) => {
+    indexSetter(0);
     paragraphsSetter(paragraphs);
   }, []);
 
@@ -34,34 +35,31 @@ export const useTextController = () => {
   });
 };
 
-const TextComponent = (
-  {
-    // name,
-    controller,
-    width = "auto",
-    height = "auto",
-    dx = 0,
-    dy = 0,
-    fontFamily = "goblin",
-    fontSize = "0.7em",
-    fontWeight,
-    children,
-    color,
-    //outlineColor,
-    letterSpacing,
-    lineHeight = 1.4,
-    visible = true,
-    overflow = "visible",
-    ...props
-  },
-  ref,
-) => {
+const TextComponent = ({
+  // name,
+  controller,
+  width = "auto",
+  height = "auto",
+  dx = 0,
+  dy = 0,
+  fontFamily = "goblin",
+  fontSize = "0.7em",
+  fontWeight,
+  children,
+  color,
+  //outlineColor,
+  letterSpacing,
+  lineHeight = 1.4,
+  visible = true,
+  overflow = "visible",
+  ...props
+}) => {
   const lines = splitLines(children);
   const svgInnerRef = useRef();
   const textRef = useRef();
-  const [paragraphs, paragraphsSetter] = useState([]);
   const setParagraphRef = useRef();
   const index = controller?.index;
+  const onParagraphChange = controller?.onParagraphChange;
 
   const update = useCallback(() => {
     const svgElement = svgInnerRef.current;
@@ -81,12 +79,12 @@ const TextComponent = (
       availableHeight,
     });
     setParagraphRef.current = setParagraph;
-    paragraphsSetter(paragraphs);
-    setParagraph(0);
-    if (controller) {
-      controller.onParagraphChange(paragraphs);
+    if (onParagraphChange) {
+      onParagraphChange(paragraphs);
+    } else {
+      setParagraph(0);
     }
-  }, [dx, dy, lineHeight, overflow, controller]);
+  }, [dx, dy, lineHeight, overflow, onParagraphChange]);
 
   useLayoutEffect(() => {
     const svg = svgInnerRef.current;
@@ -104,10 +102,10 @@ const TextComponent = (
   }, [update]);
 
   useLayoutEffect(() => {
-    if (typeof index === "number" && paragraphs.length) {
+    if (typeof index === "number" && setParagraphRef.current) {
       setParagraphRef.current(controller.index);
     }
-  }, [index, paragraphs]);
+  }, [index, setParagraphRef.current]);
 
   return (
     <svg
@@ -135,6 +133,7 @@ const TextComponent = (
     </svg>
   );
 };
+export const Text = forwardRef(TextComponent);
 
 const initTextFiller = (
   lines,
@@ -199,6 +198,7 @@ const initTextFiller = (
   };
   const endCurrentParagraph = () => {
     if (currentParagraph && currentParagraph.lines.length) {
+      renderLines(currentParagraph.lines); // sometimes not neccessary
       currentParagraph.width = widthTaken;
       currentParagraph.height = heightTaken;
       paragraphs.push(currentParagraph);
@@ -212,7 +212,7 @@ const initTextFiller = (
   };
   startNewParagraph();
   let lineIndex = 0;
-  let debug = false;
+  let debug = true;
   if (debug) {
     console.log(
       `compute paragraphs fitting into ${availableWidth}x${availableHeight}`,
@@ -314,7 +314,6 @@ const initTextFiller = (
     }
     startNewParagraph();
     addToCurrentParagraph(childrenFittingOnThatLine);
-    renderLines(currentParagraph.lines);
     lineIndex++;
     continue;
   }
@@ -353,8 +352,6 @@ const Tspan = ({
     </tspan>
   );
 };
-
-export const Text = forwardRef(TextComponent);
 
 Text.bold = ({ children }) => {
   return <Text weight="bold">{children}</Text>;
@@ -406,14 +403,14 @@ export const splitLines = (text) => {
         const chars = child.split("");
         for (const char of chars) {
           if (char === "\n") {
-            addChar("\n");
+            // addChar("\n");
             startNewLine();
           } else {
             addChar(char);
           }
         }
       } else if (child.type === "br") {
-        addChar("\n");
+        // addChar("\n");
         startNewLine();
       } else if (child.type.displayName?.includes("TextComponent")) {
         const { props } = child;
