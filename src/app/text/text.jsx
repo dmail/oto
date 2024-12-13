@@ -8,8 +8,6 @@ const TextComponent = (
     // name,
     width = "auto",
     height = "auto",
-    x = "start",
-    y = "start",
     dx = 0,
     dy = 0,
     fontFamily = "goblin",
@@ -32,6 +30,8 @@ const TextComponent = (
     const svg = innerRef.current;
     const [availableWidth, availableHeight] = getAvailableSize(svg.parentNode);
     const textFiller = createTextFiller(lines, {
+      dx,
+      dy,
       fontSize,
       fontFamily,
       fontWeight,
@@ -40,6 +40,8 @@ const TextComponent = (
       svgElement: svg,
       availableWidth,
       availableHeight,
+      color,
+      outlineColor,
     });
     textFiller();
   }, [lines]);
@@ -67,6 +69,8 @@ const TextComponent = (
 const createTextFiller = (
   lines,
   {
+    dx,
+    dy,
     fontSize,
     fontFamily,
     fontWeight,
@@ -75,10 +79,10 @@ const createTextFiller = (
     svgElement,
     availableWidth,
     availableHeight,
+    color,
   },
 ) => {
   const fontSizeBase = 10;
-  const dy = 0;
   let widthTaken;
   let heightTaken;
   let remainingWidth;
@@ -110,7 +114,7 @@ const createTextFiller = (
         <Tspan
           x="0"
           y="0"
-          dx={0}
+          dx={dx}
           dy={dy + lineHeight * fontSizeBase * lineIndex}
         >
           {lineChildren}
@@ -124,6 +128,7 @@ const createTextFiller = (
         font-family={fontFamily}
         font-weight={fontWeight}
         letter-spacing={letterSpacing}
+        color={color}
       >
         {textChildren}
       </text>,
@@ -234,6 +239,8 @@ const createTextFiller = (
   }
 
   renderLines(paragraphs[0].lines);
+  svgElement.style.width = paragraphs[0].width;
+  svgElement.style.height = paragraphs[0].height;
   let paragraphIndex = 0;
   const fillNext = () => {
     const paragraph = paragraphs[paragraphIndex];
