@@ -149,6 +149,10 @@ const TextComponent = (
 
 export const Text = forwardRef(TextComponent);
 
+Text.bold = (props) => {
+  return <Text weight="bold" {...props}></Text>;
+};
+
 export const splitLines = (text, maxLines) => {
   const lines = [];
   let currentLineChildren = [];
