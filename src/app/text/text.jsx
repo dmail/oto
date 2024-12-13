@@ -28,23 +28,45 @@ const TextComponent = (
   useImperativeHandle(ref, () => innerRef.current);
   useLayoutEffect(() => {
     const svg = innerRef.current;
-    const [availableWidth, availableHeight] = getAvailableSize(svg.parentNode);
-    const textFiller = createTextFiller(lines, {
-      dx,
-      dy,
-      fontSize,
-      fontFamily,
-      fontWeight,
-      letterSpacing,
-      lineHeight,
-      svgElement: svg,
-      availableWidth,
-      availableHeight,
-      color,
-      outlineColor,
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        return;
+      }
+      const [availableWidth, availableHeight] = getAvailableSize(
+        svg.parentNode,
+      );
+      const textFiller = createTextFiller(lines, {
+        dx,
+        dy,
+        fontSize,
+        fontFamily,
+        fontWeight,
+        letterSpacing,
+        lineHeight,
+        svgElement: svg,
+        availableWidth,
+        availableHeight,
+        color,
+        outlineColor,
+      });
+      textFiller();
     });
-    textFiller();
-  }, [lines]);
+    observer.observe(svg.parentNode);
+    return () => {
+      observer.disconnect();
+    };
+  }, [
+    lines,
+    dx,
+    dy,
+    fontSize,
+    fontFamily,
+    letterSpacing,
+    lineHeight,
+    color,
+    outlineColor,
+  ]);
 
   return (
     <svg
@@ -82,30 +104,12 @@ const createTextFiller = (
     color,
   },
 ) => {
+  lines = [...lines];
   const fontSizeBase = 10;
   let widthTaken;
   let heightTaken;
   let remainingWidth;
   let remainingHeight;
-  let currentParagraph;
-  const paragraphs = [];
-  const startNewParagraph = () => {
-    endCurrentParagraph();
-    currentParagraph = { width: 0, height: 0, lines: [] };
-    renderLines([]);
-    currentParagraph.width = widthTaken;
-    currentParagraph.height = heightTaken;
-  };
-  const addToCurrentParagraph = (lineChildren) => {
-    currentParagraph.lines.push(lineChildren);
-  };
-  const endCurrentParagraph = () => {
-    if (currentParagraph && currentParagraph.lines.length) {
-      currentParagraph.width = widthTaken;
-      currentParagraph.height = heightTaken;
-      paragraphs.push(currentParagraph);
-    }
-  };
   const renderLines = (lines) => {
     const textChildren = [];
     let lineIndex = 0;
@@ -122,6 +126,7 @@ const createTextFiller = (
       );
       lineIndex++;
     }
+    // render(null, svgElement);
     render(
       <text
         font-size={fontSize}
@@ -139,6 +144,33 @@ const createTextFiller = (
     heightTaken = Math.ceil(height);
     remainingWidth = availableWidth - widthTaken;
     remainingHeight = availableHeight - heightTaken;
+  };
+
+  let currentParagraph;
+  const paragraphs = [];
+
+  const startNewParagraph = () => {
+    endCurrentParagraph();
+    currentParagraph = { width: 0, height: 0, lines: [] };
+    renderLines(currentParagraph.lines);
+    currentParagraph.width = widthTaken;
+    currentParagraph.height = heightTaken;
+  };
+  const addToCurrentParagraph = (lineChildren) => {
+    currentParagraph.lines.push(lineChildren);
+  };
+  const endCurrentParagraph = () => {
+    if (currentParagraph && currentParagraph.lines.length) {
+      currentParagraph.width = widthTaken;
+      currentParagraph.height = heightTaken;
+      paragraphs.push(currentParagraph);
+    }
+  };
+
+  const setParagraph = (paragraph) => {
+    renderLines(paragraph.lines);
+    svgElement.style.width = paragraph.width;
+    svgElement.style.height = paragraph.height;
   };
   startNewParagraph();
   let lineIndex = 0;
@@ -238,12 +270,11 @@ const createTextFiller = (
     console.log("resulting paragraphs", paragraphs);
   }
 
-  renderLines(paragraphs[0].lines);
-  svgElement.style.width = paragraphs[0].width;
-  svgElement.style.height = paragraphs[0].height;
+  setParagraph(paragraphs[0]);
   let paragraphIndex = 0;
   const fillNext = () => {
     const paragraph = paragraphs[paragraphIndex];
+    setParagraph(paragraph);
     paragraphIndex++;
     return {
       done: paragraphIndex === paragraphs.length,
