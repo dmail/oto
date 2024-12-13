@@ -19,7 +19,7 @@ const TextComponent = (
     letterSpacing,
     lineHeight = 1.4,
     visible = true,
-    overflowY = "visible",
+    overflow = "visible",
     ...props
   },
   ref,
@@ -50,7 +50,7 @@ const TextComponent = (
         availableHeight,
         color,
         outlineColor,
-        overflowY,
+        overflow,
       });
       textFiller();
     });
@@ -66,7 +66,7 @@ const TextComponent = (
     fontFamily,
     letterSpacing,
     lineHeight,
-    overflowY,
+    overflow,
     color,
     outlineColor,
   ]);
@@ -105,7 +105,7 @@ const createTextFiller = (
     availableWidth,
     availableHeight,
     color,
-    overflowY,
+    overflow,
   },
 ) => {
   lines = [...lines];
@@ -257,8 +257,8 @@ const createTextFiller = (
       lineIndex++;
       continue;
     }
-    if (overflowY === "hidden") {
-      // cette ligne dépasse en hauteur
+    // cette ligne dépasse en hauteur
+    if (overflow === "hidden") {
       if (currentParagraph.length === 0) {
         // c'est la premiere ligne, on autorise quand meme
         addToCurrentParagraph(childrenFittingOnThatLine);
