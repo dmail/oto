@@ -17,7 +17,6 @@ const MessageComponent = (
     // outlineColor = "black",
     color = "white",
     overflow,
-    maxLines,
     textController,
     ...props
   },
@@ -45,7 +44,6 @@ const MessageComponent = (
         ref={ref}
         controller={textController}
         color={color}
-        maxLines={maxLines}
         overflow={overflow}
       >
         {children}

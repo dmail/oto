@@ -47,6 +47,29 @@
                 <Text fontWeight="bold">Damien and I would like</Text>{" "}
               </Text>
             </div>
+            <div>
+              <div style="margin: 10px; display: flex; width: 150px; height: 20px; border: 1px solid black; background: green">
+                <Text overflow="hidden" controller={textController}>
+                  A<br />B
+                </Text>
+              </div>
+              <button
+                disabled={!textController.hasPrev}
+                onClick={() => {
+                  textController.prev();
+                }}
+              >
+                prev
+              </button>
+              <button
+                disabled={!textController.hasNext}
+                onClick={() => {
+                  textController.next();
+                }}
+              >
+                next
+              </button>
+            </div>
           </div>
         );
       };

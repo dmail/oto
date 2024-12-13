@@ -53,12 +53,20 @@ const TextComponent = ({
   overflow = "visible",
   ...props
 }) => {
+  children = normalizeChildren(children);
   const lines = splitLines(children);
   const svgInnerRef = useRef();
   const textRef = useRef();
   const setParagraphRef = useRef();
   const index = controller?.index;
   const onParagraphChange = controller?.onParagraphChange;
+
+  const lineAsDeps = [];
+  for (const line of lines) {
+    lineAsDeps.push(line.type);
+    lineAsDeps.push(line.value);
+    lineAsDeps.push(line.char);
+  }
 
   const update = useCallback(() => {
     const svgElement = svgInnerRef.current;
@@ -78,7 +86,7 @@ const TextComponent = ({
     } else {
       setParagraph(0);
     }
-  }, [dx, dy, lineHeight, overflow, onParagraphChange]);
+  }, [...lineAsDeps, dx, dy, lineHeight, overflow, onParagraphChange]);
 
   useLayoutEffect(() => {
     const svgElement = svgInnerRef.current;
@@ -367,7 +375,20 @@ Text.bold = ({ children }) => {
   return <Text weight="bold">{children}</Text>;
 };
 
-export const splitLines = (text) => {
+const normalizeChildren = (children) => {
+  if (children === null || children === undefined) {
+    return [];
+  }
+  if (typeof children === "number") {
+    return [String(children)];
+  }
+  if (typeof children === "string") {
+    return [children];
+  }
+  return children;
+};
+
+const splitLines = (text) => {
   const visitChildren = (children) => {
     if (children === null || children === undefined) {
       return [];
