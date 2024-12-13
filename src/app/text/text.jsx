@@ -39,8 +39,6 @@ export const useTextController = () => {
 const TextComponent = ({
   // name,
   controller,
-  width = "auto",
-  height = "auto",
   dx = 0,
   dy = 0,
   fontFamily = "goblin",
@@ -65,9 +63,6 @@ const TextComponent = ({
   const update = useCallback(() => {
     const svgElement = svgInnerRef.current;
     const textElement = textRef.current;
-    const [availableWidth, availableHeight] = getAvailableSize(
-      svgElement.parentNode,
-    );
     const [paragraphs, setParagraph] = initTextFiller(lines, {
       dx,
       dy,
@@ -76,8 +71,6 @@ const TextComponent = ({
       controller,
       svgElement,
       textElement,
-      availableWidth,
-      availableHeight,
     });
     setParagraphRef.current = setParagraph;
     if (onParagraphChange) {
@@ -88,17 +81,40 @@ const TextComponent = ({
   }, [dx, dy, lineHeight, overflow, onParagraphChange]);
 
   useLayoutEffect(() => {
-    const svg = svgInnerRef.current;
+    const svgElement = svgInnerRef.current;
+    const elementToObserve = svgElement.parentNode;
+    let previousWidth;
+    let previousHeight;
+    let disconnect = () => {};
+
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) {
         return;
       }
+      if (
+        entry.contentRect.width === previousWidth &&
+        entry.contentRect.height === previousHeight
+      ) {
+        return;
+      }
+      previousWidth = entry.contentRect.width;
+      previousHeight = entry.contentRect.height;
+
+      console.log("resize");
+      observer.unobserve(elementToObserve);
+
+      svgElement.style.width = "0px";
+      svgElement.style.height = "0px";
       update();
+      observer.observe(elementToObserve);
     });
-    observer.observe(svg.parentNode);
-    return () => {
+    observer.observe(elementToObserve);
+    disconnect = () => {
       observer.disconnect();
+    };
+    return () => {
+      disconnect();
     };
   }, [update]);
 
@@ -119,8 +135,6 @@ const TextComponent = ({
         pointerEvents: visible ? "auto" : "none",
         dominantBaseline: "text-before-edge",
         overflow: "visible",
-        position:
-          width === "auto" || height === "auto" ? "absolute" : "relative",
       }}
     >
       <text
@@ -138,23 +152,14 @@ export const Text = forwardRef(TextComponent);
 
 const initTextFiller = (
   lines,
-  {
-    dx,
-    dy,
-    lineHeight,
-    svgElement,
-    textElement,
-    availableWidth,
-    availableHeight,
-    overflow,
-  },
+  { dx, dy, lineHeight, svgElement, textElement, overflow },
 ) => {
   lines = [...lines];
   const fontSizeBase = 10;
   let widthTaken;
   let heightTaken;
-  let remainingWidth;
-  let remainingHeight;
+  let hasOverflowX;
+  let hasOverflowY;
   const renderLines = (lines) => {
     const textChildren = [];
     let lineIndex = 0;
@@ -178,10 +183,15 @@ const initTextFiller = (
     // render(null, svgElement);
     render(<>{textChildren}</>, textElement);
     const { width, height } = textElement.getBBox();
-    widthTaken = width; //Math.ceil(width);
-    heightTaken = height; //  Math.ceil(height);
-    remainingWidth = availableWidth - widthTaken;
-    remainingHeight = availableHeight - heightTaken;
+    widthTaken = width;
+    heightTaken = height;
+    svgElement.style.width = `${Math.ceil(widthTaken)}px`;
+    svgElement.style.height = `${Math.ceil(heightTaken)}px`;
+    const [availableWidth, availableHeight] = getAvailableSize(
+      svgElement.parentNode,
+    );
+    hasOverflowX = widthTaken > availableWidth;
+    hasOverflowY = heightTaken > availableHeight;
   };
 
   let currentParagraph;
@@ -208,16 +218,12 @@ const initTextFiller = (
 
   const setParagraph = (paragraph) => {
     renderLines(paragraph.lines);
-    svgElement.style.width = paragraph.width;
-    svgElement.style.height = paragraph.height;
   };
   startNewParagraph();
   let lineIndex = 0;
   let debug = false;
   if (debug) {
-    console.log(
-      `compute paragraphs fitting into ${availableWidth}x${availableHeight}`,
-    );
+    console.log(`compute paragraphs fitting`);
   }
   while (lineIndex < lines.length) {
     const line = lines[lineIndex];
@@ -231,7 +237,7 @@ const initTextFiller = (
         childrenCandidateToFit,
       ];
       renderLines(linesCandidateToFit);
-      if (remainingWidth >= 0) {
+      if (!hasOverflowX) {
         childrenFittingOnThatLine.push(lineChild);
         // there is still room for this char
         lineChildIndex++;
@@ -283,7 +289,7 @@ const initTextFiller = (
       lines.splice(lineIndex + 1, 0, childrenPushedNextLine);
       break;
     }
-    if (remainingHeight >= 0) {
+    if (!hasOverflowY) {
       // cette ligne tiens en hauteur
       addToCurrentParagraph(childrenFittingOnThatLine);
       if (debug) {
@@ -363,7 +369,7 @@ Text.bold = ({ children }) => {
 
 export const splitLines = (text) => {
   const visitChildren = (children) => {
-    if (children === null) {
+    if (children === null || children === undefined) {
       return [];
     }
     if (typeof children === "number") {
