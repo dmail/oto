@@ -15,7 +15,7 @@ const TextComponent = (
     fontWeight,
     children,
     color,
-    outlineColor,
+    //outlineColor,
     letterSpacing,
     lineHeight = 1.4,
     visible = true,
@@ -24,57 +24,67 @@ const TextComponent = (
   },
   ref,
 ) => {
+  // const [text, textSetter] = useState(children);
   const lines = splitLines(children);
-  const innerRef = useRef();
-  useImperativeHandle(ref, () => innerRef.current);
+  const svgInnerRef = useRef();
+  const textRef = useRef();
+
+  const show = (text) => {
+    const svg = svgInnerRef.current;
+    const textElement = textRef.current;
+    const [availableWidth, availableHeight] = getAvailableSize(svg.parentNode);
+    const textFiller = createTextFiller(lines, {
+      dx,
+      dy,
+      lineHeight,
+      svgElement: svg,
+      textElement,
+      availableWidth,
+      availableHeight,
+      overflow,
+    });
+    let currentPart = textFiller();
+    let _resolve;
+    const donePromise = new Promise((resolve) => {
+      _resolve = resolve;
+    });
+    // textSetter(currentPart.value);
+    return {
+      donePromise,
+      next: () => {
+        if (currentPart.done) {
+          _resolve();
+          return;
+        }
+        currentPart = textFiller();
+      },
+    };
+  };
+
+  useImperativeHandle(ref, () => {
+    return {
+      show,
+    };
+  });
   useLayoutEffect(() => {
-    const svg = innerRef.current;
+    const svg = svgInnerRef.current;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) {
         return;
       }
-      const [availableWidth, availableHeight] = getAvailableSize(
-        svg.parentNode,
-      );
-      const textFiller = createTextFiller(lines, {
-        dx,
-        dy,
-        fontSize,
-        fontFamily,
-        fontWeight,
-        letterSpacing,
-        lineHeight,
-        svgElement: svg,
-        availableWidth,
-        availableHeight,
-        color,
-        outlineColor,
-        overflow,
-      });
-      textFiller();
+      show();
     });
     observer.observe(svg.parentNode);
     return () => {
       observer.disconnect();
     };
-  }, [
-    lines,
-    dx,
-    dy,
-    fontSize,
-    fontFamily,
-    letterSpacing,
-    lineHeight,
-    overflow,
-    color,
-    outlineColor,
-  ]);
+  }, [lines, dx, dy, lineHeight, overflow]);
 
   return (
     <svg
       {...props}
-      ref={innerRef}
+      ref={svgInnerRef}
       xmlns="http://www.w3.org/2000/svg"
       style={{
         ...props.style,
@@ -87,7 +97,17 @@ const TextComponent = (
         position:
           width === "auto" || height === "auto" ? "absolute" : "relative",
       }}
-    ></svg>
+    >
+      <text
+        ref={textRef}
+        font-size={fontSize}
+        font-family={fontFamily}
+        font-weight={fontWeight}
+        letter-spacing={letterSpacing}
+        color={color}
+      ></text>
+      ,
+    </svg>
   );
 };
 
@@ -96,15 +116,11 @@ const createTextFiller = (
   {
     dx,
     dy,
-    fontSize,
-    fontFamily,
-    fontWeight,
-    letterSpacing,
     lineHeight,
     svgElement,
+    textElement,
     availableWidth,
     availableHeight,
-    color,
     overflow,
   },
 ) => {
@@ -131,19 +147,8 @@ const createTextFiller = (
       lineIndex++;
     }
     // render(null, svgElement);
-    render(
-      <text
-        font-size={fontSize}
-        font-family={fontFamily}
-        font-weight={fontWeight}
-        letter-spacing={letterSpacing}
-        color={color}
-      >
-        {textChildren}
-      </text>,
-      svgElement,
-    );
-    const { width, height } = svgElement.getBBox();
+    render(<>{textChildren}</>, textElement);
+    const { width, height } = textElement.getBBox();
     widthTaken = Math.ceil(width);
     heightTaken = Math.ceil(height);
     remainingWidth = availableWidth - widthTaken;
@@ -178,7 +183,7 @@ const createTextFiller = (
   };
   startNewParagraph();
   let lineIndex = 0;
-  let debug = true;
+  let debug = false;
   if (debug) {
     console.log(
       `compute paragraphs fitting into ${availableWidth}x${availableHeight}`,
@@ -289,7 +294,6 @@ const createTextFiller = (
     console.log("resulting paragraphs", paragraphs);
   }
 
-  setParagraph(paragraphs[0]);
   let paragraphIndex = 0;
   const fillNext = () => {
     const paragraph = paragraphs[paragraphIndex];
