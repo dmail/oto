@@ -1,11 +1,43 @@
 import { render } from "preact";
 import { forwardRef } from "preact/compat";
-import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
+import { useCallback, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useStructuredMemo } from "/app/hooks/use_structured_memo.js";
 import { getAvailableSize } from "/app/utils/get_available_size.js";
+
+export const useTextController = () => {
+  const [index, indexSetter] = useState(0);
+  const [paragraphs, paragraphsSetter] = useState([]);
+  const hasPrev = index > 0 && paragraphs.length > 0;
+  const hasNext = index !== paragraphs.length - 1 && paragraphs.length > 0;
+  const prev = useCallback(() => {
+    if (hasPrev) {
+      indexSetter((current) => current - 1);
+    }
+  }, [hasPrev]);
+  const next = useCallback(() => {
+    if (hasNext) {
+      indexSetter((current) => current + 1);
+    }
+  }, [hasNext]);
+
+  const onParagraphChange = useCallback((paragraphs) => {
+    paragraphsSetter(paragraphs);
+  }, []);
+
+  return useStructuredMemo({
+    index,
+    hasPrev,
+    hasNext,
+    prev,
+    next,
+    onParagraphChange,
+  });
+};
 
 const TextComponent = (
   {
     // name,
+    controller,
     width = "auto",
     height = "auto",
     dx = 0,
@@ -24,16 +56,25 @@ const TextComponent = (
   },
   ref,
 ) => {
-  // const [text, textSetter] = useState(children);
-  const lines = splitLines(children);
+  const linesRef = useRef(splitLines(children));
   const svgInnerRef = useRef();
   const textRef = useRef();
 
-  const show = (text) => {
+  const [paragraphs, paragraphsSetter] = useState([]);
+  const setParagraphRef = useRef();
+  const index = controller?.index;
+
+  useLayoutEffect(() => {
+    if (index !== undefined && index !== -1 && paragraphs.length) {
+      setParagraphRef.current(index);
+    }
+  }, [index, paragraphs]);
+
+  const show = (lines) => {
     const svg = svgInnerRef.current;
     const textElement = textRef.current;
     const [availableWidth, availableHeight] = getAvailableSize(svg.parentNode);
-    const textFiller = createTextFiller(lines, {
+    const [paragraphs, setParagraph] = initTextFiller(lines, {
       dx,
       dy,
       lineHeight,
@@ -42,30 +83,16 @@ const TextComponent = (
       availableWidth,
       availableHeight,
       overflow,
+      controller,
     });
-    let currentPart = textFiller();
-    let _resolve;
-    const donePromise = new Promise((resolve) => {
-      _resolve = resolve;
-    });
-    // textSetter(currentPart.value);
-    return {
-      donePromise,
-      next: () => {
-        if (currentPart.done) {
-          _resolve();
-          return;
-        }
-        currentPart = textFiller();
-      },
-    };
+    setParagraphRef.current = setParagraph;
+    paragraphsSetter(paragraphs);
+    setParagraph(0);
+    if (controller) {
+      controller.onParagraphChange(paragraphs);
+    }
   };
 
-  useImperativeHandle(ref, () => {
-    return {
-      show,
-    };
-  });
   useLayoutEffect(() => {
     const svg = svgInnerRef.current;
     const observer = new ResizeObserver((entries) => {
@@ -73,13 +100,13 @@ const TextComponent = (
       if (!entry) {
         return;
       }
-      show();
+      show(linesRef.current);
     });
     observer.observe(svg.parentNode);
     return () => {
       observer.disconnect();
     };
-  }, [lines, dx, dy, lineHeight, overflow]);
+  }, [dx, dy, lineHeight, overflow]);
 
   return (
     <svg
@@ -88,8 +115,6 @@ const TextComponent = (
       xmlns="http://www.w3.org/2000/svg"
       style={{
         ...props.style,
-        // width: width === "100%" ? width : undefined,
-        // height: height === "100%" ? height : undefined,
         display: "block",
         pointerEvents: visible ? "auto" : "none",
         dominantBaseline: "text-before-edge",
@@ -106,12 +131,11 @@ const TextComponent = (
         letter-spacing={letterSpacing}
         color={color}
       ></text>
-      ,
     </svg>
   );
 };
 
-const createTextFiller = (
+const initTextFiller = (
   lines,
   {
     dx,
@@ -195,6 +219,10 @@ const createTextFiller = (
     let childrenFittingOnThatLine = [];
     while (lineChildIndex < line.length) {
       const lineChild = line[lineChildIndex];
+      if (lineChild.char === "\n") {
+        lineChildIndex++;
+        continue;
+      }
       const childrenCandidateToFit = line.slice(0, lineChildIndex + 1);
       const linesCandidateToFit = [
         ...currentParagraph.lines,
@@ -271,7 +299,6 @@ const createTextFiller = (
         char: ".",
       };
     }
-
     // cette ligne dépasse en hauteur
     if (overflow === "visible") {
       addToCurrentParagraph(childrenFittingOnThatLine);
@@ -286,6 +313,7 @@ const createTextFiller = (
     }
     startNewParagraph();
     addToCurrentParagraph(childrenFittingOnThatLine);
+    renderLines(currentParagraph.lines);
     lineIndex++;
     continue;
   }
@@ -294,17 +322,12 @@ const createTextFiller = (
     console.log("resulting paragraphs", paragraphs);
   }
 
-  let paragraphIndex = 0;
-  const fillNext = () => {
-    const paragraph = paragraphs[paragraphIndex];
-    setParagraph(paragraph);
-    paragraphIndex++;
-    return {
-      done: paragraphIndex === paragraphs.length,
-      value: paragraph,
-    };
-  };
-  return fillNext;
+  return [
+    paragraphs,
+    (index) => {
+      setParagraph(paragraphs[index]);
+    },
+  ];
 };
 
 const Tspan = ({
@@ -382,12 +405,14 @@ export const splitLines = (text) => {
         const chars = child.split("");
         for (const char of chars) {
           if (char === "\n") {
+            addChar("\n");
             startNewLine();
           } else {
             addChar(char);
           }
         }
       } else if (child.type === "br") {
+        addChar("\n");
         startNewLine();
       } else if (child.type.displayName?.includes("TextComponent")) {
         const { props } = child;

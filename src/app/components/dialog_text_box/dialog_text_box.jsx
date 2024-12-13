@@ -27,39 +27,37 @@ const DialogTextBoxComponent = (
   { color = "white", backgroundColor = "blue", children = "", ...props },
   ref,
 ) => {
+  // j'aimerais un state local qui contienne
+  // un truc genre
+  // wholeText, hasText, hasPrevText, hasNextText, lastTextDisplayedCallbackSet
+  // comme ça je peux manipuler a ma guise l'affichage du texte
   const [text, textSetter] = useState("");
   const messageElementRef = useRef();
 
   useKeyEffect({
     Enter: {
-      enabled: Boolean(text),
-      callback: () => {},
+      enabled: hasText,
+      callback: () => {
+        showNextText();
+      },
     },
     Space: {
-      enabled: Boolean(text),
-      callback: () => {},
+      enabled: hasText,
+      callback: () => {
+        showNextText();
+      },
     },
   });
 
-  const clickCallbackRef = useRef();
   const alert = (text) => {
-    let _resolve;
-    const donePromise = new Promise((resolve) => {
-      _resolve = resolve;
+    textSetter(text);
+    let _r;
+    const donePromise = new Promise((re) => {
+      _r = re;
     });
-    const fillNext = startFill(text, messageElementRef.current);
-    let currentPart = fillNext();
-    textSetter(currentPart.value);
-    clickCallbackRef.current = () => {
-      if (currentPart.done) {
-        textSetter(null);
-        clickCallbackRef.current = null;
-        _resolve();
-        return;
-      }
-      currentPart = fillNext();
-      textSetter(currentPart.value);
-    };
+    lastTextDisplayedCallbackSet.add(() => {
+      _r();
+    });
     return donePromise;
   };
 
@@ -85,8 +83,8 @@ const DialogTextBoxComponent = (
       height="100%"
       maxWidth="100%"
       onClick={() => {
-        if (clickCallbackRef.current) {
-          clickCallbackRef.current();
+        if (hasNextText) {
+          showNextText();
         }
       }}
       {...props}
