@@ -257,22 +257,32 @@ const createTextFiller = (
       lineIndex++;
       continue;
     }
+    if (overflow === "ellipsis" && currentParagraph.lines.length > 0) {
+      const previousLine =
+        currentParagraph.lines[currentParagraph.lines.length - 1];
+      previousLine[previousLine.length - 1] = {
+        type: "char",
+        value: ".",
+        char: ".",
+      };
+    }
+
     // cette ligne dépasse en hauteur
-    if (overflow === "hidden") {
-      if (currentParagraph.length === 0) {
-        // c'est la premiere ligne, on autorise quand meme
-        addToCurrentParagraph(childrenFittingOnThatLine);
-        startNewParagraph();
-        lineIndex++;
-        continue;
-      }
-      startNewParagraph();
+    if (overflow === "visible") {
       addToCurrentParagraph(childrenFittingOnThatLine);
       lineIndex++;
       continue;
     }
+    if (currentParagraph.length === 0) {
+      addToCurrentParagraph(childrenFittingOnThatLine);
+      startNewParagraph();
+      lineIndex++;
+      continue;
+    }
+    startNewParagraph();
     addToCurrentParagraph(childrenFittingOnThatLine);
     lineIndex++;
+    continue;
   }
   endCurrentParagraph();
   if (debug) {
