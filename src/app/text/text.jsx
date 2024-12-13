@@ -56,34 +56,29 @@ const TextComponent = (
   },
   ref,
 ) => {
-  const linesRef = useRef(splitLines(children));
+  const lines = splitLines(children);
   const svgInnerRef = useRef();
   const textRef = useRef();
-
   const [paragraphs, paragraphsSetter] = useState([]);
   const setParagraphRef = useRef();
   const index = controller?.index;
 
-  useLayoutEffect(() => {
-    if (index !== undefined && index !== -1 && paragraphs.length) {
-      setParagraphRef.current(index);
-    }
-  }, [index, paragraphs]);
-
-  const show = (lines) => {
-    const svg = svgInnerRef.current;
+  const update = useCallback(() => {
+    const svgElement = svgInnerRef.current;
     const textElement = textRef.current;
-    const [availableWidth, availableHeight] = getAvailableSize(svg.parentNode);
+    const [availableWidth, availableHeight] = getAvailableSize(
+      svgElement.parentNode,
+    );
     const [paragraphs, setParagraph] = initTextFiller(lines, {
       dx,
       dy,
       lineHeight,
-      svgElement: svg,
+      overflow,
+      controller,
+      svgElement,
       textElement,
       availableWidth,
       availableHeight,
-      overflow,
-      controller,
     });
     setParagraphRef.current = setParagraph;
     paragraphsSetter(paragraphs);
@@ -91,7 +86,7 @@ const TextComponent = (
     if (controller) {
       controller.onParagraphChange(paragraphs);
     }
-  };
+  }, [dx, dy, lineHeight, overflow, controller]);
 
   useLayoutEffect(() => {
     const svg = svgInnerRef.current;
@@ -100,13 +95,19 @@ const TextComponent = (
       if (!entry) {
         return;
       }
-      show(linesRef.current);
+      update();
     });
     observer.observe(svg.parentNode);
     return () => {
       observer.disconnect();
     };
-  }, [dx, dy, lineHeight, overflow]);
+  }, [update]);
+
+  useLayoutEffect(() => {
+    if (typeof index === "number" && paragraphs.length) {
+      setParagraphRef.current(controller.index);
+    }
+  }, [index, paragraphs]);
 
   return (
     <svg
@@ -158,6 +159,10 @@ const initTextFiller = (
     const textChildren = [];
     let lineIndex = 0;
     for (const lineChildren of lines) {
+      const lineChildrenValues = [];
+      for (const lineChild of lineChildren) {
+        lineChildrenValues.push(lineChild.value);
+      }
       textChildren.push(
         <Tspan
           x="0"
@@ -165,7 +170,7 @@ const initTextFiller = (
           dx={dx}
           dy={dy + lineHeight * fontSizeBase * lineIndex}
         >
-          {lineChildren.map((c) => c.value)}
+          {lineChildrenValues}
         </Tspan>,
       );
       lineIndex++;
@@ -219,10 +224,6 @@ const initTextFiller = (
     let childrenFittingOnThatLine = [];
     while (lineChildIndex < line.length) {
       const lineChild = line[lineChildIndex];
-      if (lineChild.char === "\n") {
-        lineChildIndex++;
-        continue;
-      }
       const childrenCandidateToFit = line.slice(0, lineChildIndex + 1);
       const linesCandidateToFit = [
         ...currentParagraph.lines,
