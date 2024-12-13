@@ -48,24 +48,23 @@ const BoxComponent = (
 
   useLayoutEffect(() => {
     const element = innerRef.current;
-    const elementToObserve = element.parentNode;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) {
         return;
       }
-      // const parentDimensions = entry.contentRect;
       // const { borderSizes } = getPaddingAndBorderSizes(element);
       const elementDimensions = element.getBoundingClientRect();
-      const [availableWidth, availableHeight] =
-        getAvailableSize(elementToObserve);
+      const [availableWidth, availableHeight] = getAvailableSize(
+        element.parentNode,
+      );
 
       if (x === "start") {
         if (vertical) {
           element.style.alignSelf = "flex-start";
         } else {
-          element.style.marginLeft = "0";
-          element.style.marginRight = undefined;
+          element.style.left = "0";
+          element.style.right = undefined;
         }
       } else if (x === "center") {
         if (vertical) {
@@ -73,50 +72,54 @@ const BoxComponent = (
         } else {
           const elementWidth = elementDimensions.width;
           const halfWidth = (availableWidth - elementWidth) / 2;
-          element.style.marginLeft = `${halfWidth}px`;
-          element.style.marginRight = `${halfWidth}px`;
+          // Math.floor is important otherwise the float imprecision
+          // might cause element to resize due to margings, then
+          // be resized again due to the new widht infinite loop of resizing
+          element.style.left = `${halfWidth}px`;
+          element.style.right = `${halfWidth}px`;
         }
       } else if (x === "end") {
         if (vertical) {
           element.style.alignSelf = "flex-end";
         } else {
-          element.style.marginLeft = "auto";
-          element.style.marginRight = undefined;
+          element.style.left = "auto";
+          element.style.right = undefined;
         }
       } else if (isFinite(x)) {
-        element.style.marginLeft = `${parseInt(x)}px`;
+        element.style.left = `${parseInt(x)}px`;
       }
 
       if (y === "start") {
         if (vertical) {
-          element.style.marginTop = "0";
+          element.style.top = "0";
         } else {
           element.style.alignSelf = "flex-start";
         }
       } else if (y === "center") {
         if (vertical) {
           const elementHeight = elementDimensions.height;
-          element.style.marginTop = `${(availableHeight - elementHeight) / 2}px`;
+          element.style.top = `${(availableHeight - elementHeight) / 2}px`;
         } else {
           element.style.alignSelf = "center";
         }
       } else if (y === "end") {
         if (vertical) {
-          element.style.marginTop = "auto";
+          element.style.top = "auto";
         } else {
           element.style.alignSelf = "flex-end";
         }
       } else if (isFinite(y)) {
-        element.style.marginTop = `${parseInt(y)}px`;
+        element.style.top = `${parseInt(y)}px`;
       }
     });
-    observer.observe(elementToObserve);
+    observer.observe(element);
     return () => {
       observer.disconnect();
     };
   }, [x, y, vertical]);
 
   const style = {
+    position: absolute ? "absolute" : "relative",
     width: isFinite(width)
       ? `${width}px`
       : width === "..." || width === "auto"
@@ -133,9 +136,6 @@ const BoxComponent = (
     cursor,
     ...props.style,
   };
-  if (absolute) {
-    style.position = "absolute";
-  }
   if (innerSpacing !== undefined) {
     style.padding = isFinite(innerSpacing)
       ? parseInt(innerSpacing)
@@ -232,8 +232,8 @@ const BoxComponent = (
     <NodeName
       ref={innerRef}
       name={name}
-      {...props}
       className="box"
+      {...props}
       data-vertical={vertical || undefined}
       data-hidden={hidden || undefined}
       data-invisible={invisible || undefined}
