@@ -13,7 +13,7 @@ const TextComponent = (
     dy = 0,
     fontFamily = "goblin",
     fontSize = "0.7em",
-    weight,
+    fontWeight,
     children,
     color,
     outlineColor,
@@ -46,6 +46,8 @@ const TextComponent = (
     tspanAttributes.x = "100%";
   }
 
+  const thickness = fontWeight === "bold" ? 1 : 0;
+
   if (y === "start") {
     tspanAttributes.y = "0";
   } else if (y === "center") {
@@ -55,26 +57,28 @@ const TextComponent = (
     tspanAttributes.y = "100%";
     dy -= fontSizeBase;
   }
-  for (const lineChildren of lines) {
+  for (const line of lines) {
+    const lineAttributes = {
+      ...tspanAttributes,
+      dx,
+      dy: dy + lineHeight * fontSizeBase * lineIndex,
+    };
     textChildren.push(
-      <tspan
-        {...tspanAttributes}
-        dx={dx}
-        dy={dy + lineHeight * fontSizeBase * lineIndex}
+      <Tspan
+        {...lineAttributes}
+        fontSize={fontSize}
+        fontFamily={fontFamily}
+        fontWeight={fontWeight}
+        letterSpacing={letterSpacing}
       >
-        {lineChildren}
-      </tspan>,
+        {line}
+      </Tspan>,
     );
     lineIndex++;
   }
 
   const textRef = useRef();
   const textOutlineRef = useRef();
-
-  const thickness = weight === "bold" ? 1 : 0;
-  if (weight === "bold") {
-    letterSpacing += thickness;
-  }
 
   // TODO: should be resizeObserver too
   useLayoutEffect(() => {
@@ -116,8 +120,6 @@ const TextComponent = (
         pointerEvents: visible ? "auto" : "none",
         dominantBaseline: "text-before-edge",
         overflow: "visible",
-        fontSize: isFinite(fontSize) ? `${parseInt(fontSize)}px` : fontSize,
-        fontFamily,
         position:
           width === "auto" || height === "auto" ? "absolute" : "relative",
       }}
@@ -126,75 +128,80 @@ const TextComponent = (
         <text
           ref={textOutlineRef}
           fill="none"
-          font-family={fontFamily}
           stroke={outlineColor}
           stroke-width={thickness + 3}
-          letter-spacing={letterSpacing}
         >
           {textChildren}
         </text>
       )}
-      <text
-        ref={textRef}
-        fill={color}
-        stroke={color}
-        stroke-width={thickness}
-        letter-spacing={letterSpacing}
-      >
+      <text ref={textRef} fill={color} stroke={color} stroke-width={thickness}>
         {textChildren}
       </text>
     </svg>
   );
 };
 
-export const Text = forwardRef(TextComponent);
-
-Text.bold = (props) => {
-  return <Text weight="bold" {...props}></Text>;
+const Tspan = ({
+  fontSize,
+  fontFamily,
+  fontWeight,
+  letterSpacing,
+  children,
+}) => {
+  return (
+    <tspan
+      font-size={isFinite(fontSize) ? `${parseInt(fontSize)}px` : fontSize}
+      font-family={fontFamily}
+      font-weight={fontWeight}
+      letter-spacing={letterSpacing}
+    >
+      {children}
+    </tspan>
+  );
 };
 
-export const splitLines = (text, maxLines) => {
+export const Text = forwardRef(TextComponent);
+
+Text.bold = ({ children }) => {
+  return <Text weight="bold">{children}</Text>;
+};
+
+export const splitLines = (text) => {
   const lines = [];
-  let currentLineChildren = [];
-  let someChildNotAString = false;
-  if (text === null) {
-    return [];
-  }
-  if (typeof text === "number") {
-    text = String(text).split("");
-  }
-  if (typeof text === "string") {
-    text = text.split("");
-  }
-  for (const child of text) {
-    if (typeof child === "string") {
-      for (const char of child.split("")) {
-        if (char === "\n") {
-          lines.push(currentLineChildren);
-          currentLineChildren = [];
-          someChildNotAString = false;
-          continue;
+  let line = [];
+  const visitChildren = (children) => {
+    if (children === null) {
+      return;
+    }
+    if (typeof children === "number") {
+      children = String(children).split("");
+    }
+    if (typeof children === "string") {
+      children = children.split("");
+    }
+    for (const child of children) {
+      if (typeof child === "string") {
+        const [firstLine, ...remainingLines] = child.split("\n");
+        line.push(firstLine);
+        if (remainingLines.length) {
+          lines.push(line);
+          lines.push(remainingLines);
+          line = [];
         }
-        currentLineChildren.push(char);
+      } else if (child.type === "br") {
+        lines.push(line);
+        line = [];
+      } else if (child.type.displayName.includes("TextComponent")) {
+        const { props } = child;
+        line.push(<Tspan {...props}></Tspan>);
+      } else {
+        line.push(child);
       }
-    } else if (child.type === "br") {
-      lines.push(currentLineChildren);
-      currentLineChildren = [];
-      someChildNotAString = true;
-    } else {
-      currentLineChildren.push(child);
-      someChildNotAString = true;
     }
-    if (maxLines && lines.length >= maxLines) {
-      break;
-    }
-  }
-  if (currentLineChildren.length && (!maxLines || lines.length < maxLines)) {
-    if (someChildNotAString) {
-      lines.push(currentLineChildren);
-    } else {
-      lines.push(currentLineChildren.join(""));
-    }
+  };
+  visitChildren(text);
+  if (line.length) {
+    lines.push(line);
   }
   return lines;
 };
