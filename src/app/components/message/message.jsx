@@ -16,7 +16,9 @@ const MessageComponent = (
     borderColor = "white",
     // outlineColor = "black",
     color = "white",
+    overflow,
     maxLines,
+    textController,
     ...props
   },
   ref,
@@ -39,7 +41,13 @@ const MessageComponent = (
         ...props.style,
       }}
     >
-      <Text ref={ref} color={color} maxLines={maxLines}>
+      <Text
+        ref={ref}
+        controller={textController}
+        color={color}
+        maxLines={maxLines}
+        overflow={overflow}
+      >
         {children}
       </Text>
     </Box>

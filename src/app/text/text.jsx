@@ -29,6 +29,7 @@ export const useTextController = () => {
     index,
     hasPrev,
     hasNext,
+    hasContent: paragraphs.length > 0,
     prev,
     next,
     onParagraphChange,
@@ -128,7 +129,7 @@ const TextComponent = ({
         font-family={fontFamily}
         font-weight={fontWeight}
         letter-spacing={letterSpacing}
-        color={color}
+        fill={color}
       ></text>
     </svg>
   );
@@ -212,7 +213,7 @@ const initTextFiller = (
   };
   startNewParagraph();
   let lineIndex = 0;
-  let debug = true;
+  let debug = false;
   if (debug) {
     console.log(
       `compute paragraphs fitting into ${availableWidth}x${availableHeight}`,
@@ -325,7 +326,10 @@ const initTextFiller = (
   return [
     paragraphs,
     (index) => {
-      setParagraph(paragraphs[index]);
+      const p = paragraphs[index];
+      if (p) {
+        setParagraph(p);
+      }
     },
   ];
 };

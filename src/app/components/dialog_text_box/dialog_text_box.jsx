@@ -10,62 +10,54 @@ ptet un [dialog, displayDialog] = useDialogText()
 aui retourne une fonction qui se resolve dans un cas précis
 
 */
-import { render } from "preact";
 import { forwardRef } from "preact/compat";
-import {
-  useImperativeHandle,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "preact/hooks";
+import { useImperativeHandle, useRef, useState } from "preact/hooks";
 import { useKeyEffect } from "../../hooks/use_key_effect.js";
 import { Message } from "../message/message.jsx";
-import { splitLines, Text } from "/app/text/text.jsx";
-import { getAvailableSize } from "/app/utils/get_available_size.js";
+import { useTextController } from "/app/text/text.jsx";
 
 const DialogTextBoxComponent = (
-  { color = "white", backgroundColor = "blue", children = "", ...props },
+  { color = "white", backgroundColor = "blue", children, ...props },
   ref,
 ) => {
-  // j'aimerais un state local qui contienne
-  // un truc genre
-  // wholeText, hasText, hasPrevText, hasNextText, lastTextDisplayedCallbackSet
-  // comme ça je peux manipuler a ma guise l'affichage du texte
-  const [text, textSetter] = useState("");
+  const [text, textSetter] = useState(children);
+  const textController = useTextController();
   const messageElementRef = useRef();
+  const alertPromiseRef = useRef();
+
+  const next = () => {
+    if (textController.hasNext) {
+      textController.next();
+    } else {
+      textSetter(null);
+      if (alertPromiseRef.current) {
+        alertPromiseRef.current();
+        alertPromiseRef.current = null;
+      }
+    }
+  };
 
   useKeyEffect({
     Enter: {
-      enabled: hasText,
+      enabled: textController.hasContent,
       callback: () => {
-        showNextText();
+        next();
       },
     },
     Space: {
-      enabled: hasText,
+      enabled: textController.hasContent,
       callback: () => {
-        showNextText();
+        next();
       },
     },
   });
 
   const alert = (text) => {
     textSetter(text);
-    let _r;
-    const donePromise = new Promise((re) => {
-      _r = re;
+    return new Promise((resolve) => {
+      alertPromiseRef.current = resolve;
     });
-    lastTextDisplayedCallbackSet.add(() => {
-      _r();
-    });
-    return donePromise;
   };
-
-  useLayoutEffect(() => {
-    if (children) {
-      alert(children);
-    }
-  }, [children]);
 
   useImperativeHandle(ref, () => {
     return {
@@ -76,16 +68,16 @@ const DialogTextBoxComponent = (
   return (
     <Message
       ref={messageElementRef}
+      textController={textController}
       color={color}
       backgroundColor={backgroundColor}
       invisible={!text}
       width="100%"
       height="100%"
       maxWidth="100%"
+      overflow="hidden"
       onClick={() => {
-        if (hasNextText) {
-          showNextText();
-        }
+        next();
       }}
       {...props}
     >
@@ -95,107 +87,3 @@ const DialogTextBoxComponent = (
 };
 
 export const DialogTextBox = forwardRef(DialogTextBoxComponent);
-
-const div = document.createElement("div");
-div.name = "svg_text_measurer";
-div.style.position = "absolute";
-div.style.visibility = "hidden";
-document.body.appendChild(div);
-const measureText = (text) => {
-  render(<Text>{text}</Text>, div);
-  const svg = div.querySelector("svg");
-  const { width, height } = svg.getBBox();
-  return [Math.ceil(width), Math.ceil(height)];
-};
-
-const startFill = (text, textContainer) => {
-  const [availableWidth, availableHeight] = getAvailableSize(textContainer);
-  const lines = splitLines(text);
-
-  // keep adding characters until there is no more room
-  // then go to next line
-  // ideally do not truncate a character but rather go to line
-  // if the word is too big we'll truncate it somehow but the concern for now
-  let lineIndex = 0;
-  let done = false;
-
-  const fillNext = () => {
-    let textFitting = "";
-    let localLineIndex = 0;
-    while (lineIndex < lines.length) {
-      const line = lines[lineIndex];
-      let charIndex = 0;
-      let textFittingOnThatLine = "";
-      let xOverflow = false;
-      while (charIndex < line.length) {
-        const char = line[charIndex];
-        const textCandidateToFit = line.slice(0, charIndex);
-        const [widthTaken] = measureText(textCandidateToFit);
-        const remainingWidth = availableWidth - widthTaken;
-        if (remainingWidth >= 0) {
-          // there is still room for this char
-          charIndex++;
-          continue;
-        }
-        xOverflow = true;
-        if (char === " ") {
-          textFittingOnThatLine = line.slice(0, charIndex);
-          const textPushedNextLine = line.slice(charIndex + 1);
-          lines.splice(lineIndex + 1, 0, textPushedNextLine);
-          break;
-        }
-        if (charIndex === 0) {
-          textFittingOnThatLine = line[charIndex];
-          const textPushedNextLine = line.slice(charIndex);
-          lines.splice(lineIndex + 1, 0, textPushedNextLine);
-          break;
-        }
-        let splitIndex = -1;
-        let previousCharIndex = charIndex;
-        while (previousCharIndex--) {
-          const previousChar = line[previousCharIndex];
-          if (previousChar === " ") {
-            splitIndex = previousCharIndex;
-            break;
-          }
-        }
-        if (splitIndex === -1) {
-          // there is no room for this char and no previous char to split on
-          // we split the word exactly on that char
-          // we must inject a new line with the remaining chars from that line
-          textFittingOnThatLine = line.slice(0, charIndex);
-          const textPushedNextLine = line.slice(charIndex);
-          lines.splice(lineIndex + 1, 0, textPushedNextLine);
-          break;
-        }
-        textFittingOnThatLine = line.slice(0, splitIndex);
-        const textPushedNextLine = line.slice(splitIndex + 1);
-        lines.splice(lineIndex + 1, 0, textPushedNextLine);
-        break;
-      }
-      if (!xOverflow) {
-        // if I reach this point without x overflow we managed to put all chars on the line
-        textFittingOnThatLine = line;
-      }
-      let textCandidateToFit = textFitting;
-      if (localLineIndex > 0) {
-        textCandidateToFit += "\n";
-      }
-      textCandidateToFit += textFittingOnThatLine;
-      const [, heightTaken] = measureText(textCandidateToFit);
-      const remainingHeight = availableHeight - heightTaken;
-      if (remainingHeight < 0) {
-        break;
-      }
-      textFitting = textCandidateToFit;
-      localLineIndex++;
-      lineIndex++;
-    }
-    if (lineIndex === lines.length) {
-      done = true;
-    }
-    return { done, value: textFitting };
-  };
-
-  return fillNext;
-};
