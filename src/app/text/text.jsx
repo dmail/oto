@@ -19,6 +19,7 @@ const TextComponent = (
     letterSpacing,
     lineHeight = 1.4,
     visible = true,
+    overflowY = "visible",
     ...props
   },
   ref,
@@ -49,6 +50,7 @@ const TextComponent = (
         availableHeight,
         color,
         outlineColor,
+        overflowY,
       });
       textFiller();
     });
@@ -64,6 +66,7 @@ const TextComponent = (
     fontFamily,
     letterSpacing,
     lineHeight,
+    overflowY,
     color,
     outlineColor,
   ]);
@@ -102,6 +105,7 @@ const createTextFiller = (
     availableWidth,
     availableHeight,
     color,
+    overflowY,
   },
 ) => {
   lines = [...lines];
@@ -174,7 +178,7 @@ const createTextFiller = (
   };
   startNewParagraph();
   let lineIndex = 0;
-  let debug = false;
+  let debug = true;
   if (debug) {
     console.log(
       `compute paragraphs fitting into ${availableWidth}x${availableHeight}`,
@@ -253,15 +257,20 @@ const createTextFiller = (
       lineIndex++;
       continue;
     }
-    // cette ligne dépasse en hauteur
-    if (currentParagraph.length === 0) {
-      // c'est la premiere ligne, on autorise quand meme
-      addToCurrentParagraph(childrenFittingOnThatLine);
+    if (overflowY === "hidden") {
+      // cette ligne dépasse en hauteur
+      if (currentParagraph.length === 0) {
+        // c'est la premiere ligne, on autorise quand meme
+        addToCurrentParagraph(childrenFittingOnThatLine);
+        startNewParagraph();
+        lineIndex++;
+        continue;
+      }
       startNewParagraph();
+      addToCurrentParagraph(childrenFittingOnThatLine);
       lineIndex++;
       continue;
     }
-    startNewParagraph();
     addToCurrentParagraph(childrenFittingOnThatLine);
     lineIndex++;
   }
