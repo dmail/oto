@@ -178,8 +178,8 @@ const initTextFiller = (
     // render(null, svgElement);
     render(<>{textChildren}</>, textElement);
     const { width, height } = textElement.getBBox();
-    widthTaken = Math.ceil(width);
-    heightTaken = Math.ceil(height);
+    widthTaken = width; //Math.ceil(width);
+    heightTaken = height; //  Math.ceil(height);
     remainingWidth = availableWidth - widthTaken;
     remainingHeight = availableHeight - heightTaken;
   };
