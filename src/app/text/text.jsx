@@ -19,13 +19,12 @@ const TextComponent = (
     outlineColor,
     letterSpacing,
     lineHeight = 1.4,
-    maxLines,
     visible = true,
     ...props
   },
   ref,
 ) => {
-  const lines = splitLines(children, maxLines);
+  const lines = splitLines(children);
   const innerRef = useRef();
   useImperativeHandle(ref, () => innerRef.current);
 
@@ -63,6 +62,14 @@ const TextComponent = (
       dx,
       dy: dy + lineHeight * fontSizeBase * lineIndex,
     };
+    const lineChildren = [];
+    for (const part of line) {
+      if (typeof part === "string") {
+        lineChildren.push(part);
+      } else {
+        lineChildren.push(<Tspan {...part}></Tspan>);
+      }
+    }
     textChildren.push(
       <Tspan
         {...lineAttributes}
@@ -71,7 +78,7 @@ const TextComponent = (
         fontWeight={fontWeight}
         letterSpacing={letterSpacing}
       >
-        {line}
+        {lineChildren}
       </Tspan>,
     );
     lineIndex++;
@@ -193,7 +200,8 @@ export const splitLines = (text) => {
         line = [];
       } else if (child.type.displayName.includes("TextComponent")) {
         const { props } = child;
-        line.push(<Tspan {...props}></Tspan>);
+        const { fontWeight, children } = props;
+        line.push({ fontWeight, children });
       } else {
         line.push(child);
       }

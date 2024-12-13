@@ -130,6 +130,9 @@ const startFill = (text, textContainer) => {
       let xOverflow = false;
       while (charIndex < line.length) {
         const char = line[charIndex];
+        if (typeof char === "string") {
+        } else if (char.type.name === "Tspan") {
+        }
         const textCandidateToFit = line.slice(0, charIndex);
         const [widthTaken] = measureText(textCandidateToFit);
         const remainingWidth = availableWidth - widthTaken;
