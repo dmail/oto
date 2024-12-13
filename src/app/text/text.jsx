@@ -67,7 +67,7 @@ const TextComponent = (
       if (typeof part === "string") {
         lineChildren.push(part);
       } else {
-        lineChildren.push(<Tspan {...part}></Tspan>);
+        lineChildren.push(part);
       }
     }
     textChildren.push(
@@ -153,6 +153,7 @@ const Tspan = ({
   fontFamily,
   fontWeight,
   letterSpacing,
+  color,
   children,
 }) => {
   return (
@@ -161,6 +162,7 @@ const Tspan = ({
       font-family={fontFamily}
       font-weight={fontWeight}
       letter-spacing={letterSpacing}
+      fill={color}
     >
       {children}
     </tspan>
@@ -174,42 +176,59 @@ Text.bold = ({ children }) => {
 };
 
 export const splitLines = (text) => {
-  const lines = [];
-  let line = [];
   const visitChildren = (children) => {
     if (children === null) {
-      return;
+      return [];
     }
     if (typeof children === "number") {
-      children = String(children).split("");
+      children = [String(children)];
     }
     if (typeof children === "string") {
-      children = children.split("");
+      children = [children];
     }
+    const lines = [];
+    let line = [];
     for (const child of children) {
       if (typeof child === "string") {
-        const [firstLine, ...remainingLines] = child.split("\n");
-        line.push(firstLine);
-        if (remainingLines.length) {
-          lines.push(line);
-          lines.push(remainingLines);
-          line = [];
+        const chars = child.split("");
+        for (const char of chars) {
+          if (char === "\n") {
+            lines.push(line);
+            line = [];
+          } else {
+            line.push(char);
+          }
         }
       } else if (child.type === "br") {
         lines.push(line);
         line = [];
-      } else if (child.type.displayName.includes("TextComponent")) {
+      } else if (child.type.displayName?.includes("TextComponent")) {
         const { props } = child;
-        const { fontWeight, children } = props;
-        line.push({ fontWeight, children });
+        const { children, ...childProps } = props;
+        const [firstNestedLine, ...remainingNestedLines] =
+          visitChildren(children);
+        for (const part of firstNestedLine) {
+          line.push(<Tspan {...childProps}>{part}</Tspan>);
+        }
+        if (remainingNestedLines.length) {
+          for (const remainingNestedLine of remainingNestedLines) {
+            const remainingLine = [];
+            for (const remainingPart of remainingNestedLine) {
+              remainingLine.push(
+                <Tspan {...childProps}>{remainingPart}</Tspan>,
+              );
+            }
+            lines.push(remainingLine);
+          }
+        }
       } else {
         line.push(child);
       }
     }
+    if (line.length) {
+      lines.push(line);
+    }
+    return lines;
   };
-  visitChildren(text);
-  if (line.length) {
-    lines.push(line);
-  }
-  return lines;
+  return visitChildren(text);
 };

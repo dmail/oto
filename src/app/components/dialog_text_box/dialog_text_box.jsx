@@ -20,7 +20,7 @@ import {
 } from "preact/hooks";
 import { useKeyEffect } from "../../hooks/use_key_effect.js";
 import { Message } from "../message/message.jsx";
-import { Text, splitLines } from "/app/text/text.jsx";
+import { splitLines, Text } from "/app/text/text.jsx";
 import { getAvailableSize } from "/app/utils/get_available_size.js";
 
 const DialogTextBoxComponent = (
@@ -113,6 +113,7 @@ const measureText = (text) => {
 const startFill = (text, textContainer) => {
   const [availableWidth, availableHeight] = getAvailableSize(textContainer);
   const lines = splitLines(text);
+
   // keep adding characters until there is no more room
   // then go to next line
   // ideally do not truncate a character but rather go to line
@@ -130,9 +131,6 @@ const startFill = (text, textContainer) => {
       let xOverflow = false;
       while (charIndex < line.length) {
         const char = line[charIndex];
-        if (typeof char === "string") {
-        } else if (char.type.name === "Tspan") {
-        }
         const textCandidateToFit = line.slice(0, charIndex);
         const [widthTaken] = measureText(textCandidateToFit);
         const remainingWidth = availableWidth - widthTaken;
