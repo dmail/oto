@@ -43,19 +43,24 @@ const DialogTextBoxComponent = (
 
   const clickCallbackRef = useRef();
   const alert = (text) => {
+    let _resolve;
+    const donePromise = new Promise((resolve) => {
+      _resolve = resolve;
+    });
     const fillNext = startFill(text, messageElementRef.current);
-    const textFitting = fillNext();
-    textSetter(textFitting);
+    let currentPart = fillNext();
+    textSetter(currentPart.value);
     clickCallbackRef.current = () => {
-      const nextPart = fillNext();
-      if (nextPart) {
-        console.log({ nextPart });
-        textSetter(nextPart);
-      } else {
-        clickCallbackRef.current = null;
+      if (currentPart.done) {
         textSetter(null);
+        clickCallbackRef.current = null;
+        _resolve();
+        return;
       }
+      currentPart = fillNext();
+      textSetter(currentPart.value);
     };
+    return donePromise;
   };
 
   useLayoutEffect(() => {
@@ -113,6 +118,7 @@ const startFill = (text, textContainer) => {
   // ideally do not truncate a character but rather go to line
   // if the word is too big we'll truncate it somehow but the concern for now
   let lineIndex = 0;
+  let done = false;
 
   const fillNext = () => {
     let textFitting = "";
@@ -186,7 +192,10 @@ const startFill = (text, textContainer) => {
       localLineIndex++;
       lineIndex++;
     }
-    return textFitting;
+    if (lineIndex === lines.length) {
+      done = true;
+    }
+    return { done, value: textFitting };
   };
 
   return fillNext;

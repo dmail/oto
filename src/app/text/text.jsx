@@ -76,6 +76,7 @@ const TextComponent = (
     letterSpacing += thickness;
   }
 
+  // TODO: should be resizeObserver too
   useLayoutEffect(() => {
     if (width === "auto" || height === "auto") {
       const svg = innerRef.current;

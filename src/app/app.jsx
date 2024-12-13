@@ -187,17 +187,14 @@ export const App = () => {
               ></MenuFight>
             </Box>
             <DialogTextBox
+              ref={dialogRef}
               absolute
               width="90%"
               height="80%"
-              contentX="center"
-              contentY="end"
+              contentX="start"
+              contentY="start"
               x="center"
               y="center"
-              style={{
-                pointerEvents: "none",
-              }}
-              ref={dialogRef}
             ></DialogTextBox>
           </Box>
         </Box>
