@@ -1,10 +1,6 @@
-import { toChildArray } from "preact";
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
-import {
-  getAvailableSize,
-  getPaddingAndBorderSizes,
-} from "../utils/get_available_size.js";
+import { getAvailableSize } from "../utils/get_available_size.js";
 import boxStylesheet from "./box.css" with { type: "css" };
 
 document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];
@@ -52,77 +48,73 @@ const BoxComponent = (
 
   useLayoutEffect(() => {
     const element = innerRef.current;
-    const { borderSizes } = getPaddingAndBorderSizes(element);
-    const [availableWidth, availableHeight] = getAvailableSize(
-      element.parentNode,
-    );
+    const elementToObserve = element.parentNode;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        return;
+      }
+      // const parentDimensions = entry.contentRect;
+      // const { borderSizes } = getPaddingAndBorderSizes(element);
+      const elementDimensions = element.getBoundingClientRect();
+      const [availableWidth, availableHeight] =
+        getAvailableSize(elementToObserve);
 
-    if (x === "start") {
-      if (vertical) {
-        element.style.alignSelf = "flex-start";
-      } else {
-        element.style.marginLeft = "0";
-        element.style.marginRight = undefined;
+      if (x === "start") {
+        if (vertical) {
+          element.style.alignSelf = "flex-start";
+        } else {
+          element.style.marginLeft = "0";
+          element.style.marginRight = undefined;
+        }
+      } else if (x === "center") {
+        if (vertical) {
+          element.style.alignSelf = "center";
+        } else {
+          const elementWidth = elementDimensions.width;
+          const halfWidth = (availableWidth - elementWidth) / 2;
+          element.style.marginLeft = `${halfWidth}px`;
+          element.style.marginRight = `${halfWidth}px`;
+        }
+      } else if (x === "end") {
+        if (vertical) {
+          element.style.alignSelf = "flex-end";
+        } else {
+          element.style.marginLeft = "auto";
+          element.style.marginRight = undefined;
+        }
+      } else if (isFinite(x)) {
+        element.style.marginLeft = `${parseInt(x)}px`;
       }
-    } else if (x === "center") {
-      if (width === "..." || width === "100%") {
-      } else if (vertical) {
-        element.style.alignSelf = "center";
-      } else {
-        const elementWidth =
-          element.clientWidth + borderSizes.left + borderSizes.right;
-        const halfWidth = (availableWidth - elementWidth) / 2;
-        element.style.marginLeft = `${halfWidth}px`;
-        element.style.marginRight = `${halfWidth}px`;
-      }
-    } else if (x === "end") {
-      if (vertical) {
-        element.style.alignSelf = "flex-end";
-      } else {
-        element.style.marginLeft = "auto";
-        element.style.marginRight = undefined;
-      }
-    } else if (isFinite(x)) {
-      element.style.marginLeft = `${parseInt(x)}px`;
-    }
 
-    if (y === "start") {
-      if (vertical) {
-        element.style.marginTop = "0";
-      } else {
-        element.style.alignSelf = "flex-start";
+      if (y === "start") {
+        if (vertical) {
+          element.style.marginTop = "0";
+        } else {
+          element.style.alignSelf = "flex-start";
+        }
+      } else if (y === "center") {
+        if (vertical) {
+          const elementHeight = elementDimensions.height;
+          element.style.marginTop = `${(availableHeight - elementHeight) / 2}px`;
+        } else {
+          element.style.alignSelf = "center";
+        }
+      } else if (y === "end") {
+        if (vertical) {
+          element.style.marginTop = "auto";
+        } else {
+          element.style.alignSelf = "flex-end";
+        }
+      } else if (isFinite(y)) {
+        element.style.marginTop = `${parseInt(y)}px`;
       }
-    } else if (y === "center") {
-      if (height === "..." || height === "100%") {
-      } else if (vertical) {
-        const elementHeight =
-          element.clientHeight + borderSizes.top + borderSizes.bottom;
-        element.style.marginTop = `${(availableHeight - elementHeight) / 2}px`;
-      } else {
-        element.style.alignSelf = "center";
-      }
-    } else if (y === "end") {
-      if (vertical) {
-        element.style.marginTop = "auto";
-      } else {
-        element.style.alignSelf = "flex-end";
-      }
-    } else if (isFinite(y)) {
-      element.style.marginTop = `${parseInt(y)}px`;
-    }
-  }, [
-    x,
-    y,
-    vertical,
-    width,
-    height,
-    ratio,
-    maxWidth,
-    maxHeight,
-    innerSpacing,
-    outerSpacingTop,
-    ...toChildArray(children),
-  ]);
+    });
+    observer.observe(elementToObserve);
+    return () => {
+      observer.disconnect();
+    };
+  }, [x, y, vertical]);
 
   const style = {
     width: isFinite(width)

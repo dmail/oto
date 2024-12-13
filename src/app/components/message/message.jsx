@@ -14,7 +14,7 @@ const MessageComponent = (
     children,
     backgroundColor = "black",
     borderColor = "white",
-    outlineColor = "black",
+    // outlineColor = "black",
     color = "white",
     maxLines,
     ...props
@@ -35,7 +35,7 @@ const MessageComponent = (
         backgroundColor,
         border: `0.2em solid ${borderColor}`,
         borderRadius: "0.1em",
-        outline: `1px solid ${outlineColor}`,
+        //  outline: `1px solid ${outlineColor}`,
         userSelect: "none",
         ...props.style,
       }}

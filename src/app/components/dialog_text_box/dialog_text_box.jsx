@@ -41,13 +41,21 @@ const DialogTextBoxComponent = (
     },
   });
 
+  const clickCallbackRef = useRef();
   const alert = (text) => {
     const fillNext = startFill(text, messageElementRef.current);
     const textFitting = fillNext();
     textSetter(textFitting);
-    // setTimeout(() => {
-    //   textSetter("");
-    // }, 100);
+    clickCallbackRef.current = () => {
+      const nextPart = fillNext();
+      if (nextPart) {
+        console.log({ nextPart });
+        textSetter(nextPart);
+      } else {
+        clickCallbackRef.current = null;
+        textSetter(null);
+      }
+    };
   };
 
   useLayoutEffect(() => {
@@ -71,6 +79,11 @@ const DialogTextBoxComponent = (
       width="100%"
       height="100%"
       maxWidth="100%"
+      onClick={() => {
+        if (clickCallbackRef.current) {
+          clickCallbackRef.current();
+        }
+      }}
       {...props}
     >
       {text}
@@ -100,13 +113,13 @@ const startFill = (text, textContainer) => {
   // ideally do not truncate a character but rather go to line
   // if the word is too big we'll truncate it somehow but the concern for now
   let lineIndex = 0;
-  let charIndex;
 
   const fillNext = () => {
     let textFitting = "";
+    let localLineIndex = 0;
     while (lineIndex < lines.length) {
       const line = lines[lineIndex];
-      charIndex = 0;
+      let charIndex = 0;
       let textFittingOnThatLine = "";
       let xOverflow = false;
       while (charIndex < line.length) {
@@ -160,7 +173,7 @@ const startFill = (text, textContainer) => {
         textFittingOnThatLine = line;
       }
       let textCandidateToFit = textFitting;
-      if (lineIndex > 0) {
+      if (localLineIndex > 0) {
         textCandidateToFit += "\n";
       }
       textCandidateToFit += textFittingOnThatLine;
@@ -170,6 +183,7 @@ const startFill = (text, textContainer) => {
         break;
       }
       textFitting = textCandidateToFit;
+      localLineIndex++;
       lineIndex++;
     }
     return textFitting;
