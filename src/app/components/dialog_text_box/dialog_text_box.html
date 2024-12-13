@@ -20,24 +20,14 @@
       import { DialogTextBox } from "./dialog_text_box.jsx";
 
       const App = () => {
-        const dialogRef = useRef();
-        const defaultValue = "Hello world, I am not";
-
         return (
           <div>
-            <div style="display: flex; width: 100px; height: 60px; border: 1px solid black; background: green">
-              <DialogTextBox ref={dialogRef}>{defaultValue}</DialogTextBox>
+            <div style="margin: 10px; display: flex; width: 100px; height: 50px; border: 1px solid black; background: green">
+              <DialogTextBox>Hello world, I am not</DialogTextBox>
             </div>
-            <br />
-            <textarea
-              onInput={(e) => {
-                dialogRef.current.alert(e.target.value);
-              }}
-              cols="50"
-              rows="5"
-            >
-              {defaultValue}
-            </textarea>
+            <div style="margin: 10px; display: flex; width: 100px; height: 35px; border: 1px solid black; background: green">
+              <DialogTextBox>Hello world, I am not</DialogTextBox>
+            </div>
           </div>
         );
       };

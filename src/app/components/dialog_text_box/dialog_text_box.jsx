@@ -45,9 +45,9 @@ const DialogTextBoxComponent = (
     const fillNext = startFill(text, messageElementRef.current);
     const textFitting = fillNext();
     textSetter(textFitting);
-    setTimeout(() => {
-      textSetter("");
-    }, 100);
+    // setTimeout(() => {
+    //   textSetter("");
+    // }, 100);
   };
 
   useLayoutEffect(() => {
@@ -159,15 +159,17 @@ const startFill = (text, textContainer) => {
         // if I reach this point without x overflow we managed to put all chars on the line
         textFittingOnThatLine = line;
       }
-      textFitting += textFittingOnThatLine;
-      if (lineIndex < lines.length - 1) {
-        textFitting += "\n";
+      let textCandidateToFit = textFitting;
+      if (lineIndex > 0) {
+        textCandidateToFit += "\n";
       }
-      const [, heightTaken] = measureText(textFitting);
+      textCandidateToFit += textFittingOnThatLine;
+      const [, heightTaken] = measureText(textCandidateToFit);
       const remainingHeight = availableHeight - heightTaken;
       if (remainingHeight < 0) {
         break;
       }
+      textFitting = textCandidateToFit;
       lineIndex++;
     }
     return textFitting;
