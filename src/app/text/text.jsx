@@ -121,7 +121,7 @@ const createTextFiller = (
           dx={dx}
           dy={dy + lineHeight * fontSizeBase * lineIndex}
         >
-          {lineChildren}
+          {lineChildren.map((c) => c.value)}
         </Tspan>,
       );
       lineIndex++;
@@ -174,7 +174,7 @@ const createTextFiller = (
   };
   startNewParagraph();
   let lineIndex = 0;
-  let debug = true;
+  let debug = false;
   if (debug) {
     console.log(
       `compute paragraphs fitting into ${availableWidth}x${availableHeight}`,
@@ -198,7 +198,7 @@ const createTextFiller = (
         lineChildIndex++;
         continue;
       }
-      if (lineChild === " ") {
+      if (lineChild.char === " ") {
         childrenFittingOnThatLine = line.slice(0, lineChildIndex);
         const childrenPushedNextLine = line.slice(lineChildIndex + 1);
         lines.splice(lineIndex + 1, 0, childrenPushedNextLine);
@@ -225,7 +225,7 @@ const createTextFiller = (
       let previousChildIndex = lineChildIndex;
       while (previousChildIndex--) {
         const previousChild = line[previousChildIndex];
-        if (previousChild === " ") {
+        if (previousChild.char === " ") {
           splitIndex = previousChildIndex;
           break;
         }
@@ -325,46 +325,70 @@ export const splitLines = (text) => {
       children = [children];
     }
     const lines = [];
-    let line = [];
+    let line;
+
+    const startNewLine = () => {
+      endCurrentLine();
+      line = [];
+    };
+    const addChar = (char) => {
+      line.push({
+        type: "char",
+        value: char,
+        char,
+      });
+    };
+    const addChild = (child, parentChild) => {
+      line.push({
+        type: "component",
+        value: child,
+        char:
+          typeof parentChild.value === "string"
+            ? parentChild.value
+            : parentChild.char,
+      });
+    };
+    const endCurrentLine = () => {
+      if (line) {
+        lines.push(line);
+      }
+    };
+    startNewLine();
     for (const child of children) {
       if (typeof child === "string") {
         const chars = child.split("");
         for (const char of chars) {
           if (char === "\n") {
-            lines.push(line);
-            line = [];
+            startNewLine();
           } else {
-            line.push(char);
+            addChar(char);
           }
         }
       } else if (child.type === "br") {
-        lines.push(line);
-        line = [];
+        startNewLine();
       } else if (child.type.displayName?.includes("TextComponent")) {
         const { props } = child;
         const { children, ...childProps } = props;
         const [firstNestedLine, ...remainingNestedLines] =
           visitChildren(children);
         for (const part of firstNestedLine) {
-          line.push(<Tspan {...childProps}>{part}</Tspan>);
+          addChild(<Tspan {...childProps}>{part.value}</Tspan>, part);
         }
-        if (remainingNestedLines.length) {
-          for (const remainingNestedLine of remainingNestedLines) {
-            const remainingLine = [];
-            for (const remainingPart of remainingNestedLine) {
-              remainingLine.push(
-                <Tspan {...childProps}>{remainingPart}</Tspan>,
-              );
-            }
-            lines.push(remainingLine);
+        for (const remainingNestedLine of remainingNestedLines) {
+          startNewLine();
+          for (const remainingPart of remainingNestedLine) {
+            addChild(
+              <Tspan {...childProps}>{remainingPart}</Tspan>,
+              remainingPart,
+            );
           }
         }
       } else {
-        line.push(child);
+        addChild(child);
       }
     }
     if (line.length) {
-      lines.push(line);
+      endCurrentLine();
     }
     return lines;
   };
