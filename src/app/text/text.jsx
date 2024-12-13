@@ -1,6 +1,7 @@
-import { toChildArray } from "preact";
+import { render } from "preact";
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
+import { getAvailableSize } from "/app/utils/get_available_size.js";
 
 const TextComponent = (
   {
@@ -27,92 +28,21 @@ const TextComponent = (
   const lines = splitLines(children);
   const innerRef = useRef();
   useImperativeHandle(ref, () => innerRef.current);
-
-  const fontSizeBase = 10;
-  children = toChildArray(children);
-
-  const textChildren = [];
-  let lineIndex = 0;
-  const tspanAttributes = {};
-  if (x === "start") {
-    tspanAttributes["text-anchor"] = "start";
-    tspanAttributes.x = "0";
-  } else if (x === "center") {
-    tspanAttributes["text-anchor"] = "middle";
-    tspanAttributes.x = "50%";
-  } else if (x === "end") {
-    tspanAttributes["text-anchor"] = "end";
-    tspanAttributes.x = "100%";
-  }
-
-  const thickness = fontWeight === "bold" ? 1 : 0;
-
-  if (y === "start") {
-    tspanAttributes.y = "0";
-  } else if (y === "center") {
-    tspanAttributes.y = "50%";
-    dy -= 0.5 * fontSizeBase;
-  } else if (y === "end") {
-    tspanAttributes.y = "100%";
-    dy -= fontSizeBase;
-  }
-  for (const line of lines) {
-    const lineAttributes = {
-      ...tspanAttributes,
-      dx,
-      dy: dy + lineHeight * fontSizeBase * lineIndex,
-    };
-    const lineChildren = [];
-    for (const part of line) {
-      if (typeof part === "string") {
-        lineChildren.push(part);
-      } else {
-        lineChildren.push(part);
-      }
-    }
-    textChildren.push(
-      <Tspan
-        {...lineAttributes}
-        fontSize={fontSize}
-        fontFamily={fontFamily}
-        fontWeight={fontWeight}
-        letterSpacing={letterSpacing}
-      >
-        {lineChildren}
-      </Tspan>,
-    );
-    lineIndex++;
-  }
-
-  const textRef = useRef();
-  const textOutlineRef = useRef();
-
-  // TODO: should be resizeObserver too
   useLayoutEffect(() => {
-    if (width === "auto" || height === "auto") {
-      const svg = innerRef.current;
-      const textOutline = textOutlineRef.current;
-      const text = textRef.current;
-      const textBBox = textOutline
-        ? textOutline.getBBox({ stroke: true })
-        : text.getBBox();
-      if (width === "auto") {
-        svg.style.width = `${textBBox.width}px`;
-      }
-      if (height === "auto") {
-        svg.style.height = `${textBBox.height}px`;
-      }
-      svg.style.position = "";
-    }
-  }, [
-    width,
-    height,
-    outlineColor,
-    letterSpacing,
-    lineHeight,
-    fontSize,
-    ...toChildArray(children),
-  ]);
+    const svg = innerRef.current;
+    const [availableWidth, availableHeight] = getAvailableSize(svg.parentNode);
+    const textFiller = createTextFiller(lines, {
+      fontSize,
+      fontFamily,
+      fontWeight,
+      letterSpacing,
+      lineHeight,
+      svgElement: svg,
+      availableWidth,
+      availableHeight,
+    });
+    textFiller();
+  }, [lines]);
 
   return (
     <svg
@@ -130,22 +60,190 @@ const TextComponent = (
         position:
           width === "auto" || height === "auto" ? "absolute" : "relative",
       }}
-    >
-      {outlineColor && (
-        <text
-          ref={textOutlineRef}
-          fill="none"
-          stroke={outlineColor}
-          stroke-width={thickness + 3}
-        >
-          {textChildren}
-        </text>
-      )}
-      <text ref={textRef} fill={color} stroke={color} stroke-width={thickness}>
-        {textChildren}
-      </text>
-    </svg>
+    ></svg>
   );
+};
+
+const createTextFiller = (
+  lines,
+  {
+    fontSize,
+    fontFamily,
+    fontWeight,
+    letterSpacing,
+    lineHeight,
+    svgElement,
+    availableWidth,
+    availableHeight,
+  },
+) => {
+  const fontSizeBase = 10;
+  const dy = 0;
+  let widthTaken;
+  let heightTaken;
+  let remainingWidth;
+  let remainingHeight;
+  let currentParagraph;
+  const paragraphs = [];
+  const startNewParagraph = () => {
+    endCurrentParagraph();
+    currentParagraph = { width: 0, height: 0, lines: [] };
+    renderLines([]);
+    currentParagraph.width = widthTaken;
+    currentParagraph.height = heightTaken;
+  };
+  const addToCurrentParagraph = (lineChildren) => {
+    currentParagraph.lines.push(lineChildren);
+  };
+  const endCurrentParagraph = () => {
+    if (currentParagraph && currentParagraph.lines.length) {
+      currentParagraph.width = widthTaken;
+      currentParagraph.height = heightTaken;
+      paragraphs.push(currentParagraph);
+    }
+  };
+  const renderLines = (lines) => {
+    const textChildren = [];
+    let lineIndex = 0;
+    for (const lineChildren of lines) {
+      textChildren.push(
+        <Tspan
+          x="0"
+          y="0"
+          dx={0}
+          dy={dy + lineHeight * fontSizeBase * lineIndex}
+        >
+          {lineChildren}
+        </Tspan>,
+      );
+      lineIndex++;
+    }
+    render(
+      <text
+        font-size={fontSize}
+        font-family={fontFamily}
+        font-weight={fontWeight}
+        letter-spacing={letterSpacing}
+      >
+        {textChildren}
+      </text>,
+      svgElement,
+    );
+    const { width, height } = svgElement.getBBox();
+    widthTaken = Math.ceil(width);
+    heightTaken = Math.ceil(height);
+    remainingWidth = availableWidth - widthTaken;
+    remainingHeight = availableHeight - heightTaken;
+  };
+  startNewParagraph();
+  let lineIndex = 0;
+  let debug = true;
+  if (debug) {
+    console.log(
+      `compute paragraphs fitting into ${availableWidth}x${availableHeight}`,
+    );
+  }
+  while (lineIndex < lines.length) {
+    const line = lines[lineIndex];
+    let lineChildIndex = 0;
+    let childrenFittingOnThatLine = [];
+    while (lineChildIndex < line.length) {
+      const lineChild = line[lineChildIndex];
+      const childrenCandidateToFit = line.slice(0, lineChildIndex + 1);
+      const linesCandidateToFit = [
+        ...currentParagraph.lines,
+        childrenCandidateToFit,
+      ];
+      renderLines(linesCandidateToFit);
+      if (remainingWidth >= 0) {
+        childrenFittingOnThatLine.push(lineChild);
+        // there is still room for this char
+        lineChildIndex++;
+        continue;
+      }
+      if (lineChild === " ") {
+        childrenFittingOnThatLine = line.slice(0, lineChildIndex);
+        const childrenPushedNextLine = line.slice(lineChildIndex + 1);
+        lines.splice(lineIndex + 1, 0, childrenPushedNextLine);
+        if (debug) {
+          console.log("overflow on space at", lineChildIndex, {
+            childrenPushedNextLine,
+          });
+        }
+        break;
+      }
+      if (lineChildIndex === 0) {
+        childrenFittingOnThatLine = [lineChild];
+        const childrenPushedNextLine = line.slice(lineChildIndex + 1);
+        lines.splice(lineIndex + 1, 0, childrenPushedNextLine);
+        if (debug) {
+          console.log("overflow on first char", {
+            childrenFittingOnThatLine,
+            childrenPushedNextLine,
+          });
+        }
+        break;
+      }
+      let splitIndex = -1;
+      let previousChildIndex = lineChildIndex;
+      while (previousChildIndex--) {
+        const previousChild = line[previousChildIndex];
+        if (previousChild === " ") {
+          splitIndex = previousChildIndex;
+          break;
+        }
+      }
+      if (splitIndex === -1) {
+        // there is no room for this char and no previous char to split on
+        // we split the word exactly on that char
+        // we must inject a new line with the remaining chars from that line
+        childrenFittingOnThatLine = line.slice(0, lineChildIndex);
+        const childrenPushedNextLine = line.slice(lineChildIndex);
+        lines.splice(lineIndex + 1, 0, childrenPushedNextLine);
+        break;
+      }
+      childrenFittingOnThatLine = line.slice(0, splitIndex);
+      const childrenPushedNextLine = line.slice(splitIndex + 1);
+      lines.splice(lineIndex + 1, 0, childrenPushedNextLine);
+      break;
+    }
+    if (remainingHeight >= 0) {
+      // cette ligne tiens en hauteur
+      addToCurrentParagraph(childrenFittingOnThatLine);
+      if (debug) {
+        console.log("fit in height", childrenFittingOnThatLine);
+      }
+      lineIndex++;
+      continue;
+    }
+    // cette ligne dépasse en hauteur
+    if (currentParagraph.length === 0) {
+      // c'est la premiere ligne, on autorise quand meme
+      addToCurrentParagraph(childrenFittingOnThatLine);
+      startNewParagraph();
+      lineIndex++;
+      continue;
+    }
+    startNewParagraph();
+    addToCurrentParagraph(childrenFittingOnThatLine);
+    lineIndex++;
+  }
+  endCurrentParagraph();
+  if (debug) {
+    console.log("resulting paragraphs", paragraphs);
+  }
+
+  renderLines(paragraphs[0].lines);
+  let paragraphIndex = 0;
+  const fillNext = () => {
+    const paragraph = paragraphs[paragraphIndex];
+    paragraphIndex++;
+    return {
+      done: paragraphIndex === paragraphs.length,
+      value: paragraph,
+    };
+  };
+  return fillNext;
 };
 
 const Tspan = ({
@@ -155,6 +253,7 @@ const Tspan = ({
   letterSpacing,
   color,
   children,
+  ...props
 }) => {
   return (
     <tspan
@@ -163,6 +262,7 @@ const Tspan = ({
       font-weight={fontWeight}
       letter-spacing={letterSpacing}
       fill={color}
+      {...props}
     >
       {children}
     </tspan>
@@ -232,3 +332,15 @@ export const splitLines = (text) => {
   };
   return visitChildren(text);
 };
+
+// const div = document.createElement("div");
+// div.name = "svg_text_measurer";
+// div.style.position = "absolute";
+// div.style.visibility = "hidden";
+// document.body.appendChild(div);
+// const measureText = (text) => {
+//   render(<Text>{text}</Text>, div);
+//   const svg = div.querySelector("svg");
+//   const { width, height } = svg.getBBox();
+//   return [Math.ceil(width), Math.ceil(height)];
+// };
