@@ -13,7 +13,10 @@ const MessageComponent = (
   {
     children,
     backgroundColor = "black",
-    borderColor = "white",
+    borderRadius = 5,
+    borderColor = "green",
+    borderOutlineColor = "red",
+    borderOutlineSize = 5,
     outlineColor = "black",
     color = "white",
     overflow,
@@ -30,11 +33,14 @@ const MessageComponent = (
       innerSpacing="0.4em"
       maxWidth="100%"
       cursor="default"
+      borderRadius={0}
+      borderColor={borderColor}
+      borderOutlineColor={borderOutlineColor}
+      borderSize={10}
+      borderOutlineSize={borderOutlineSize}
       {...props}
       style={{
-        backgroundColor,
-        border: `0.2em solid ${borderColor}`,
-        borderRadius: "0.1em",
+        // backgroundColor,
         // outline: `1px solid ${outlineColor}`,
         userSelect: "none",
         ...props.style,
