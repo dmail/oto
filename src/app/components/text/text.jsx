@@ -46,7 +46,7 @@ const TextComponent = ({
   fontWeight,
   children,
   color,
-  //outlineColor,
+  outlineColor,
   letterSpacing,
   lineHeight = 1.4,
   visible = true,
@@ -82,6 +82,7 @@ const TextComponent = ({
       fontWeight,
       letterSpacing,
       color,
+      outlineColor,
 
       controller,
       svgElement,
@@ -104,6 +105,7 @@ const TextComponent = ({
     fontWeight,
     letterSpacing,
     color,
+    outlineColor,
     onParagraphChange,
   ]);
 
@@ -128,8 +130,6 @@ const TextComponent = ({
       previousWidth = entry.contentRect.width;
       previousHeight = entry.contentRect.height;
       observer.unobserve(elementToObserve);
-      svgElement.style.width = "0px";
-      svgElement.style.height = "0px";
       update();
       observer.observe(elementToObserve);
     });
@@ -184,6 +184,7 @@ const initTextFiller = (
     fontWeight,
     letterSpacing,
     color,
+    outlineColor,
   },
 ) => {
   lines = [...lines];
@@ -211,6 +212,7 @@ const initTextFiller = (
           fontWeight={fontWeight}
           letterSpacing={letterSpacing}
           color={color}
+          outlineColor={outlineColor}
         >
           {lineChildrenValues}
         </Tspan>,

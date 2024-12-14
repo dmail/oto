@@ -20,7 +20,7 @@ const DialogTextBoxComponent = (
   { color = "white", backgroundColor = "blue", children, ...props },
   ref,
 ) => {
-  const [text, textSetter] = useState(children);
+  const [text, textSetter] = useState(null);
   const textController = useTextController();
   const messageElementRef = useRef();
   const alertPromiseRef = useRef();
@@ -28,12 +28,10 @@ const DialogTextBoxComponent = (
   const next = () => {
     if (textController.hasNext) {
       textController.next();
-    } else {
+    } else if (alertPromiseRef.current) {
       textSetter(null);
-      if (alertPromiseRef.current) {
-        alertPromiseRef.current();
-        alertPromiseRef.current = null;
-      }
+      alertPromiseRef.current();
+      alertPromiseRef.current = null;
     }
   };
 
@@ -76,14 +74,14 @@ const DialogTextBoxComponent = (
       height="100%"
       maxWidth="100%"
       overflow="hidden"
-      innerSpacingY="0.7em"
-      innerSpacingX="0.4em"
+      innerSpacingY="0.8em"
+      innerSpacingX="0.5em"
       onClick={() => {
         next();
       }}
       {...props}
     >
-      {text}
+      {text || children}
     </Message>
   );
 };
