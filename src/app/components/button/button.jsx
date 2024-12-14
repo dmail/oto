@@ -1,7 +1,7 @@
 import { useState } from "preact/hooks";
-import { Message } from "../message/message.jsx";
 import buttonStylesheet from "./button.css" with { type: "css" };
-import { Box } from "/app/layout/box.jsx";
+import { Box } from "/app/components/box/box.jsx";
+import { Message } from "/app/components/message/message.jsx";
 
 document.adoptedStyleSheets = [
   ...document.adoptedStyleSheets,

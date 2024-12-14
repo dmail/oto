@@ -12,9 +12,9 @@ aui retourne une fonction qui se resolve dans un cas précis
 */
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
-import { useKeyEffect } from "../../hooks/use_key_effect.js";
-import { Message } from "../message/message.jsx";
-import { useTextController } from "/app/text/text.jsx";
+import { Message } from "/app/components/message/message.jsx";
+import { useTextController } from "/app/components/text/text.jsx";
+import { useKeyEffect } from "/app/hooks/use_key_effect.js";
 
 const DialogTextBoxComponent = (
   { color = "white", backgroundColor = "blue", children, ...props },

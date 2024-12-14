@@ -1,7 +1,8 @@
 import { render } from "preact";
 import { useEffect, useErrorBoundary } from "preact/hooks";
 import { App } from "./app/app.jsx";
-import { goblinFontUrl, useFontFace } from "./app/text/use_font_face.js";
+import { goblinFontUrl } from "./app/components/text/font_urls.js";
+import { useFontFace } from "./app/hooks/use_font_face.js";
 
 const AppWithErrorBoundary = () => {
   const [error, resetError] = useErrorBoundary();

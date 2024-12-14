@@ -6,8 +6,8 @@
 */
 
 import { forwardRef } from "preact/compat";
-import { Box } from "/app/layout/box.jsx";
-import { Text } from "/app/text/text.jsx";
+import { Box } from "/app/components/box/box.jsx";
+import { Text } from "/app/components/text/text.jsx";
 
 const MessageComponent = (
   {

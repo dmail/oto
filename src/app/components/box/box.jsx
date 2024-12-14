@@ -1,6 +1,6 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
-import { getAvailableSize } from "../utils/get_available_size.js";
+import { getAvailableSize } from "../../utils/get_available_size.js";
 import boxStylesheet from "./box.css" with { type: "css" };
 
 document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];

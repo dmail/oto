@@ -108,10 +108,7 @@ const TextComponent = ({
       }
       previousWidth = entry.contentRect.width;
       previousHeight = entry.contentRect.height;
-
-      console.log("resize");
       observer.unobserve(elementToObserve);
-
       svgElement.style.width = "0px";
       svgElement.style.height = "0px";
       update();
@@ -157,6 +154,9 @@ const TextComponent = ({
   );
 };
 export const Text = forwardRef(TextComponent);
+Text.bold = ({ children }) => {
+  return <Text fontWeight="bold">{children}</Text>;
+};
 
 const initTextFiller = (
   lines,
@@ -371,10 +371,6 @@ const Tspan = ({
   );
 };
 
-Text.bold = ({ children }) => {
-  return <Text weight="bold">{children}</Text>;
-};
-
 const normalizeChildren = (children) => {
   if (children === null || children === undefined) {
     return [];
@@ -471,6 +467,30 @@ const splitLines = (text) => {
   };
   return visitChildren(text);
 };
+
+/*
+ * This component will put a resize observer on its parent element
+ * in order to update the text dimensions when the parent element size changes.
+ * When parent size is dynamic it means the parent size will be updated when trying to fit text to the parent
+ * For this reason we disable resize observer while trying to fit text to parent
+ * However the browser still complains about this because pattern as it could lead to infinite loop or bad design
+ * We know what we are doing
+ * - it won't lead to infinite loop, we just want to fit text to parent
+ * - it won't cause layout shift or cyclic layout dependencies
+ * -> we can safely ignore this error
+ * (.preventDefault() is used to prevent the error from being displayed by jsenv supervisor)
+ */
+window.addEventListener("error", (errorEvent) => {
+  if (
+    errorEvent.message.includes(
+      "ResizeObserver loop completed with undelivered notifications.",
+    )
+  ) {
+    errorEvent.stopImmediatePropagation();
+    errorEvent.preventDefault();
+    return;
+  }
+});
 
 // const div = document.createElement("div");
 // div.name = "svg_text_measurer";

@@ -4,8 +4,8 @@ import { useDigitsDisplayAnimation } from "/app/animations/use_digits_display_an
 import { useElementAnimation } from "/app/animations/use_element_animation.js";
 import { usePartyMemberHitAnimation } from "/app/animations/use_party_member_hit_animation.js";
 import { Benjamin } from "/app/character/benjamin.jsx";
-import { Box } from "/app/layout/box.jsx";
-import { Digits } from "/app/text/digits.jsx";
+import { Box } from "/app/components/box/box.jsx";
+import { Digits } from "/app/components/text/digits.jsx";
 
 export const Ally = forwardRef((props, ref) => {
   const elementRef = useRef();

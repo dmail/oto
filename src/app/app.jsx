@@ -8,6 +8,7 @@ import {
 } from "preact/hooks";
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
+import { Box } from "./components/box/box.jsx";
 import { DialogTextBox } from "./components/dialog_text_box/dialog_text_box.jsx";
 import { Lifebar } from "./components/lifebar/lifebar.jsx";
 import { taurus } from "./enemy/taurus.js";
@@ -21,7 +22,6 @@ import { useBooleanState } from "./hooks/use_boolean_state.js";
 import { useKeyEffect } from "./hooks/use_key_effect.js";
 import { useSound } from "./hooks/use_sound.js";
 import { PauseDialog } from "./interface/pause_dialog.jsx";
-import { Box } from "./layout/box.jsx";
 import { pause, pausedSignal, play } from "./signals.js";
 
 // const enemiesSignal = signal([taurus]);

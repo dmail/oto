@@ -3,12 +3,12 @@ import { useImperativeHandle, useRef, useState } from "preact/hooks";
 import { useCanvasGlowAnimation } from "/app/animations/use_canvas_glow_animation.js";
 import { useDigitsDisplayAnimation } from "/app/animations/use_digits_display_animation.js";
 import { useElementAnimation } from "/app/animations/use_element_animation.js";
+import { Box } from "/app/components/box/box.jsx";
 import { Message } from "/app/components/message/message.jsx";
+import { Digits } from "/app/components/text/digits.jsx";
 import { Enemy } from "/app/enemy/enemy.jsx";
 import { Selector } from "/app/fight/selector.jsx";
 import { SwordA } from "/app/fight/sword_a.jsx";
-import { Box } from "/app/layout/box.jsx";
-import { Digits } from "/app/text/digits.jsx";
 
 export const Opponent = forwardRef(
   (
