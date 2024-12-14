@@ -21,8 +21,8 @@ export const Selector = ({
 
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.closePath();
-    context.stroke();
     context.strokeColor = outlineColor;
+    context.stroke();
     context.fillStyle = color;
     context.fill();
   }, [color, outlineColor]);

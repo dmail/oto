@@ -2,6 +2,7 @@ import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 import { getAvailableSize } from "../../utils/get_available_size.js";
 import boxStylesheet from "./box.css" with { type: "css" };
+import { MultiBorder } from "./multi_border.jsx";
 
 document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];
 if (import.meta.hot) {
@@ -250,20 +251,20 @@ const BoxComponent = (
   const borders = borderOutlineSize
     ? [
         {
-          size: 100,
-          color: "blue",
+          size: borderOutlineSize,
+          color: borderOutlineColor,
           radius: borderRadius,
         },
-        // {
-        //   size: 30,
-        //   color: "violet",
-        //   radius: borderRadius,
-        // },
-        // {
-        //   size: 5,
-        //   color: "red",
-        //   radius: borderRadius,
-        // },
+        {
+          size: borderSize,
+          color: borderColor,
+          radius: borderRadius,
+        },
+        {
+          size: borderOutlineSize,
+          color: borderOutlineColor,
+          radius: borderRadius,
+        },
       ]
     : [];
 
@@ -285,7 +286,7 @@ const BoxComponent = (
       data-invisible={invisible || undefined}
       style={style}
     >
-      {borders.length && <MultiBorder borders={borders} />}
+      {borders.length > 0 && <MultiBorder borders={borders} />}
 
       {/*
        * This wrapper div ensure children takes dimension - padding into account when
@@ -312,80 +313,6 @@ const BoxComponent = (
 };
 
 export const Box = forwardRef(BoxComponent);
-
-const MultiBorder = ({ borders }) => {
-  const svgRef = useRef();
-  const children = [];
-  const deps = [];
-  let index = 0;
-  for (const border of borders) {
-    children.push(
-      <path
-        name={`border_${index}`}
-        fill="none"
-        stroke={border.color}
-        stroke-width={border.size * 2}
-      />,
-    );
-    deps.push(border.size, border.color, border.radius);
-    index++;
-  }
-  useLayoutEffect(() => {
-    const svg = svgRef.current;
-    const [availableWidth, availableHeight] = getAvailableSize(svg.parentNode);
-    svg.setAttribute("viewBox", `0 0 ${availableWidth} ${availableHeight}`);
-
-    const paths = Array.from(svg.querySelectorAll("path"));
-    let index = 0;
-    let inset = 0;
-    for (const path of paths) {
-      const border = borders[index];
-      // const radius = border.radius;
-      const borderSize = border.size;
-
-      let x = inset - borderSize / 2;
-      let y = inset - borderSize / 2;
-      let width = availableWidth - inset;
-      let height = availableHeight - inset;
-
-      let cmd = "";
-      cmd += `M ${x} ${y} H ${width} V ${height} H ${x} V ${y}`;
-      //  cmd += " ";
-      // cmd += `M ${x + borderSize} ${y + borderSize} H ${x2 - borderSize} V ${y2 - borderSize} H ${x + borderSize} V ${y + borderSize}`;
-      cmd += " Z";
-      path.setAttribute("d", cmd);
-      inset += borderSize;
-      index++;
-    }
-  }, deps);
-
-  let fullSize = borders.reduce((acc, border) => acc + border.size, 0);
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        inset: `${-fullSize}px`,
-      }}
-    >
-      <svg
-        ref={svgRef}
-        name="multi_border"
-        preserveAspectRatio="none"
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          width: "100%",
-          height: "100%",
-          overflow: "visible",
-        }}
-      >
-        {children}
-      </svg>
-    </div>
-  );
-};
 
 Box.div = (props) => {
   return <Box NodeName="div" {...props} />;
