@@ -28,18 +28,16 @@ export const MultiBorder = ({ borders }) => {
       let top = 0;
       for (const border of borders) {
         const borderSize = border.size;
-        context.lineWidth = borderSize;
-        context.beginPath();
-        buildBorderPath(context, {
+        const borderRadius = border.radius;
+        drawBorderPath(context, {
           left,
           top,
           width: availableWidth,
           height: availableHeight,
           size: borderSize,
+          radius: borderRadius,
+          color: border.color,
         });
-        context.closePath();
-        context.strokeStyle = border.color;
-        context.stroke();
         left += borderSize;
         top += borderSize;
         availableWidth -= borderSize;
@@ -64,7 +62,26 @@ export const MultiBorder = ({ borders }) => {
   );
 };
 
-const buildBorderPath = (context, { left, top, width, height, size }) => {
+// const drawRoundRect = (context, { x, y, width, height, radius = 5 }) => {
+//   context.beginPath();
+//   context.moveTo(x + radius, y);
+//   context.lineTo(x + width - radius, y);
+//   context.quadraticCurveTo(x + width, y, x + width, y + radius);
+//   context.lineTo(x + width, y + height - radius);
+//   context.quadraticCurveTo(
+//     x + width,
+//     y + height,
+//     x + width - radius,
+//     y + height,
+//   );
+//   context.lineTo(x + radius, y + height);
+//   context.quadraticCurveTo(x, y + height, x, y + height - radius);
+//   context.lineTo(x, y + radius);
+//   context.quadraticCurveTo(x, y, x + radius, y);
+//   context.closePath();
+// };
+
+const drawBorderPath = (context, { left, top, width, height, size, color }) => {
   let x;
   let y;
   const moveTo = (_x, _y) => {
@@ -81,9 +98,16 @@ const buildBorderPath = (context, { left, top, width, height, size }) => {
     context.lineTo(x, y);
   };
 
+  context.beginPath();
+  context.lineWidth = size;
   moveTo(left + size / 2, top + size / 2);
   lineX(width - size / 2);
   lineY(height - size / 2);
   lineX(left + size / 2);
   lineY(top + size / 2);
+  context.closePath();
+  if (color) {
+    context.strokeStyle = color;
+    context.stroke();
+  }
 };
