@@ -18,12 +18,12 @@
       import { render } from "preact";
       import { useState, useRef } from "preact/hooks";
       import { DialogTextBox } from "./dialog_text_box.jsx";
-      import { Text } from "/app/text/text.jsx";
+      import { Text } from "/app/components/text/text.jsx";
 
       const App = () => {
         return (
           <div>
-            <div style="margin: 10px; display: flex; width: 100px; height: 35px; border: 1px solid black; background: green">
+            <div style="margin: 10px; display: flex; width: 100px; border: 1px solid black; background: green">
               <DialogTextBox>
                 My name is <Text fontWeight="bold">Damien</Text> Maillard
               </DialogTextBox>

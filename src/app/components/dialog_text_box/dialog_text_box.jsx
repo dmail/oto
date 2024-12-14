@@ -76,6 +76,8 @@ const DialogTextBoxComponent = (
       height="100%"
       maxWidth="100%"
       overflow="hidden"
+      innerSpacingY="0.7em"
+      innerSpacingX="0.4em"
       onClick={() => {
         next();
       }}

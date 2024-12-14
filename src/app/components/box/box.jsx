@@ -22,6 +22,8 @@ const BoxComponent = (
     invisible = false,
     children,
     innerSpacing = 0,
+    innerSpacingY,
+    innerSpacingX,
     innerSpacingTop,
     innerSpacingLeft,
     innerSpacingRight,
@@ -141,23 +143,30 @@ const BoxComponent = (
       ? parseInt(innerSpacing)
       : SPACING_SIZES[innerSpacing] || innerSpacing;
   }
+  if (innerSpacingY) {
+    style.paddingTop = style.paddingBottom = isFinite(innerSpacingY)
+      ? parseInt(innerSpacingY)
+      : SPACING_SIZES[innerSpacingY] || innerSpacingY;
+  }
+  if (innerSpacingX) {
+    style.paddingLeft = style.paddingRight = isFinite(innerSpacingX)
+      ? parseInt(innerSpacingX)
+      : SPACING_SIZES[innerSpacingX] || innerSpacingX;
+  }
   if (innerSpacingTop) {
-    style.innerSpacingTop =
-      typeof innerSpacingTop === "number"
-        ? innerSpacingTop
-        : SPACING_SIZES[innerSpacingTop];
+    style.paddingTop = isFinite(innerSpacingTop)
+      ? parseInt(innerSpacingTop)
+      : SPACING_SIZES[innerSpacingTop] || innerSpacingTop;
   }
   if (innerSpacingLeft) {
-    style.paddingLeft =
-      typeof innerSpacingLeft === "number"
-        ? innerSpacingLeft
-        : SPACING_SIZES[innerSpacingLeft];
+    style.paddingLeft = isFinite(innerSpacingLeft)
+      ? parseInt(innerSpacingLeft)
+      : SPACING_SIZES[innerSpacingLeft] || innerSpacingLeft;
   }
   if (innerSpacingRight) {
-    style.paddingRight =
-      typeof innerSpacingRight === "number"
-        ? innerSpacingRight
-        : SPACING_SIZES[innerSpacingRight];
+    style.paddingRight = isFinite(innerSpacingRight)
+      ? parseInt(innerSpacingRight)
+      : SPACING_SIZES[innerSpacingRight] || innerSpacingRight;
   }
   if (innerSpacingBottom) {
     style.paddingBottom = isFinite(innerSpacingBottom)
@@ -223,7 +232,14 @@ const BoxComponent = (
       styleForContentPosition.alignItems = "flex-end";
     }
   }
-  const needsSpacingContainer = Boolean(innerSpacing || innerSpacingBottom);
+  const needsSpacingContainer = Boolean(
+    innerSpacing ||
+      innerSpacingX ||
+      innerSpacingY ||
+      innerSpacingBottom ||
+      innerSpacingTop ||
+      innerSpacingLeft,
+  );
   if (!needsSpacingContainer) {
     Object.assign(style, styleForContentPosition);
   }
