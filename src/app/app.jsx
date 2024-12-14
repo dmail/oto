@@ -101,7 +101,7 @@ export const App = () => {
     if (damage < 0) {
       damage = 0;
     }
-    await dialogRef.current.alert("Taurus attaque avec Cornes");
+    await dialogRef.current.alert("Taurus attaque avec Cornes.");
     await oponentRef.current.glow();
     await heroRef.current.recoilAfterHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
@@ -109,7 +109,7 @@ export const App = () => {
     decreaseHeroHp(15);
   };
   const performHeroTurn = async () => {
-    await dialogRef.current.alert("Hero attaque avec Epée -A-");
+    await dialogRef.current.alert("Hero attaque avec Epée -A-.");
     let damage = heroAttack + weaponAttack - enemyDefense;
     if (damage < 0) {
       damage = 0;

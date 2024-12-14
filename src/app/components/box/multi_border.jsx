@@ -10,39 +10,52 @@ export const MultiBorder = ({ borders }) => {
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    const canvasParentNode = canvas.parentNode;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        return;
+      }
+      let [availableWidth, availableHeight] = [
+        canvasParentNode.offsetWidth,
+        canvasParentNode.offsetHeight,
+      ];
+      canvas.width = `${availableWidth}`;
+      canvas.height = `${availableHeight}`;
+      context.clearRect(0, 0, canvas.width, canvas.height);
 
-    let left = 0;
-    let top = 0;
-    let availableWidth = canvas.width;
-    let availableHeight = canvas.height;
-    for (const border of borders) {
-      const borderSize = border.size;
-      context.lineWidth = borderSize;
-      context.beginPath();
-      buildBorderPath(context, {
-        left,
-        top,
-        width: availableWidth,
-        height: availableHeight,
-        size: borderSize,
-      });
-      context.closePath();
-      context.strokeStyle = border.color;
-      context.stroke();
-      left += borderSize;
-      top += borderSize;
-      availableWidth -= borderSize;
-      availableHeight -= borderSize;
-    }
+      let left = 0;
+      let top = 0;
+      for (const border of borders) {
+        const borderSize = border.size;
+        context.lineWidth = borderSize;
+        context.beginPath();
+        buildBorderPath(context, {
+          left,
+          top,
+          width: availableWidth,
+          height: availableHeight,
+          size: borderSize,
+        });
+        context.closePath();
+        context.strokeStyle = border.color;
+        context.stroke();
+        left += borderSize;
+        top += borderSize;
+        availableWidth -= borderSize;
+        availableHeight -= borderSize;
+      }
+    });
+    observer.observe(canvasParentNode);
+    return () => {
+      observer.disconnect();
+    };
   }, deps);
 
   return (
     <canvas
       ref={canvasRef}
       name="multi_border"
-      width="100"
-      height="100"
       style={{
         position: "absolute",
         inset: `-${fullSize}px`,

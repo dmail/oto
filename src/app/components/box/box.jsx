@@ -1,3 +1,7 @@
+// TODO: multi border radius
+// TODO: background color
+// should not be part of the border but for some reason it is
+
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 import { getAvailableSize } from "../../utils/get_available_size.js";
@@ -265,9 +269,11 @@ const BoxComponent = (
       innerSpacingLeft ||
       (borders.length > 0 && backgroundColor),
   );
+  if (backgroundColor) {
+    style.backgroundColor = backgroundColor;
+  }
   if (!needsSpacingContainer) {
     Object.assign(style, styleForContentPosition);
-    style.backgroundColor = backgroundColor;
   }
 
   if (borders.length) {
