@@ -14,7 +14,7 @@ const MessageComponent = (
     children,
     backgroundColor = "black",
     borderColor = "white",
-    // outlineColor = "black",
+    outlineColor = "black",
     color = "white",
     overflow,
     textController,
@@ -44,6 +44,7 @@ const MessageComponent = (
         ref={ref}
         controller={textController}
         color={color}
+        outlineColor={outlineColor}
         overflow={overflow}
       >
         {children}

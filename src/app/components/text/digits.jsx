@@ -7,6 +7,7 @@ export const Digits = ({ children, ...props }) => {
       fontFamily="goblin"
       // weight="bold"
       outlineColor="black"
+      outlineSize={2}
       letterSpacing={2}
       lineHeight={1.4}
       {...props}

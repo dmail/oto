@@ -47,6 +47,7 @@ const TextComponent = ({
   children,
   color,
   outlineColor,
+  outlineSize = 1,
   letterSpacing,
   lineHeight = 1.4,
   visible = true,
@@ -83,6 +84,7 @@ const TextComponent = ({
       letterSpacing,
       color,
       outlineColor,
+      outlineSize,
 
       controller,
       svgElement,
@@ -106,6 +108,7 @@ const TextComponent = ({
     letterSpacing,
     color,
     outlineColor,
+    outlineSize,
     onParagraphChange,
   ]);
 
@@ -185,6 +188,7 @@ const initTextFiller = (
     letterSpacing,
     color,
     outlineColor,
+    outlineSize = 1,
   },
 ) => {
   lines = [...lines];
@@ -213,6 +217,7 @@ const initTextFiller = (
           letterSpacing={letterSpacing}
           color={color}
           outlineColor={outlineColor}
+          outlineSize={outlineSize}
         >
           {lineChildrenValues}
         </Tspan>,
@@ -386,6 +391,7 @@ const Tspan = ({
   letterSpacing,
   color,
   outlineColor,
+  outlineSize = 1,
   children,
   ...props
 }) => {
@@ -400,7 +406,7 @@ const Tspan = ({
       {...(outlineColor
         ? {
             "stroke": outlineColor,
-            "stroke-width": thickness + 2,
+            "stroke-width": thickness + outlineSize,
             "paint-order": "stroke",
           }
         : {})}

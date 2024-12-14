@@ -66,7 +66,7 @@ export const Ally = forwardRef((props, ref) => {
         <Box x="center" y="end">
           <Digits
             name="hero_digits"
-            dx={2} // for some reason it's better centered with that
+            dx="0.3em" // for some reason it's better centered with that
           >
             {heroDamage}
           </Digits>
