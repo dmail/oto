@@ -144,6 +144,7 @@ const BoxComponent = (
         : height,
     maxWidth: isFinite(maxWidth) ? `${maxWidth}px` : maxWidth,
     maxHeight: isFinite(maxHeight) ? `${maxHeight}px` : maxHeight,
+    backgroundColor,
     cursor,
     ...props.style,
   };
@@ -269,9 +270,6 @@ const BoxComponent = (
       innerSpacingLeft ||
       (borders.length > 0 && backgroundColor),
   );
-  if (backgroundColor) {
-    style.backgroundColor = backgroundColor;
-  }
   if (!needsSpacingContainer) {
     Object.assign(style, styleForContentPosition);
   }
@@ -281,6 +279,7 @@ const BoxComponent = (
     style.borderWidth = `${fullSize}px`;
     style.borderStyle = "solid";
     style.borderColor = "transparent";
+    style.backgroundClip = "padding-box"; // prevent background to be visible behind border
   }
 
   return (
@@ -309,7 +308,6 @@ const BoxComponent = (
             width: "100%",
             height: "100%",
             position: "relative",
-            backgroundColor,
           }}
         >
           {children}
