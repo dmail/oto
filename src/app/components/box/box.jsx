@@ -32,6 +32,7 @@ const BoxComponent = (
     outerSpacing,
     outerSpacingTop,
     ratio,
+    backgroundColor,
     borderColor,
     borderSize = 0,
     borderOutlineColor,
@@ -236,18 +237,6 @@ const BoxComponent = (
       styleForContentPosition.alignItems = "flex-end";
     }
   }
-  const needsSpacingContainer = Boolean(
-    innerSpacing ||
-      innerSpacingX ||
-      innerSpacingY ||
-      innerSpacingBottom ||
-      innerSpacingTop ||
-      innerSpacingLeft,
-  );
-  if (!needsSpacingContainer) {
-    Object.assign(style, styleForContentPosition);
-  }
-
   const borders = borderOutlineSize
     ? [
         {
@@ -267,6 +256,19 @@ const BoxComponent = (
         },
       ]
     : [];
+  const needsSpacingContainer = Boolean(
+    innerSpacing ||
+      innerSpacingX ||
+      innerSpacingY ||
+      innerSpacingBottom ||
+      innerSpacingTop ||
+      innerSpacingLeft ||
+      (borders.length > 0 && backgroundColor),
+  );
+  if (!needsSpacingContainer) {
+    Object.assign(style, styleForContentPosition);
+    style.backgroundColor = backgroundColor;
+  }
 
   if (borders.length) {
     let fullSize = borders.reduce((acc, border) => acc + border.size, 0);
@@ -301,6 +303,7 @@ const BoxComponent = (
             width: "100%",
             height: "100%",
             position: "relative",
+            backgroundColor,
           }}
         >
           {children}
