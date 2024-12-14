@@ -76,6 +76,13 @@ const TextComponent = ({
       dy,
       lineHeight,
       overflow,
+
+      fontSize,
+      fontFamily,
+      fontWeight,
+      letterSpacing,
+      color,
+
       controller,
       svgElement,
       textElement,
@@ -86,7 +93,19 @@ const TextComponent = ({
     } else {
       setParagraph(0);
     }
-  }, [...lineAsDeps, dx, dy, lineHeight, overflow, onParagraphChange]);
+  }, [
+    ...lineAsDeps,
+    dx,
+    dy,
+    lineHeight,
+    overflow,
+    fontSize,
+    fontFamily,
+    fontWeight,
+    letterSpacing,
+    color,
+    onParagraphChange,
+  ]);
 
   useLayoutEffect(() => {
     const svgElement = svgInnerRef.current;
@@ -142,14 +161,7 @@ const TextComponent = ({
         overflow: "visible",
       }}
     >
-      <text
-        ref={textRef}
-        font-size={fontSize}
-        font-family={fontFamily}
-        font-weight={fontWeight}
-        letter-spacing={letterSpacing}
-        fill={color}
-      ></text>
+      <text ref={textRef}></text>
     </svg>
   );
 };
@@ -160,7 +172,19 @@ Text.bold = ({ children }) => {
 
 const initTextFiller = (
   lines,
-  { dx, dy, lineHeight, svgElement, textElement, overflow },
+  {
+    dx,
+    dy,
+    lineHeight,
+    svgElement,
+    textElement,
+    overflow,
+    fontSize,
+    fontFamily,
+    fontWeight,
+    letterSpacing,
+    color,
+  },
 ) => {
   lines = [...lines];
   const fontSizeBase = 10;
@@ -182,6 +206,11 @@ const initTextFiller = (
           y="0"
           dx={dx}
           dy={dy + lineHeight * fontSizeBase * lineIndex}
+          fontSize={fontSize}
+          fontFamily={fontFamily}
+          fontWeight={fontWeight}
+          letterSpacing={letterSpacing}
+          color={color}
         >
           {lineChildrenValues}
         </Tspan>,
@@ -354,9 +383,11 @@ const Tspan = ({
   fontWeight,
   letterSpacing,
   color,
+  outlineColor,
   children,
   ...props
 }) => {
+  const thickness = fontWeight === "bold" ? 1 : 0;
   return (
     <tspan
       font-size={isFinite(fontSize) ? `${parseInt(fontSize)}px` : fontSize}
@@ -364,6 +395,13 @@ const Tspan = ({
       font-weight={fontWeight}
       letter-spacing={letterSpacing}
       fill={color}
+      {...(outlineColor
+        ? {
+            "stroke": outlineColor,
+            "stroke-width": thickness + 2,
+            "paint-order": "stroke",
+          }
+        : {})}
       {...props}
     >
       {children}

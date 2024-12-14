@@ -1,9 +1,13 @@
 export const getAvailableSize = (element) => {
-  const { paddingSizes } = getPaddingAndBorderSizes(element);
+  const { paddingSizes, borderSizes } = getPaddingAndBorderSizes(element);
   const boundingClientRect = element.getBoundingClientRect();
   let availableWidth = boundingClientRect.width;
   let availableHeight = boundingClientRect.height;
-  availableWidth -= paddingSizes.left + paddingSizes.right;
+  availableWidth -=
+    paddingSizes.left +
+    paddingSizes.right +
+    borderSizes.left +
+    borderSizes.right;
   availableHeight -= paddingSizes.top + paddingSizes.bottom;
   return [availableWidth, availableHeight];
 };
