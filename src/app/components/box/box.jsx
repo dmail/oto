@@ -280,6 +280,7 @@ const BoxComponent = (
     style.borderStyle = "solid";
     style.borderColor = "transparent";
     style.backgroundClip = "padding-box"; // prevent background to be visible behind border
+    style.borderRadius = borderRadius;
   }
 
   return (
