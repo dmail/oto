@@ -37,6 +37,16 @@
             radius,
             color: "blue",
           });
+          drawTopLeftCorner(context, {
+            x: x + size,
+            y: y + size,
+            width: width - size,
+            height: height - size,
+            size,
+            radius: 0,
+            controlPoint: [17, 17],
+            color: "green",
+          });
 
           drawTopRightCorner(context, {
             x: x + 100,
@@ -125,7 +135,16 @@
 
       const drawTopLeftCorner = (
         context,
-        { x, y, width, height, size, radius, color },
+        {
+          x,
+          y,
+          width,
+          height,
+          size,
+          radius,
+          color,
+          controlPoint = [x + size / 2, y + size / 2],
+        },
       ) => {
         context.lineWidth = size;
         const leftLineStart = [x + size / 2, y + size + radius];
@@ -135,7 +154,6 @@
         if (leftLineStart[1] < leftLineEnd[1]) {
           drawLine(context, leftLineStart, leftLineEnd, { color });
         }
-        const controlPoint = [x + size / 2, y + size / 2];
         drawQuadraticCurveTo(
           context,
           leftLineStart,
@@ -197,29 +215,29 @@
         drawPoint(context, start, { color: "aqua" });
         drawPoint(context, end, { color: "chocolate" });
       };
-      const drawBezierCurveTo = (
-        context,
-        start,
-        controlPoint,
-        secondControlPoint,
-        end,
-        { color = "green" } = {},
-      ) => {
-        context.beginPath();
-        context.moveTo(start[0], start[1]);
-        context.bezierCurveTo(
-          controlPoint[0],
-          controlPoint[1],
-          secondControlPoint[0],
-          secondControlPoint[1],
-          end[0],
-          end[1],
-        );
-        context.strokeStyle = color;
-        context.stroke();
-        drawPoint(context, controlPoint, { color: "orange" });
-        drawPoint(context, secondControlPoint, { color: "yellow" });
-      };
+      //   const drawBezierCurveTo = (
+      //     context,
+      //     start,
+      //     controlPoint,
+      //     secondControlPoint,
+      //     end,
+      //     { color = "green" } = {},
+      //   ) => {
+      //     context.beginPath();
+      //     context.moveTo(start[0], start[1]);
+      //     context.bezierCurveTo(
+      //       controlPoint[0],
+      //       controlPoint[1],
+      //       secondControlPoint[0],
+      //       secondControlPoint[1],
+      //       end[0],
+      //       end[1],
+      //     );
+      //     context.strokeStyle = color;
+      //     context.stroke();
+      //     drawPoint(context, controlPoint, { color: "orange" });
+      //     drawPoint(context, secondControlPoint, { color: "yellow" });
+      //   };
       const drawQuadraticCurveTo = (
         context,
         start,
