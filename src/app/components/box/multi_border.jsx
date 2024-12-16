@@ -37,6 +37,7 @@ export const MultiBorder = ({ borders }) => {
         if (sizeConsumed > 0) {
           radius -= sizeConsumed / 2;
           radius -= borderSize / 2;
+          radius = Math.floor(radius); // to avoid eventuals gaps leading to white pixels
         }
         drawCorners(context, {
           x: sizeConsumed,
@@ -135,24 +136,20 @@ const drawTopLeftCorner = (
 ) => {
   context.lineWidth = size;
   context.globalAlpha = opacity;
-  const leftLineStart = [x + size / 2, y + radius + size / 2];
+  const leftLineStart = [
+    x + size / 2,
+    radius === 0 ? y : y + radius + size / 2,
+  ];
   const leftLineEnd = [x + size / 2, y + height];
   const topLineStart = [x + radius + size / 2, y + size / 2];
   const topLineEnd = [x + width, y + size / 2];
   const controlPoint = [x + size / 2, y + size / 2];
   if (leftLineStart[1] < leftLineEnd[1]) {
-    drawLine(context, [leftLineStart[0], leftLineStart[1] - 1], leftLineEnd, {
+    drawLine(context, leftLineStart, leftLineEnd, {
       color,
     });
   }
-  if (radius === 0) {
-    drawRect(
-      context,
-      [x + size / 2, y + size / 2],
-      [x + size / 2 + size / 4, y + size / 2 + size / 4],
-      { color },
-    );
-  } else {
+  if (radius !== 0) {
     drawArcTo(context, leftLineStart, controlPoint, topLineStart, radius, {
       color,
     });
@@ -170,16 +167,18 @@ const drawTopRightCorner = (
   context.lineWidth = size;
   context.globalAlpha = opacity;
   const topLineStart = [x - width, y + size / 2];
-  const topLineEnd = [x - radius - size / 2, y + size / 2];
+  const topLineEnd = [radius === 0 ? x : x - radius - size / 2, y + size / 2];
   const rightLineStart = [x - size / 2, y + radius + size / 2];
   const rightLineEnd = [x - size / 2, y + height];
   const controlPoint = [x - size / 2, y + size / 2];
   if (topLineStart[0] < topLineEnd[0]) {
     drawLine(context, topLineStart, topLineEnd, { color });
   }
-  drawArcTo(context, topLineEnd, controlPoint, rightLineStart, radius, {
-    color,
-  });
+  if (radius !== 0) {
+    drawArcTo(context, topLineEnd, controlPoint, rightLineStart, radius, {
+      color,
+    });
+  }
   if (rightLineStart[1] < rightLineEnd[1]) {
     drawLine(context, rightLineStart, rightLineEnd, { color });
   }
@@ -191,16 +190,18 @@ const drawBottomRightCorner = (
   context.lineWidth = size;
   context.globalAlpha = opacity;
   const rightLineStart = [x - size / 2, y - height];
-  const rightLineEnd = [x - size / 2, y - radius - size / 2];
+  const rightLineEnd = [x - size / 2, radius === 0 ? y : y - radius - size / 2];
   const bottomLineStart = [x - radius - size / 2, y - size / 2];
   const bottomLineEnd = [x - width, y - size / 2];
   const controlPoint = [x - size / 2, y - size / 2];
   if (rightLineStart[1] < rightLineEnd[1]) {
     drawLine(context, rightLineStart, rightLineEnd, { color });
   }
-  drawArcTo(context, rightLineEnd, controlPoint, bottomLineStart, radius, {
-    color,
-  });
+  if (radius !== 0) {
+    drawArcTo(context, rightLineEnd, controlPoint, bottomLineStart, radius, {
+      color,
+    });
+  }
   if (bottomLineStart[0] > bottomLineEnd[0]) {
     drawLine(context, bottomLineStart, bottomLineEnd, { color });
   }
@@ -213,15 +214,20 @@ const drawBottomLeftCorner = (
   context.globalAlpha = opacity;
   const leftLineStart = [x + size / 2, y - height];
   const leftLineEnd = [x + size / 2, y - radius - size / 2];
-  const bottomLineStart = [x + radius + size / 2, y - size / 2];
+  const bottomLineStart = [
+    radius === 0 ? x : x + radius + size / 2,
+    y - size / 2,
+  ];
   const bottomLineEnd = [x + width, y - size / 2];
   const controlPoint = [x + size / 2, y - size / 2];
   if (leftLineStart[1] < leftLineEnd[1]) {
     drawLine(context, leftLineStart, leftLineEnd, { color });
   }
-  drawArcTo(context, leftLineEnd, controlPoint, bottomLineStart, radius, {
-    color,
-  });
+  if (radius !== 0) {
+    drawArcTo(context, leftLineEnd, controlPoint, bottomLineStart, radius, {
+      color,
+    });
+  }
   if (bottomLineStart[0] < bottomLineEnd[0]) {
     drawLine(context, bottomLineStart, bottomLineEnd, { color });
   }
@@ -236,14 +242,14 @@ const drawLine = (context, start, end, { color } = {}) => {
     context.stroke();
   }
 };
-const drawRect = (context, start, end, { color }) => {
-  context.beginPath();
-  context.rect(start[0], start[1], end[0] - start[0], end[1] - start[1]);
-  if (color) {
-    context.strokeStyle = color;
-    context.stroke();
-  }
-};
+// const drawRect = (context, start, end, { color }) => {
+//   context.beginPath();
+//   context.rect(start[0], start[1], end[0] - start[0], end[1] - start[1]);
+//   if (color) {
+//     context.strokeStyle = color;
+//     context.stroke();
+//   }
+// };
 const drawArcTo = (
   context,
   start,
@@ -253,8 +259,29 @@ const drawArcTo = (
   { color } = {},
 ) => {
   context.beginPath();
-  context.moveTo(start[0], start[1]);
-  context.arcTo(controlPoint[0], controlPoint[1], end[0], end[1], radius);
+  let [startX, startY] = start;
+  let [controlX, controlY] = controlPoint;
+  let [endX, endY] = end;
+  const controlXDecimal = controlX % 1;
+  const controlYDecimal = controlY % 1;
+  if (controlXDecimal) {
+    if (controlX > startX) {
+      controlX = Math.ceil(controlX);
+      startX -= controlXDecimal;
+    } else {
+      controlX = Math.floor(controlX);
+    }
+  }
+  if (controlYDecimal) {
+    if (controlY > startY) {
+      controlY = Math.ceil(controlY);
+      startY -= controlYDecimal;
+    } else {
+      controlY = Math.floor(controlY);
+    }
+  }
+  context.moveTo(startX, startY);
+  context.arcTo(controlX, controlY, endX, endY, radius);
   if (color) {
     context.strokeStyle = color;
     context.stroke();
