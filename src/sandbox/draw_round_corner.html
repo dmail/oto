@@ -3,8 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" href="data:," />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>Draw corner</title>
+    <style>
+      canvas {
+        image-rendering: pixelated;
+      }
+    </style>
   </head>
   <body>
     <div id="root" style="position: relative"></div>
@@ -12,7 +17,12 @@
       import { render } from "preact";
       import { useRef, useLayoutEffect } from "preact/hooks";
       import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
-      import { drawArc } from "/app/canvas/draw.js";
+      import {
+        drawArc,
+        drawLine,
+        drawArcTo,
+        drawQuadraticCurveTo,
+      } from "/app/canvas/draw.js";
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
@@ -20,6 +30,8 @@
 
         const [x, xSetter] = useLocalStorageState("x", 50);
         const [y, ySetter] = useLocalStorageState("y", 25);
+        const [width, widthSetter] = useLocalStorageState("width", 50);
+        const [height, heightSetter] = useLocalStorageState("height", 50);
         const [outerSize, outerSizeSetter] = useLocalStorageState(
           "outer_size",
           1,
@@ -46,45 +58,121 @@
         const drawArcs = (canvas) => {
           const context = canvas.getContext("2d");
           context.clearRect(0, 0, canvas.width, canvas.height);
+          context.imageSmoothingEnabled = false;
           const outerColor = "green";
-          const opacity = 0.8;
+          const outerOpacity = 0.5;
           const innerColor = "red";
-          const innerOpacity = 0.7;
-          let innerRadius = radius - outerSize / 2 - innerSize / 2;
-          if (innerRadius < 0) {
-            innerRadius = 0;
+          const innerOpacity = 0.5;
+
+          const center = [
+            x + radius + outerSize / 2,
+            y + radius + outerSize / 2,
+          ];
+
+          outer: {
+            let outerRadius = radius;
+            context.beginPath();
+            context.lineWidth = outerSize;
+            if (topLeft) {
+              drawTopLeftCorner(context, {
+                x,
+                y,
+                center,
+                radius: outerRadius,
+                size: outerSize,
+                width,
+                height,
+              });
+            }
+            context.globalAlpha = outerOpacity;
+            context.strokeStyle = outerColor;
+            context.stroke();
           }
 
-          if (topLeft) {
-            drawTopLeftArc(context, {
-              x,
-              y,
-              radius,
-              size: outerSize,
-              color: outerColor,
-              opacity,
-            });
-            drawTopLeftArc(context, {
-              x: x + outerSize,
-              y: y + outerSize,
-              radius: innerRadius,
-              size: innerSize,
-              color: innerColor,
-              opacity: innerOpacity,
-            });
+          inner: {
+            let innerRadius = 2;
+            context.beginPath();
+            context.lineWidth = innerSize;
+            drawLine(
+              context,
+              [x + outerSize, y + outerSize],
+              [x + width, y + outerSize],
+            );
+            context.strokStyle = outerColor;
+            context.stroke();
+
+            context.beginPath();
+            context.lineWidth = outerSize;
+            if (topLeft) {
+              drawTopLeftCorner(context, {
+                x: x + outerSize,
+                y: y + outerSize,
+                center,
+                radius: Math.max(innerRadius, 0),
+                size: innerSize,
+                width: width - outerSize,
+                height: height - outerSize,
+              });
+            }
+
+            context.globalAlpha = innerOpacity;
+            context.strokeStyle = innerColor;
+            context.stroke();
+          }
+
+          one_more: {
+            let subRadius =
+              radius -
+              outerSize / 2 -
+              innerSize / 2 -
+              innerSize / 2 -
+              innerSize / 2;
+            context.beginPath();
+            context.lineWidth = innerSize;
+            if (topLeft) {
+              drawTopLeftCorner(context, {
+                x: x + outerSize + innerSize,
+                y: y + outerSize + innerSize,
+                center,
+                radius: Math.max(subRadius, 0),
+                size: innerSize,
+                width: width - outerSize - innerSize,
+                height: height - outerSize - innerSize,
+              });
+            }
+            context.globalAlpha = innerOpacity;
+            context.strokeStyle = "blue";
+            context.stroke();
           }
         };
 
-        const drawTopLeftArc = (
+        const drawTopLeftCorner = (
           context,
-          { x, y, radius, size, color, opacity = 1 },
+          { x, y, width, height, center, radius, size },
         ) => {
-          context.lineWidth = size;
-          context.globalAlpha = opacity;
-          const center = [x + radius + size / 2, y + radius + size / 2];
-          drawArc(context, center, radius, 180, 270, {
-            color,
-          });
+          const leftLineX = x + size / 2;
+          if (radius === 0) {
+            drawLine(context, [x, y + size / 2], [x + width, y + size / 2]);
+            drawLine(context, [leftLineX, y + size], [leftLineX, y + height]);
+            return;
+          }
+
+          let topLineXStart = x + radius + size / 2;
+          let topLineY = y + size / 2;
+          const topLineStart = [topLineXStart, topLineY];
+          const topLineEnd = [x + width, topLineY];
+
+          const leftLineStart = [leftLineX, y + radius + size / 2];
+          const leftLineEnd = [leftLineX, y + height];
+          drawQuadraticCurveTo(
+            context,
+            leftLineStart,
+            [x + size / 2, y + size / 2],
+            topLineStart,
+          );
+          //  drawArc(context, center, radius, 180, 270);
+          drawLine(context, topLineStart, topLineEnd);
+          drawLine(context, leftLineStart, leftLineEnd);
         };
 
         useLayoutEffect(() => {
@@ -92,6 +180,8 @@
         }, [
           x,
           y,
+          width,
+          height,
           outerSize,
           innerSize,
           radius,
@@ -140,10 +230,31 @@
                 radius:
                 <input
                   type="number"
-                  min="1"
+                  min="0"
                   max="100"
                   value={radius}
                   onInput={(e) => radiusSetter(e.target.valueAsNumber)}
+                />
+              </label>
+              <br />
+              <label>
+                width:
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={width}
+                  onInput={(e) => widthSetter(e.target.valueAsNumber)}
+                />
+              </label>
+              <label>
+                height:
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={height}
+                  onInput={(e) => heightSetter(e.target.valueAsNumber)}
                 />
               </label>
               <br />
