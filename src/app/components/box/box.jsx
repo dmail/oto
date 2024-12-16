@@ -19,22 +19,26 @@ export const borderWithStroke = ({
   strokeColor,
   strokeSize = 1,
   radius,
+  opacity,
 }) => {
   return [
     {
       size: strokeSize,
       color: strokeColor,
       radius,
+      opacity,
     },
     {
       size,
       color,
       radius,
+      opacity,
     },
     {
       size: strokeSize,
       color: strokeColor,
       radius,
+      opacity,
     },
   ];
 };

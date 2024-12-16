@@ -25,108 +25,129 @@
         const [height, heightSetter] = useLocalStorageState("height", 50);
         const [size, sizeSetter] = useLocalStorageState("size", 1);
         const [radius, radiusSetter] = useLocalStorageState("radius", 10);
+        const [topLeft, topLeftSetter] = useLocalStorageState("topLeft", true);
+        const [topRight, topRightSetter] = useLocalStorageState(
+          "topRight",
+          true,
+        );
+        const [bottomRight, bottomRightSetter] = useLocalStorageState(
+          "bottomRight",
+          true,
+        );
+        const [bottomLeft, bottomLeftSetter] = useLocalStorageState(
+          "bottomLeft",
+          true,
+        );
 
         const drawCorners = (canvas, { withArcTo }) => {
           const context = canvas.getContext("2d");
           context.clearRect(0, 0, canvas.width, canvas.height);
-          const innerBorderColor = "indigo";
-          const opacity = 0.5;
+          const borderColor = "green";
+          const opacity = 0.8;
+          const innerBorderColor = "red";
+          const innerBorderSize = 10;
           const innerBorderOpacity = 0.7;
+          let innerBorderRadius = radius - size / 2 - innerBorderSize / 2;
+          if (innerBorderRadius < 0) {
+            innerBorderRadius = 0;
+          }
 
-          drawTopLeftCorner(context, {
-            x,
-            y,
-            width,
-            height,
-            size,
-            radius,
-            withArcTo,
-            color: "blue",
-            opacity,
-          });
-          const secondTopLeftCornerSize = 4;
-          drawTopLeftCorner(context, {
-            x: x + size,
-            y: y + size,
-            width: width - size,
-            height: height - size,
-            size: secondTopLeftCornerSize,
-            radius: radius - size / 2 - secondTopLeftCornerSize / 2,
-            withArcTo,
-            color: innerBorderColor,
-            opacity: innerBorderOpacity,
-          });
-          drawTopRightCorner(context, {
-            x: x + 100,
-            y,
-            width,
-            height,
-            size,
-            radius,
-            withArcTo,
-            color: "red",
-            opacity,
-          });
-          const secondTopRightCornerSize = 4;
-          drawTopRightCorner(context, {
-            x: x + 100 - size,
-            y: y + size,
-            width: width - size,
-            height: height - size,
-            size: secondTopRightCornerSize,
-            radius: radius - size / 2 - secondTopRightCornerSize / 2,
-            withArcTo,
-            color: innerBorderColor,
-            opacity: innerBorderOpacity,
-          });
-
-          drawBottomRightCorner(context, {
-            x: x + 100,
-            y: y + 100,
-            width,
-            height,
-            size,
-            radius,
-            withArcTo,
-            color: "green",
-            opacity,
-          });
-          const secondBottomRightCornerSize = 4;
-          drawBottomRightCorner(context, {
-            x: x + 100 - size,
-            y: y + 100 - size,
-            width: width - size,
-            height: height - size,
-            size: secondBottomRightCornerSize,
-            radius: radius - size / 2 - secondBottomRightCornerSize / 2,
-            withArcTo,
-            color: innerBorderColor,
-            opacity: innerBorderOpacity,
-          });
-
-          drawBottomLeftCorner(context, {
-            x,
-            y: y + 100,
-            width,
-            height,
-            size,
-            radius,
-            withArcTo,
-            color: "black",
-            opacity,
-          });
-          const secondBottomLeftCornerSize = 4;
-          drawBottomLeftCorner(context, {
-            x: x + size,
-            y: y + 100 - size,
-            width: width - size,
-            height: height - size,
-            size: secondBottomLeftCornerSize,
-            radius: radius - size / 2 - secondBottomLeftCornerSize / 2,
-            withArcTo,
-            color: innerBorderColor,
-            opacity: innerBorderOpacity,
-          });
+          if (topLeft) {
+            drawTopLeftCorner(context, {
+              x,
+              y,
+              width,
+              height,
+              size,
+              radius,
+              withArcTo,
+              color: borderColor,
+              opacity,
+            });
+            drawTopLeftCorner(context, {
+              x: x + size,
+              y: y + size,
+              width: width - size,
+              height: height - size,
+              size: innerBorderSize,
+              radius: innerBorderRadius,
+              withArcTo,
+              color: innerBorderColor,
+              opacity: innerBorderOpacity,
+            });
+          }
+          if (topRight) {
+            drawTopRightCorner(context, {
+              x: x + 100,
+              y,
+              width,
+              height,
+              size,
+              radius,
+              withArcTo,
+              color: borderColor,
+              opacity,
+            });
+            drawTopRightCorner(context, {
+              x: x + 100 - size,
+              y: y + size,
+              width: width - size,
+              height: height - size,
+              size: innerBorderSize,
+              radius: innerBorderRadius,
+              withArcTo,
+              color: innerBorderColor,
+              opacity: innerBorderOpacity,
+            });
+          }
+          if (bottomRight) {
+            drawBottomRightCorner(context, {
+              x: x + 100,
+              y: y + 100,
+              width,
+              height,
+              size,
+              radius,
+              withArcTo,
+              color: borderColor,
+              opacity,
+            });
+            drawBottomRightCorner(context, {
+              x: x + 100 - size,
+              y: y + 100 - size,
+              width: width - size,
+              height: height - size,
+              size: innerBorderSize,
+              radius: innerBorderRadius,
+              withArcTo,
+              color: innerBorderColor,
+              opacity: innerBorderOpacity,
+            });
+          }
+          if (bottomLeft) {
+            drawBottomLeftCorner(context, {
+              x,
+              y: y + 100,
+              width,
+              height,
+              size,
+              radius,
+              withArcTo,
+              color: borderColor,
+              opacity,
+            });
+            drawBottomLeftCorner(context, {
+              x: x + size,
+              y: y + 100 - size,
+              width: width - size,
+              height: height - size,
+              size: innerBorderSize,
+              radius: innerBorderRadius,
+              withArcTo,
+              color: innerBorderColor,
+              opacity: innerBorderOpacity,
+            });
+          }
         };
 
         useLayoutEffect(() => {
@@ -154,7 +175,18 @@
           context.lineWidth = secondCornerSize;
           context.strokeStyle = "indigo";
           context.stroke();
-        }, [x, y, width, height, size, radius]);
+        }, [
+          x,
+          y,
+          width,
+          height,
+          size,
+          radius,
+          topLeft,
+          topRight,
+          bottomRight,
+          bottomLeft,
+        ]);
 
         return (
           <div>
@@ -236,12 +268,45 @@
                   onInput={(e) => radiusSetter(e.target.valueAsNumber)}
                 />
               </label>
+              <br />
+              <label>
+                top left:
+                <input
+                  type="checkbox"
+                  checked={topLeft}
+                  onChange={(e) => topLeftSetter(e.target.checked)}
+                />
+              </label>
+              <label>
+                top right:
+                <input
+                  type="checkbox"
+                  checked={topRight}
+                  onChange={(e) => topRightSetter(e.target.checked)}
+                />
+              </label>
+              <label>
+                bottom right:
+                <input
+                  type="checkbox"
+                  checked={bottomRight}
+                  onChange={(e) => bottomRightSetter(e.target.checked)}
+                />
+              </label>
+              <label>
+                bottom left:
+                <input
+                  type="checkbox"
+                  checked={bottomLeft}
+                  onChange={(e) => bottomLeftSetter(e.target.checked)}
+                />
+              </label>
             </fieldset>
           </div>
         );
       };
 
-      let displayDrawPoints = false;
+      let displayDrawPoints = true;
 
       const drawTopLeftCorner = (
         context,
@@ -249,9 +314,9 @@
       ) => {
         context.lineWidth = size;
         context.globalAlpha = opacity;
-        const leftLineStart = [x + size / 2, y + radius + size / 2];
+        const leftLineStart = [x + size / 2, y + radius + size];
         const leftLineEnd = [x + size / 2, y + height];
-        const topLineStart = [x + radius + size / 2, y + size / 2];
+        const topLineStart = [x + radius + size, y + size / 2];
         const topLineEnd = [x + width, y + size / 2];
         const controlPoint = [x + size / 2, y + size / 2];
         if (leftLineStart[1] < leftLineEnd[1]) {
@@ -286,12 +351,12 @@
         context.lineWidth = size;
         context.globalAlpha = opacity;
         const topLineStart = [x - width, y + size / 2];
-        const topLineEnd = [x - radius - size / 2, y + size / 2];
-        const rightLineStart = [x - size / 2, y + radius + size / 2];
+        const topLineEnd = [x - radius - size, y + size / 2];
+        const rightLineStart = [x - size / 2, y + radius + size];
         const rightLineEnd = [x - size / 2, y + height];
         const controlPoint = [x - size / 2, y + size / 2];
         if (topLineStart[0] < topLineEnd[0]) {
-          drawLine(context, topLineStart, topLineEnd, { color });
+          // drawLine(context, topLineStart, topLineEnd, { color });
         }
         if (withArcTo) {
           drawArcTo(context, topLineEnd, controlPoint, rightLineStart, radius, {
@@ -307,7 +372,7 @@
           );
         }
         if (rightLineStart[1] < rightLineEnd[1]) {
-          drawLine(context, rightLineStart, rightLineEnd, { color });
+          // drawLine(context, rightLineStart, rightLineEnd, { color });
         }
       };
       const drawBottomRightCorner = (
@@ -353,8 +418,8 @@
         context.lineWidth = size;
         context.globalAlpha = opacity;
         const leftLineStart = [x + size / 2, y - height];
-        const leftLineEnd = [x + size / 2, y - radius - size / 2];
-        const bottomLineStart = [x + radius + size / 2, y - size / 2];
+        const leftLineEnd = [x + size / 2, y - radius - size];
+        const bottomLineStart = [x + radius + size, y - size / 2];
         const bottomLineEnd = [x + width, y - size / 2];
         const controlPoint = [x + size / 2, y - size / 2];
         if (leftLineStart[1] < leftLineEnd[1]) {
@@ -450,6 +515,9 @@
         radius,
         { color = "green" } = {},
       ) => {
+        if (radius < 0) {
+          return;
+        }
         context.beginPath();
         context.moveTo(start[0], start[1]);
         context.arcTo(controlPoint[0], controlPoint[1], end[0], end[1], radius);
@@ -466,16 +534,40 @@
         endPoint,
         { color = "darkgreen" } = {},
       ) => {
+        let [startX, startY] = start;
+        let [controlX, controlY] = controlPoint;
+        let [endX, endY] = endPoint;
+        const curveSize = context.lineWidth;
+        const curveArcSize = context.lineWidth / 4;
+        const curveDecimal = curveArcSize % 1;
+
+        const yDiff = startY - controlY;
+        console.log({ yDiff, curveSize });
+
+        if (curveDecimal) {
+          // const highestY = Math.max(startY, endY);
+          // if (controlY < highestY) {
+          //   controlY -= curveDecimal;
+          //   startY += curveDecimal;
+          // } else {
+          //   controlY += curveDecimal + 0.2;
+          // }
+          // const highestX = Math.max(startX, endX);
+          // if (controlX < highestX) {
+          //   controlX -= curveDecimal;
+          //   endX += curveDecimal;
+          // } else {
+          //   controlX += curveDecimal + 0.2;
+          // }
+        }
+
+        context.lineWidth += curveDecimal;
         context.beginPath();
-        context.moveTo(start[0], start[1]);
-        context.quadraticCurveTo(
-          controlPoint[0],
-          controlPoint[1],
-          endPoint[0],
-          endPoint[1],
-        );
+        context.moveTo(startX, startY);
+        context.quadraticCurveTo(controlX, controlY, endX, endY);
         context.strokeStyle = color;
         context.stroke();
+        context.lineWidth = curveSize;
         drawPoint(context, start, { color: "chartreuse" });
         drawPoint(context, controlPoint, { color: "violet" });
         drawPoint(context, endPoint, { color: "chartreuse" });
