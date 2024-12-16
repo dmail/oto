@@ -69,110 +69,172 @@
             y + radius + outerSize / 2,
           ];
 
-          outer: {
-            let outerRadius = radius;
-            context.beginPath();
-            context.lineWidth = outerSize;
-            if (topLeft) {
-              drawTopLeftCorner(context, {
-                x,
-                y,
-                center,
-                radius: outerRadius,
-                size: outerSize,
-                width,
-                height,
-              });
-            }
-            context.globalAlpha = outerOpacity;
-            context.strokeStyle = outerColor;
-            context.stroke();
+          context.beginPath();
+          roundRect2(
+            context,
+            x + outerSize / 2,
+            y + outerSize / 2,
+            width - outerSize,
+            height - outerSize,
+            radius,
+          );
+          context.globalAlpha = outerOpacity;
+          context.lineWidth = outerSize;
+          context.strokeStyle = "black";
+          context.stroke();
+
+          context.beginPath();
+          roundRect2(
+            context,
+            x + outerSize + innerSize / 2,
+            y + outerSize + innerSize / 2,
+            width - outerSize * 2 - innerSize,
+            height - outerSize * 2 - innerSize,
+            10,
+          );
+          context.globalAlpha = innerOpacity;
+          context.lineWidth = innerSize;
+          context.strokeStyle = "red";
+          context.stroke();
+
+          // outer: {
+          //   let outerRadius = radius;
+          //   context.beginPath();
+          //   context.lineWidth = outerSize;
+          //   if (topLeft) {
+          //     drawTopLeftCorner(context, {
+          //       x,
+          //       y,
+          //       radius: outerRadius,
+          //       size: outerSize,
+          //       width,
+          //       height,
+          //     });
+          //   }
+          //   context.globalAlpha = outerOpacity;
+          //   context.strokeStyle = "black";
+          //   context.stroke();
+          // }
+
+          // inner: {
+          //   let innerRadius = radius - outerSize / 2 - innerSize / 2;
+          //   context.beginPath();
+          //   context.lineWidth = innerSize;
+          //   if (topLeft) {
+          //     drawTopLeftCorner(context, {
+          //       x: x + outerSize,
+          //       y: y + outerSize,
+          //       center,
+          //       radius: Math.max(innerRadius, 0),
+          //       size: innerSize,
+          //       width: width - outerSize,
+          //       height: height - outerSize,
+          //     });
+          //   }
+          //   context.globalAlpha = innerOpacity;
+          //   context.strokeStyle = innerColor;
+          //   context.stroke();
+          // }
+
+          // one_more: {
+          //   let subRadius =
+          //     radius -
+          //     outerSize / 2 -
+          //     innerSize / 2 -
+          //     innerSize / 2 -
+          //     innerSize / 2;
+          //   context.beginPath();
+          //   context.lineWidth = innerSize;
+          //   if (topLeft) {
+          //     drawTopLeftCorner(context, {
+          //       x: x + outerSize + innerSize,
+          //       y: y + outerSize + innerSize,
+          //       center,
+          //       radius: Math.max(subRadius, 0),
+          //       size: innerSize,
+          //       width: width - outerSize - innerSize,
+          //       height: height - outerSize - innerSize,
+          //     });
+          //   }
+          //   context.globalAlpha = innerOpacity;
+          //   context.strokeStyle = "blue";
+          //   context.stroke();
+          // }
+        };
+
+        function roundRect(ctx, x, y, width, height, radius) {
+          /*
+           * Draws a rounded rectangle using the current state of the canvas.
+           */
+          let w = width;
+          let h = height;
+          let r = radius;
+          ctx.stroke();
+          ctx.fill();
+          ctx.beginPath();
+          // Configure the roundedness of the rectangles corners
+          if (w >= r * 2 && h >= r * 2) {
+            // Handles width and height larger than diameter
+            // Keep radius fixed
+            ctx.moveTo(x + r, y); // tr start
+            ctx.lineTo(x + w - r, y); // tr
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r); //tr
+            ctx.lineTo(x + w, y + h - r); // br
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); // br
+            ctx.lineTo(x + r, y + h); // bl
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r); // bl
+            ctx.lineTo(x, y + r); // tl
+            ctx.quadraticCurveTo(x, y, x + r, y); // tl
+          } else if (w < r * 2 && h > r * 2) {
+            // Handles width lower than diameter
+            // Radius must dynamically change as half of width
+            r = w / 2;
+            ctx.moveTo(x + w, y + h - r); // br start
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); // br curve
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r); // bl curve
+            ctx.lineTo(x, y + r); // line
+            ctx.quadraticCurveTo(x, y, x + r, y); // tl
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r); // tl
+            ctx.lineTo(x + w, y + h - r); // line
+          } else if (w > r * 2 && h < r * 2) {
+            // Handles height lower than diameter
+            // Radius must dynamically change as half of height
+            r = h / 2;
+            ctx.moveTo(x + w - r, y + h); // br start
+            ctx.quadraticCurveTo(x + w, y + h, x + w, y + r); // br curve
+            ctx.quadraticCurveTo(x + w, y, x + w - r, y); // tr curve
+            ctx.lineTo(x + r, y); // line between tr tl
+            ctx.quadraticCurveTo(x, y, x, y + r); // tl curve
+            ctx.quadraticCurveTo(x, y + h, x + r, y + h); // bl curve
+          } else if (w < 2 * r && h < 2 * r) {
+            // Handles width and height lower than diameter
+            ctx.moveTo(x + w / 2, y + h);
+            ctx.quadraticCurveTo(x + w, y + h, x + w, y + h / 2); // bl curve
+            ctx.quadraticCurveTo(x + w, y, x + w / 2, y); // tr curve
+            ctx.quadraticCurveTo(x, y, x, y + h / 2); // tl curve
+            ctx.quadraticCurveTo(x, y + h, x + w / 2, y + h); // bl curve
           }
+          ctx.closePath();
+        }
 
-          inner: {
-            let innerRadius = 2;
-            context.beginPath();
-            context.lineWidth = innerSize;
-            drawLine(
-              context,
-              [x + outerSize, y + outerSize],
-              [x + width, y + outerSize],
-            );
-            context.strokStyle = outerColor;
-            context.stroke();
-
-            context.beginPath();
-            context.lineWidth = outerSize;
-            if (topLeft) {
-              drawTopLeftCorner(context, {
-                x: x + outerSize,
-                y: y + outerSize,
-                center,
-                radius: Math.max(innerRadius, 0),
-                size: innerSize,
-                width: width - outerSize,
-                height: height - outerSize,
-              });
-            }
-
-            context.globalAlpha = innerOpacity;
-            context.strokeStyle = innerColor;
-            context.stroke();
-          }
-
-          one_more: {
-            let subRadius =
-              radius -
-              outerSize / 2 -
-              innerSize / 2 -
-              innerSize / 2 -
-              innerSize / 2;
-            context.beginPath();
-            context.lineWidth = innerSize;
-            if (topLeft) {
-              drawTopLeftCorner(context, {
-                x: x + outerSize + innerSize,
-                y: y + outerSize + innerSize,
-                center,
-                radius: Math.max(subRadius, 0),
-                size: innerSize,
-                width: width - outerSize - innerSize,
-                height: height - outerSize - innerSize,
-              });
-            }
-            context.globalAlpha = innerOpacity;
-            context.strokeStyle = "blue";
-            context.stroke();
-          }
+        const roundRect2 = (ctx, ...args) => {
+          ctx.roundRect(...args);
         };
 
         const drawTopLeftCorner = (
           context,
-          { x, y, width, height, center, radius, size },
+          { x, y, width, height, radius, size },
         ) => {
-          const leftLineX = x + size / 2;
-          if (radius === 0) {
-            drawLine(context, [x, y + size / 2], [x + width, y + size / 2]);
-            drawLine(context, [leftLineX, y + size], [leftLineX, y + height]);
-            return;
-          }
-
-          let topLineXStart = x + radius + size / 2;
-          let topLineY = y + size / 2;
-          const topLineStart = [topLineXStart, topLineY];
-          const topLineEnd = [x + width, topLineY];
-
-          const leftLineStart = [leftLineX, y + radius + size / 2];
-          const leftLineEnd = [leftLineX, y + height];
-          drawQuadraticCurveTo(
-            context,
-            leftLineStart,
-            [x + size / 2, y + size / 2],
-            topLineStart,
+          context.lineJoin = "round";
+          context.moveTo(x + size / 2, y + height);
+          context.lineTo(x + size / 2, y + radius);
+          context.quadraticCurveTo(
+            x + size / 2,
+            y + size / 2,
+            x + size / 2 + radius,
+            y + size / 2,
           );
-          //  drawArc(context, center, radius, 180, 270);
-          drawLine(context, topLineStart, topLineEnd);
-          drawLine(context, leftLineStart, leftLineEnd);
+          context.lineTo(x + width, y + size / 2);
         };
 
         useLayoutEffect(() => {
