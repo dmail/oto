@@ -1,7 +1,3 @@
-// TODO: multi border radius
-// TODO: background color
-// should not be part of the border but for some reason it is
-
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 import { getAvailableSize } from "../../utils/get_available_size.js";
@@ -16,6 +12,32 @@ if (import.meta.hot) {
     );
   });
 }
+
+export const borderWithStroke = ({
+  color,
+  size = 2,
+  strokeColor,
+  strokeSize = 1,
+  radius,
+}) => {
+  return [
+    {
+      size: strokeSize,
+      color: strokeColor,
+      radius,
+    },
+    {
+      size,
+      color,
+      radius,
+    },
+    {
+      size: strokeSize,
+      color: strokeColor,
+      radius,
+    },
+  ];
+};
 
 const BoxComponent = (
   {
@@ -37,11 +59,8 @@ const BoxComponent = (
     outerSpacingTop,
     ratio,
     backgroundColor,
-    borderColor,
-    borderSize = 0,
-    borderOutlineColor,
-    borderOutlineSize = 0,
-    borderRadius,
+    border,
+    outline,
     width = "auto",
     height = "auto",
     maxWidth = ratio && height !== "auto" ? "100%" : undefined,
@@ -242,25 +261,18 @@ const BoxComponent = (
       styleForContentPosition.alignItems = "flex-end";
     }
   }
-  const borders = borderOutlineSize
-    ? [
-        {
-          size: borderOutlineSize,
-          color: borderOutlineColor,
-          radius: borderRadius,
-        },
-        {
-          size: borderSize,
-          color: borderColor,
-          radius: borderRadius,
-        },
-        {
-          size: borderOutlineSize,
-          color: borderOutlineColor,
-          radius: borderRadius,
-        },
-      ]
-    : [];
+
+  const borders = [];
+  if (outline) {
+    borders.push(outline);
+  }
+  if (border) {
+    if (Array.isArray(border)) {
+      borders.push(...border);
+    } else {
+      borders.push(border);
+    }
+  }
   const needsSpacingContainer = Boolean(
     innerSpacing ||
       innerSpacingX ||
@@ -273,14 +285,13 @@ const BoxComponent = (
   if (!needsSpacingContainer) {
     Object.assign(style, styleForContentPosition);
   }
-
   if (borders.length) {
     let fullSize = borders.reduce((acc, border) => acc + border.size, 0);
     style.borderWidth = `${fullSize}px`;
     style.borderStyle = "solid";
     style.borderColor = "transparent";
     style.backgroundClip = "padding-box"; // prevent background to be visible behind border
-    style.borderRadius = borderRadius;
+    // style.borderRadius = borderRadius;
   }
 
   return (

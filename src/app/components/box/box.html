@@ -28,7 +28,7 @@
     <script type="module" jsenv-type="module/jsx">
       /* eslint-disable no-unused-vars */
       import { render } from "preact";
-      import { Box } from "./box.jsx";
+      import { Box, borderWithStroke } from "./box.jsx";
 
       const App = () => {
         return (
@@ -134,10 +134,41 @@
                   style={{
                     background: "green",
                   }}
+                  border={borderWithStroke({
+                    size: 10,
+                    color: "red",
+                    strokeSize: 5,
+                    strokeColor: "violet",
+                    radius: 10,
+                  })}
+                >
+                  Coucou
+                </Box>
+              </div>
+
+              <div style="margin:10px">
+                <Box
+                  width="100"
+                  height="100"
+                  backgroundColor="green"
                   borderColor="red"
-                  borderSize={4}
-                  borderOutlineColor="violet"
-                  borderOutlineSize={4}
+                  borderSize={10}
+                  borderOutlineColor="transparent"
+                  borderOutlineSize={5}
+                >
+                  Coucou
+                </Box>
+              </div>
+
+              <div style="margin:10px">
+                <Box
+                  width="200"
+                  height="120"
+                  backgroundColor="green"
+                  borderColor="red"
+                  borderSize={5}
+                  borderOutlineColor="orange"
+                  borderOutlineSize={2}
                 >
                   Coucou
                 </Box>

@@ -10,6 +10,7 @@ export const MultiBorder = ({ borders }) => {
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const context = canvas.getContext("2d");
+    context.imageSmoothingEnabled = false;
     const canvasParentNode = canvas.parentNode;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
@@ -24,26 +25,34 @@ export const MultiBorder = ({ borders }) => {
       canvas.height = `${availableHeight}`;
       context.clearRect(0, 0, canvas.width, canvas.height);
 
-      let x = 0;
-      let y = 0;
-      let widthRemaining = availableWidth;
-      let heightRemaining = availableHeight;
+      let sizeConsumed = 0;
+      let width = availableWidth / 2;
+      let height = availableHeight / 2;
+      let remainingWidth = availableWidth;
+      let remainingHeight = availableHeight;
       for (const border of borders) {
         const borderSize = border.size;
-        const borderRadius = border.radius || 5;
-        drawRoundedBorderPath(context, {
-          x: x + borderRadius,
-          y: y + borderRadius,
-          width: widthRemaining - borderSize,
-          height: heightRemaining - borderSize,
+        const borderRadius = border.radius || 0;
+        let radius = borderRadius;
+        if (sizeConsumed > 0) {
+          radius -= sizeConsumed / 2;
+          radius -= borderSize / 2;
+        }
+        drawCorners(context, {
+          x: sizeConsumed,
+          y: sizeConsumed,
+          width: width - sizeConsumed,
+          height: height - sizeConsumed,
           size: borderSize,
-          radius: borderRadius,
+          radius: Math.max(radius, 0),
           color: border.color,
+          opacity: border.opacity,
+          availableWidth: remainingWidth,
+          availableHeight: remainingHeight,
         });
-        x += borderSize / 2 + borderRadius / 2;
-        y += borderSize / 2 + borderRadius / 2;
-        widthRemaining -= borderSize + borderRadius;
-        heightRemaining -= borderSize + borderRadius;
+        remainingWidth -= borderSize * 2;
+        remainingHeight -= borderSize * 2;
+        sizeConsumed += borderSize;
       }
     });
     observer.observe(canvasParentNode);
@@ -64,61 +73,190 @@ export const MultiBorder = ({ borders }) => {
   );
 };
 
-// https://jsfiddle.net/cZ2gH/1/
-const drawRoundedBorderPath = (
+const drawCorners = (
   context,
-  { x, y, width, height, size, radius = 5, color },
+  {
+    x,
+    y,
+    width,
+    height,
+    size,
+    radius,
+    color,
+    opacity,
+    availableWidth,
+    availableHeight,
+  },
+) => {
+  drawTopLeftCorner(context, {
+    x,
+    y,
+    width,
+    height,
+    size,
+    radius,
+    color,
+    opacity,
+  });
+  drawTopRightCorner(context, {
+    x: x + availableWidth,
+    y,
+    width,
+    height,
+    size,
+    radius,
+    color,
+    opacity,
+  });
+  drawBottomRightCorner(context, {
+    x: x + availableWidth,
+    y: y + availableHeight,
+    width,
+    height,
+    size,
+    radius,
+    color,
+    opacity,
+  });
+  drawBottomLeftCorner(context, {
+    x,
+    y: y + availableHeight,
+    width,
+    height,
+    size,
+    radius,
+    color,
+    opacity,
+  });
+};
+const drawTopLeftCorner = (
+  context,
+  { x, y, width, height, size, radius, color, opacity = 1 },
 ) => {
   context.lineWidth = size;
+  context.globalAlpha = opacity;
+  const leftLineStart = [x + size / 2, y + radius + size / 2];
+  const leftLineEnd = [x + size / 2, y + height];
+  const topLineStart = [x + radius + size / 2, y + size / 2];
+  const topLineEnd = [x + width, y + size / 2];
+  const controlPoint = [x + size / 2, y + size / 2];
+  if (leftLineStart[1] < leftLineEnd[1]) {
+    drawLine(context, [leftLineStart[0], leftLineStart[1] - 1], leftLineEnd, {
+      color,
+    });
+  }
+  if (radius === 0) {
+    drawRect(
+      context,
+      [x + size / 2, y + size / 2],
+      [x + size / 2 + size / 4, y + size / 2 + size / 4],
+      { color },
+    );
+  } else {
+    drawArcTo(context, leftLineStart, controlPoint, topLineStart, radius, {
+      color,
+    });
+  }
+  if (topLineStart[0] < topLineEnd[0]) {
+    drawLine(context, [topLineStart[0] - 1, topLineStart[1]], topLineEnd, {
+      color,
+    });
+  }
+};
+const drawTopRightCorner = (
+  context,
+  { x, y, width, height, size, radius, color, opacity = 1 },
+) => {
+  context.lineWidth = size;
+  context.globalAlpha = opacity;
+  const topLineStart = [x - width, y + size / 2];
+  const topLineEnd = [x - radius - size / 2, y + size / 2];
+  const rightLineStart = [x - size / 2, y + radius + size / 2];
+  const rightLineEnd = [x - size / 2, y + height];
+  const controlPoint = [x - size / 2, y + size / 2];
+  if (topLineStart[0] < topLineEnd[0]) {
+    drawLine(context, topLineStart, topLineEnd, { color });
+  }
+  drawArcTo(context, topLineEnd, controlPoint, rightLineStart, radius, {
+    color,
+  });
+  if (rightLineStart[1] < rightLineEnd[1]) {
+    drawLine(context, rightLineStart, rightLineEnd, { color });
+  }
+};
+const drawBottomRightCorner = (
+  context,
+  { x, y, width, height, size, radius, color, opacity },
+) => {
+  context.lineWidth = size;
+  context.globalAlpha = opacity;
+  const rightLineStart = [x - size / 2, y - height];
+  const rightLineEnd = [x - size / 2, y - radius - size / 2];
+  const bottomLineStart = [x - radius - size / 2, y - size / 2];
+  const bottomLineEnd = [x - width, y - size / 2];
+  const controlPoint = [x - size / 2, y - size / 2];
+  if (rightLineStart[1] < rightLineEnd[1]) {
+    drawLine(context, rightLineStart, rightLineEnd, { color });
+  }
+  drawArcTo(context, rightLineEnd, controlPoint, bottomLineStart, radius, {
+    color,
+  });
+  if (bottomLineStart[0] > bottomLineEnd[0]) {
+    drawLine(context, bottomLineStart, bottomLineEnd, { color });
+  }
+};
+const drawBottomLeftCorner = (
+  context,
+  { x, y, width, height, size, radius, color, opacity = 1 },
+) => {
+  context.lineWidth = size;
+  context.globalAlpha = opacity;
+  const leftLineStart = [x + size / 2, y - height];
+  const leftLineEnd = [x + size / 2, y - radius - size / 2];
+  const bottomLineStart = [x + radius + size / 2, y - size / 2];
+  const bottomLineEnd = [x + width, y - size / 2];
+  const controlPoint = [x + size / 2, y - size / 2];
+  if (leftLineStart[1] < leftLineEnd[1]) {
+    drawLine(context, leftLineStart, leftLineEnd, { color });
+  }
+  drawArcTo(context, leftLineEnd, controlPoint, bottomLineStart, radius, {
+    color,
+  });
+  if (bottomLineStart[0] < bottomLineEnd[0]) {
+    drawLine(context, bottomLineStart, bottomLineEnd, { color });
+  }
+};
+
+const drawLine = (context, start, end, { color } = {}) => {
   context.beginPath();
-  context.moveTo(x + radius, y);
-  context.lineTo(x + width - radius, y);
-  context.quadraticCurveTo(x + width, y, x + width, y + radius);
-  context.lineTo(x + width, y + height - radius);
-  context.quadraticCurveTo(
-    x + width,
-    y + height,
-    x + width - radius,
-    y + height,
-  );
-  context.lineTo(x + radius, y + height);
-  context.quadraticCurveTo(x, y + height, x, y + height - radius);
-  context.lineTo(x, y + radius);
-  context.quadraticCurveTo(x, y, x + radius, y);
-  context.closePath();
+  context.moveTo(start[0], start[1]);
+  context.lineTo(end[0], end[1]);
   if (color) {
     context.strokeStyle = color;
     context.stroke();
   }
 };
-
-// const drawBorderPath = (context, { left, top, width, height, size, color }) => {
-//   let x;
-//   let y;
-//   const moveTo = (_x, _y) => {
-//     x = _x;
-//     y = _y;
-//     context.moveTo(x, y);
-//   };
-//   const lineX = (_x) => {
-//     x = _x;
-//     context.lineTo(x, y);
-//   };
-//   const lineY = (_y) => {
-//     y = _y;
-//     context.lineTo(x, y);
-//   };
-
-//   context.beginPath();
-//   context.lineWidth = size;
-//   moveTo(left + size / 2, top + size / 2);
-//   lineX(width - size / 2);
-//   lineY(height - size / 2);
-//   lineX(left + size / 2);
-//   lineY(top + size / 2);
-//   context.closePath();
-//   if (color) {
-//     context.strokeStyle = color;
-//     context.stroke();
-//   }
-// };
+const drawRect = (context, start, end, { color }) => {
+  context.beginPath();
+  context.rect(start[0], start[1], end[0] - start[0], end[1] - start[1]);
+  if (color) {
+    context.strokeStyle = color;
+    context.stroke();
+  }
+};
+const drawArcTo = (
+  context,
+  start,
+  controlPoint,
+  end,
+  radius,
+  { color } = {},
+) => {
+  context.beginPath();
+  context.moveTo(start[0], start[1]);
+  context.arcTo(controlPoint[0], controlPoint[1], end[0], end[1], radius);
+  if (color) {
+    context.strokeStyle = color;
+    context.stroke();
+  }
+};
