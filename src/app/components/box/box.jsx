@@ -3,6 +3,7 @@ import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 import { getAvailableSize } from "../../utils/get_available_size.js";
 import boxStylesheet from "./box.css" with { type: "css" };
 import { MultiBorder } from "./multi_border.jsx";
+import { Spacing } from "./spacing.jsx";
 
 document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];
 if (import.meta.hot) {
@@ -90,8 +91,6 @@ const BoxComponent = (
     innerSpacingLeft,
     innerSpacingRight,
     innerSpacingBottom,
-    outerSpacing,
-    outerSpacingTop,
     ratio,
     backgroundColor,
     border,
@@ -195,52 +194,6 @@ const BoxComponent = (
     cursor,
     ...props.style,
   };
-  if (innerSpacing !== undefined) {
-    style.padding = isFinite(innerSpacing)
-      ? parseInt(innerSpacing)
-      : SPACING_SIZES[innerSpacing] || innerSpacing;
-  }
-  if (innerSpacingY) {
-    style.paddingTop = style.paddingBottom = isFinite(innerSpacingY)
-      ? parseInt(innerSpacingY)
-      : SPACING_SIZES[innerSpacingY] || innerSpacingY;
-  }
-  if (innerSpacingX) {
-    style.paddingLeft = style.paddingRight = isFinite(innerSpacingX)
-      ? parseInt(innerSpacingX)
-      : SPACING_SIZES[innerSpacingX] || innerSpacingX;
-  }
-  if (innerSpacingTop) {
-    style.paddingTop = isFinite(innerSpacingTop)
-      ? parseInt(innerSpacingTop)
-      : SPACING_SIZES[innerSpacingTop] || innerSpacingTop;
-  }
-  if (innerSpacingLeft) {
-    style.paddingLeft = isFinite(innerSpacingLeft)
-      ? parseInt(innerSpacingLeft)
-      : SPACING_SIZES[innerSpacingLeft] || innerSpacingLeft;
-  }
-  if (innerSpacingRight) {
-    style.paddingRight = isFinite(innerSpacingRight)
-      ? parseInt(innerSpacingRight)
-      : SPACING_SIZES[innerSpacingRight] || innerSpacingRight;
-  }
-  if (innerSpacingBottom) {
-    style.paddingBottom = isFinite(innerSpacingBottom)
-      ? parseInt(innerSpacingBottom)
-      : SPACING_SIZES[innerSpacingBottom] || innerSpacingBottom;
-  }
-  if (outerSpacing) {
-    style.margin = isFinite(outerSpacing)
-      ? parseInt(outerSpacing)
-      : SPACING_SIZES[outerSpacing] || outerSpacing;
-  }
-  if (outerSpacingTop) {
-    style.marginTop =
-      typeof outerSpacingTop === "number"
-        ? outerSpacingTop
-        : SPACING_SIZES[outerSpacingTop];
-  }
   if (height === "..." || width === "...") {
     style.minWidth = 0;
     style.minHeight = 0;
@@ -304,17 +257,7 @@ const BoxComponent = (
   if (borders.length) {
     style.borderRadius = borders[0].radius;
   }
-  const needsSpacingContainer = Boolean(
-    innerSpacing ||
-      innerSpacingX ||
-      innerSpacingY ||
-      innerSpacingBottom ||
-      innerSpacingTop ||
-      innerSpacingLeft,
-  );
-  if (!needsSpacingContainer) {
-    Object.assign(style, styleForContentPosition);
-  }
+  Object.assign(style, styleForContentPosition);
 
   return (
     <NodeName
@@ -328,26 +271,17 @@ const BoxComponent = (
       style={style}
     >
       <MultiBorder borders={borders} backgroundColor={backgroundColor}>
-        {/*
-         * This wrapper div ensure children takes dimension - padding into account when
-         * they positions and dimensions themselves
-         */}
-        {needsSpacingContainer ? (
-          <div
-            name="spacing_container"
-            style={{
-              ...styleForContentPosition,
-              display: "inline-flex",
-              width: "100%",
-              height: "100%",
-              position: "relative",
-            }}
-          >
-            {children}
-          </div>
-        ) : (
-          children
-        )}
+        <Spacing
+          around={innerSpacing}
+          x={innerSpacingX}
+          y={innerSpacingY}
+          top={innerSpacingTop}
+          bottom={innerSpacingBottom}
+          left={innerSpacingLeft}
+          right={innerSpacingRight}
+        >
+          {children}
+        </Spacing>
       </MultiBorder>
     </NodeName>
   );
@@ -363,14 +297,4 @@ Box.canvas = (props) => {
 };
 Box.button = (props) => {
   return <Box NodeName="button" {...props} />;
-};
-
-const SPACING_SIZES = {
-  xxl: 100,
-  xl: 50,
-  l: 20,
-  md: 10,
-  s: 5,
-  xs: 2,
-  xxs: 1,
 };

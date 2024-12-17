@@ -4,7 +4,6 @@ export const MultiBorder = ({ borders, backgroundColor, children }) => {
   if (borders.length === 0) {
     return <>{children}</>;
   }
-
   let i = borders.length;
   while (i--) {
     const isLastBorder = i === borders.length - 1;
@@ -18,7 +17,6 @@ export const MultiBorder = ({ borders, backgroundColor, children }) => {
       </CornersWrapper>
     );
   }
-
   return <>{children}</>;
 };
 
@@ -140,7 +138,7 @@ const CornersWrapper = ({
   return (
     <div
       style={{
-        borderWidth: `${cornerSize}px`,
+        borderWidth: `${cornerSize + strokeSize}px`,
         borderStyle: "solid",
         borderColor: "transparent",
         borderRadius: `${cornerRadius}px`,
@@ -155,7 +153,7 @@ const CornersWrapper = ({
       <div
         style={{
           position: "absolute",
-          inset: `-${cornerSize}px`,
+          inset: `-${cornerSize + strokeSize}px`,
         }}
       >
         <svg
@@ -175,6 +173,8 @@ const CornersWrapper = ({
             radius={cornerRadius}
             color={color}
             opacity={opacity}
+            strokeSize={strokeSize}
+            strokeColor={strokeColor}
           />
         </svg>
       </div>

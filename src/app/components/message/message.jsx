@@ -13,13 +13,13 @@ const MessageComponent = (
   {
     children,
     backgroundColor = "black",
-    borderRadius = 5,
-    borderColor = "white",
-    borderOutlineColor = "black",
-    borderOutlineSize = 1,
-    borderSize = 2,
-    outlineColor = "black",
     color = "white",
+    borderColor = "white",
+    borderStrokeColor = "black",
+    borderSize = 5,
+    borderStrokeSize = 3,
+    borderRadius = 5,
+    textOutlineColor = "black",
     overflow,
     textController,
     ...props
@@ -35,11 +35,13 @@ const MessageComponent = (
       maxWidth="100%"
       cursor="default"
       backgroundColor={backgroundColor}
-      borderColor={borderColor}
-      borderOutlineColor={borderOutlineColor}
-      borderSize={borderSize}
-      borderOutlineSize={borderOutlineSize}
-      borderRadius={borderRadius}
+      border={{
+        color: borderColor,
+        size: borderSize,
+        strokeColor: borderStrokeColor,
+        strokeSize: borderStrokeSize,
+        radius: borderRadius,
+      }}
       {...props}
       style={{
         userSelect: "none",
@@ -50,7 +52,7 @@ const MessageComponent = (
         ref={ref}
         controller={textController}
         color={color}
-        outlineColor={outlineColor}
+        outlineColor={textOutlineColor}
         overflow={overflow}
       >
         {children}
