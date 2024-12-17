@@ -14,11 +14,11 @@ if (import.meta.hot) {
 }
 
 export const borderWithStroke = ({
-  color,
+  color = "black",
   size = 2,
   strokeColor,
   strokeSize = 1,
-  radius,
+  radius = 0,
   opacity,
 }) => {
   return [
@@ -43,14 +43,20 @@ export const borderWithStroke = ({
   ];
 };
 
-export const outlinePartial = ({ size, color = "lightblue", opacity }) => {
+export const outlinePartial = ({
+  width = "10%",
+  height = "10%",
+  size,
+  color = "lightblue",
+  opacity,
+}) => {
   return [
     {
       size,
       color,
       opacity,
-      width: "10%",
-      height: "10%",
+      width,
+      height,
     },
   ];
 };

@@ -8,11 +8,11 @@ export const MultiBorder = ({ borders, children }) => {
 };
 
 const CornersWrapper = ({
-  width,
-  height,
+  width = "50%",
+  height = "50%",
   size,
   color,
-  radius,
+  radius = 0,
   opacity,
   children,
 }) => {
@@ -20,7 +20,7 @@ const CornersWrapper = ({
   const svgRef = useRef();
   const [availableWidth, setAvailableWidth] = useState(0);
   const [availableHeight, setAvailableHeight] = useState(0);
-  const [borderWidth, borderWidthSetter] = useState(0);
+  const [borderWidthComputed, borderWidthComputedSetter] = useState(0);
 
   useLayoutEffect(() => {
     const svg = svgRef.current;
@@ -35,8 +35,9 @@ const CornersWrapper = ({
       setAvailableWidth(availableWidth);
       setAvailableHeight(availableHeight);
       const div = divRef.current;
-      const { borderWidth } = window.getComputedStyle(div, null);
-      borderWidthSetter(parseFloat(borderWidth));
+      let { borderWidth } = window.getComputedStyle(div, null);
+      borderWidth = parseFloat(borderWidth);
+      borderWidthComputedSetter(borderWidth);
     });
     observer.observe(svgParentNode);
     return () => {
@@ -45,7 +46,7 @@ const CornersWrapper = ({
   }, [size, color, radius]);
 
   // si c'est en em comment on fait?
-  const borderWidthComputed = isFinite(size) ? `${parseInt(size)}px` : size;
+  const borderWidthCssValue = isFinite(size) ? `${parseInt(size)}px` : size;
   const cornerWidth =
     typeof width === "string" && width.endsWith("%")
       ? availableWidth * (parseInt(width) / 100)
@@ -60,7 +61,7 @@ const CornersWrapper = ({
     <div
       ref={divRef}
       style={{
-        borderWidth: borderWidthComputed,
+        borderWidth: borderWidthCssValue,
         borderStyle: "solid",
         borderColor: "transparent",
         position: "relative",
@@ -72,7 +73,7 @@ const CornersWrapper = ({
       <div
         style={{
           position: "absolute",
-          inset: `-${borderWidthComputed}`,
+          inset: `-${borderWidthCssValue}`,
         }}
       >
         <svg
@@ -88,7 +89,7 @@ const CornersWrapper = ({
             y={0}
             width={cornerWidth}
             height={cornerHeight}
-            size={borderWidth}
+            size={borderWidthComputed}
             radius={cornerRadius}
             color={color}
             opacity={opacity}
