@@ -33,6 +33,7 @@
       const App = () => {
         return (
           <>
+            {/*
             <div style="display: flex;">
               <div style="margin:10px">
                 <Box width="100" height="200" style={{ background: "green" }}>
@@ -92,6 +93,8 @@
                 </Box>
               </div>
             </div>
+            */}
+            {/*
             <div style="display: flex;">
               <div style="margin:10px">
                 <Box
@@ -184,8 +187,30 @@
                 </Box>
               </div>
             </div>
+             */}
 
             <div style="display:flex">
+              <div style="margin:10px">
+                <Box
+                  width="100"
+                  border={[
+                    {
+                      size: 10,
+                      color: "red",
+                      outside: true,
+                      opacity: 0.5,
+                    },
+                    {
+                      size: 5,
+                      color: "blue",
+                      opacity: 0.3,
+                    },
+                  ]}
+                >
+                  Coucou
+                </Box>
+              </div>
+
               {/*<div style="margin:10px">
                 <Box width="100" border={borderOutsidePartial({ size: 1 })}>
                   Coucou

@@ -259,15 +259,21 @@ const BoxComponent = (
   }
   Object.assign(style, styleForContentPosition);
 
-  const [resolvedBorders, availableWidth, availableHeight, borderFullSize] =
-    useMultiBorder(innerRef, borders);
+  const [
+    resolvedBorders,
+    borderWidth,
+    borderHeight,
+    borderFullSize,
+    solidBorderFullSize,
+    borderRadius,
+  ] = useMultiBorder(innerRef, borders);
 
-  if (resolvedBorders.length) {
-    style.borderWidth = `${borderFullSize}px`;
+  if (solidBorderFullSize) {
+    style.borderWidth = `${solidBorderFullSize}px`;
     style.borderColor = "transparent";
     style.borderStyle = "solid";
     style.backgroundClip = "padding-box";
-    style.borderRadius = resolvedBorders[0].radius;
+    style.borderRadius = borderRadius;
   }
 
   return (
@@ -283,10 +289,10 @@ const BoxComponent = (
     >
       <MultiBorder
         borders={resolvedBorders}
-        width={availableWidth}
-        height={availableHeight}
+        width={borderWidth}
+        height={borderHeight}
         borderFullSize={borderFullSize}
-      ></MultiBorder>
+      />
       <Spacing
         around={innerSpacing}
         x={innerSpacingX}
