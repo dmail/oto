@@ -2,7 +2,7 @@ import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 import { getAvailableSize } from "../../utils/get_available_size.js";
 import boxStylesheet from "./box.css" with { type: "css" };
-import { MultiBorder } from "./multi_border.jsx";
+import { MultiBorder, useMultiBorder } from "./multi_border.jsx";
 import { Spacing } from "./spacing.jsx";
 
 document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];
@@ -190,6 +190,7 @@ const BoxComponent = (
         : height,
     maxWidth: isFinite(maxWidth) ? `${maxWidth}px` : maxWidth,
     maxHeight: isFinite(maxHeight) ? `${maxHeight}px` : maxHeight,
+    backgroundColor,
     cursor,
     ...props.style,
   };
@@ -258,6 +259,17 @@ const BoxComponent = (
   }
   Object.assign(style, styleForContentPosition);
 
+  const [resolvedBorders, availableWidth, availableHeight, borderFullSize] =
+    useMultiBorder(innerRef, borders);
+
+  if (resolvedBorders.length) {
+    style.borderWidth = `${borderFullSize}px`;
+    style.borderColor = "transparent";
+    style.borderStyle = "solid";
+    style.backgroundClip = "padding-box";
+    style.borderRadius = resolvedBorders[0].radius;
+  }
+
   return (
     <NodeName
       ref={innerRef}
@@ -269,19 +281,23 @@ const BoxComponent = (
       data-invisible={invisible || undefined}
       style={style}
     >
-      <MultiBorder borders={borders} backgroundColor={backgroundColor}>
-        <Spacing
-          around={innerSpacing}
-          x={innerSpacingX}
-          y={innerSpacingY}
-          top={innerSpacingTop}
-          bottom={innerSpacingBottom}
-          left={innerSpacingLeft}
-          right={innerSpacingRight}
-        >
-          {children}
-        </Spacing>
-      </MultiBorder>
+      <MultiBorder
+        borders={resolvedBorders}
+        width={availableWidth}
+        height={availableHeight}
+        borderFullSize={borderFullSize}
+      ></MultiBorder>
+      <Spacing
+        around={innerSpacing}
+        x={innerSpacingX}
+        y={innerSpacingY}
+        top={innerSpacingTop}
+        bottom={innerSpacingBottom}
+        left={innerSpacingLeft}
+        right={innerSpacingRight}
+      >
+        {children}
+      </Spacing>
     </NodeName>
   );
 };

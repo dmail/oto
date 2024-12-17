@@ -28,7 +28,7 @@
     <script type="module" jsenv-type="module/jsx">
       /* eslint-disable no-unused-vars */
       import { render } from "preact";
-      import { Box, borderWithStroke, outlinePartial } from "./box.jsx";
+      import { Box, borderWithStroke, borderOutsidePartial } from "./box.jsx";
 
       const App = () => {
         return (
@@ -186,13 +186,13 @@
             </div>
 
             <div style="display:flex">
-              <div style="margin:10px">
-                <Box width="100" border={outlinePartial({ size: 1 })}>
+              {/*<div style="margin:10px">
+                <Box width="100" border={borderOutsidePartial({ size: 1 })}>
                   Coucou
                 </Box>
-              </div>
+              </div>*/}
 
-              <div style="margin:10px">
+              {/*<div style="margin:10px">
                 <Box
                   width="500"
                   border={borderWithStroke({
@@ -205,7 +205,7 @@
                 >
                   Coucou
                 </Box>
-              </div>
+              </div>*/}
             </div>
           </>
         );

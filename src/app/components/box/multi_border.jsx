@@ -1,49 +1,12 @@
-import { useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useLayoutEffect, useState } from "preact/hooks";
 
-export const MultiBorder = ({ borders, backgroundColor, children }) => {
-  if (borders.length === 0) {
-    return <>{children}</>;
-  }
-  let i = borders.length;
-  while (i--) {
-    const isLastBorder = i === borders.length - 1;
-    const border = borders[i];
-    children = (
-      <CornersWrapper
-        {...border}
-        backgroundColor={isLastBorder ? backgroundColor : undefined}
-      >
-        {children}
-      </CornersWrapper>
-    );
-  }
-  return <>{children}</>;
-};
-
-const CornersWrapper = ({
-  width = "50%",
-  height = "50%",
-  minWidth,
-  minHeight,
-  size,
-  radius = 0,
-  color,
-  strokeColor,
-  strokeSize = 0,
-  opacity,
-  outside,
-  spacing = 0,
-  backgroundColor,
-  children,
-}) => {
-  const svgRef = useRef();
+export const useMultiBorder = (ref, borders) => {
   const [availableWidth, setAvailableWidth] = useState(0);
   const [availableHeight, setAvailableHeight] = useState(0);
   const [fontSizeComputed, fontSizeComputedSetter] = useState(16);
 
   useLayoutEffect(() => {
-    const svg = svgRef.current;
-    const elementToObserve = svg.parentNode;
+    const elementToObserve = ref.current;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) {
@@ -54,7 +17,7 @@ const CornersWrapper = ({
       setAvailableWidth(availableWidth);
       setAvailableHeight(availableHeight);
 
-      let { fontSize } = window.getComputedStyle(svg, null);
+      let { fontSize } = window.getComputedStyle(elementToObserve, null);
       fontSize = parseFloat(fontSize);
       fontSizeComputedSetter(fontSize);
     });
@@ -64,122 +27,112 @@ const CornersWrapper = ({
     };
   }, []);
 
-  const cornerSize = resolveSize(size, {
-    availableSize: availableWidth,
-    fontSize: fontSizeComputed,
-  });
-  let [cornerWidth, cornerHeight] = resolveDimensions({
-    width,
-    height,
-    availableWidth,
-    availableHeight,
-    fontSize: fontSizeComputed,
-  });
-  minWidth = resolveSize(minWidth, {
-    availableSize: availableWidth,
-    fontSize: fontSizeComputed,
-  });
-  if (minWidth && cornerWidth < minWidth) {
-    cornerWidth = minWidth;
+  const resolvedBorders = [];
+  let borderFullSize = 0;
+  let x = 0;
+  let y = 0;
+  let remainingWidth = availableWidth;
+  let remainingHeight = availableHeight;
+  for (const border of borders) {
+    let {
+      size,
+      width = "50%",
+      height = "50%",
+      minWidth,
+      minHeight,
+      spacing = 0,
+      radius = 0,
+    } = border;
+    let [cornerWidth, cornerHeight] = resolveDimensions({
+      width,
+      height,
+      availableWidth: remainingWidth,
+      availableHeight: remainingHeight,
+      fontSize: fontSizeComputed,
+    });
+    minWidth = resolveSize(minWidth, {
+      availableSize: remainingWidth,
+      fontSize: fontSizeComputed,
+    });
+    if (minWidth && cornerWidth < minWidth) {
+      cornerWidth = minWidth;
+    }
+    minHeight = resolveSize(minHeight, {
+      availableSize: remainingHeight,
+      fontSize: fontSizeComputed,
+    });
+    if (minHeight && cornerHeight < minHeight) {
+      cornerHeight = minHeight;
+    }
+    const resolvedBorder = {
+      ...border,
+      x,
+      y,
+      width: cornerWidth,
+      height: cornerHeight,
+      rectangleWidth: remainingWidth,
+      rectangleHeight: remainingHeight,
+      size: resolveSize(size, {
+        availableSize: remainingWidth,
+        fontSize: fontSizeComputed,
+      }),
+      radius: resolveSize(radius, {
+        availableSize: remainingWidth,
+        fontSize: fontSizeComputed,
+      }),
+      spacing: resolveSize(spacing, {
+        availableSize: remainingWidth,
+        fontSize: fontSizeComputed,
+      }),
+    };
+    const sizeTakenByBorder = resolvedBorder.size + resolvedBorder.spacing;
+    borderFullSize += sizeTakenByBorder;
+    x += sizeTakenByBorder;
+    y += sizeTakenByBorder;
+    remainingWidth -= sizeTakenByBorder * 2;
+    remainingHeight -= sizeTakenByBorder * 2;
+    resolvedBorders.push(resolvedBorder);
   }
-  minHeight = resolveSize(minHeight, {
-    availableSize: availableHeight,
-    fontSize: fontSizeComputed,
-  });
-  if (minHeight && cornerHeight < minHeight) {
-    cornerHeight = minHeight;
-  }
-  spacing = resolveSize(spacing, {
-    availableSize: availableWidth,
-    fontSize: fontSizeComputed,
-  });
-  const cornerRadius = resolveSize(radius, {
-    availableSize: availableWidth,
-    fontSize: fontSizeComputed,
-  });
 
-  if (outside) {
-    return (
-      <>
-        <div
-          style={{
-            position: "absolute",
-            zIndex: "-1",
-            inset: `-${cornerSize + spacing + strokeSize}px`,
-          }}
-        >
-          <svg
-            ref={svgRef}
-            style={{ overflow: "visible" }}
-            width={availableWidth}
-            height={availableHeight}
-          >
-            <Corners
-              rectangleWidth={availableWidth}
-              rectangleHeight={availableHeight}
-              x={0}
-              y={0}
-              width={cornerWidth}
-              height={cornerHeight}
-              size={cornerSize}
-              radius={cornerRadius}
-              color={color}
-              opacity={opacity}
-              strokeColor={strokeColor}
-              strokeSize={strokeSize}
-            />
-          </svg>
-        </div>
-        {children}
-      </>
-    );
+  return [resolvedBorders, availableWidth, availableHeight, borderFullSize];
+};
+
+export const MultiBorder = ({
+  width,
+  height,
+  borders,
+  borderFullSize,
+  children,
+}) => {
+  const corners = [];
+  for (const border of borders) {
+    const cornerProps = {
+      ...border,
+    };
+    corners.push(<Corners {...cornerProps}></Corners>);
   }
+  // const svgRef= useRef();
 
   return (
-    <div
-      style={{
-        borderWidth: `${cornerSize + strokeSize}px`,
-        borderStyle: "solid",
-        borderColor: backgroundColor || "transparent",
-        borderRadius: `${cornerRadius}px`,
-        backgroundClip: "padding-box",
-        backgroundColor,
-        position: "relative",
-        display: "inline-flex",
-        width: "100%",
-        height: "100%",
-      }}
-    >
+    <>
       <div
+        name="multi_border"
         style={{
           position: "absolute",
-          inset: `-${cornerSize + strokeSize}px`,
+          inset: `-${borderFullSize}px`,
         }}
       >
         <svg
-          ref={svgRef}
+          // ref={svgRef}
           style={{ overflow: "visible" }}
-          width={availableWidth}
-          height={availableHeight}
+          width={width}
+          height={height}
         >
-          <Corners
-            rectangleWidth={availableWidth}
-            rectangleHeight={availableHeight}
-            x={0}
-            y={0}
-            width={cornerWidth}
-            height={cornerHeight}
-            size={cornerSize}
-            radius={cornerRadius}
-            color={color}
-            opacity={opacity}
-            strokeSize={strokeSize}
-            strokeColor={strokeColor}
-          />
+          {corners}
         </svg>
       </div>
       {children}
-    </div>
+    </>
   );
 };
 
@@ -212,7 +165,7 @@ const Corners = ({
         opacity={opacity}
       />
       <TopRightCorner
-        x={rectangleWidth}
+        x={x + rectangleWidth}
         y={y}
         width={width}
         height={height}
@@ -224,8 +177,8 @@ const Corners = ({
         opacity={opacity}
       />
       <BottomRightCorner
-        x={rectangleWidth}
-        y={rectangleHeight}
+        x={x + rectangleWidth}
+        y={y + rectangleHeight}
         width={width}
         height={height}
         size={size}
@@ -237,7 +190,7 @@ const Corners = ({
       />
       <BottomLeftCorner
         x={x}
-        y={rectangleHeight}
+        y={y + rectangleHeight}
         width={width}
         height={height}
         size={size}
@@ -262,6 +215,9 @@ const TopLeftCorner = ({
   strokeSize,
   opacity,
 }) => {
+  if (size <= 0 || width <= 0) {
+    return null;
+  }
   if (size > width) {
     size = width;
   }
@@ -269,9 +225,7 @@ const TopLeftCorner = ({
     size = height;
   }
   let d;
-  if (size === 0) {
-    d = [];
-  } else if (radius > 0) {
+  if (radius > 0) {
     const outerRadius = radius;
     const innerRadius = outerRadius - size;
     d = [
@@ -323,6 +277,9 @@ const TopRightCorner = ({
   strokeSize,
   opacity,
 }) => {
+  if (size <= 0 || width <= 0) {
+    return null;
+  }
   if (size > width) {
     size = width;
   }
@@ -331,9 +288,7 @@ const TopRightCorner = ({
   }
 
   let d;
-  if (size === 0) {
-    d = [];
-  } else if (radius > 0) {
+  if (radius > 0) {
     const outerRadius = radius;
     const innerRadius = outerRadius - size;
     d = [
@@ -386,6 +341,9 @@ const BottomRightCorner = ({
   strokeSize,
   opacity,
 }) => {
+  if (size <= 0 || width <= 0) {
+    return null;
+  }
   if (size > width) {
     size = width;
   }
@@ -394,9 +352,7 @@ const BottomRightCorner = ({
   }
 
   let d;
-  if (size === 0) {
-    d = [];
-  } else if (radius > 0) {
+  if (radius > 0) {
     const outerRadius = radius;
     const innerRadius = outerRadius - size;
     d = [
@@ -449,6 +405,9 @@ const BottomLeftCorner = ({
   strokeSize,
   opacity,
 }) => {
+  if (size <= 0 || width <= 0) {
+    return null;
+  }
   if (size > width) {
     size = width;
   }
@@ -457,9 +416,7 @@ const BottomLeftCorner = ({
   }
 
   let d;
-  if (size === 0) {
-    d = [];
-  } else if (radius > 0) {
+  if (radius > 0) {
     const outerRadius = radius;
     const innerRadius = outerRadius - size;
     d = [
