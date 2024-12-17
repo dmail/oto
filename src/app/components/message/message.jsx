@@ -6,7 +6,7 @@
 */
 
 import { forwardRef } from "preact/compat";
-import { Box } from "/app/components/box/box.jsx";
+import { Box, borderWithStroke } from "/app/components/box/box.jsx";
 import { Text } from "/app/components/text/text.jsx";
 
 const MessageComponent = (
@@ -17,7 +17,7 @@ const MessageComponent = (
     borderColor = "white",
     borderStrokeColor = "black",
     borderSize = 5,
-    borderStrokeSize = 3,
+    borderStrokeSize = 1,
     borderRadius = 5,
     textOutlineColor = "black",
     overflow,
@@ -35,13 +35,13 @@ const MessageComponent = (
       maxWidth="100%"
       cursor="default"
       backgroundColor={backgroundColor}
-      border={{
+      border={borderWithStroke({
         color: borderColor,
         size: borderSize,
         strokeColor: borderStrokeColor,
         strokeSize: borderStrokeSize,
         radius: borderRadius,
-      }}
+      })}
       {...props}
       style={{
         userSelect: "none",

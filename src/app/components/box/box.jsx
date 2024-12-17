@@ -43,8 +43,7 @@ export const borderWithStroke = ({
     },
   ];
 };
-
-export const outlinePartial = ({
+export const borderOutsidePartial = ({
   width = "10%",
   height = "10%",
   minWidth = "0.7em",
