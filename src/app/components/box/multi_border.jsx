@@ -58,24 +58,29 @@ export const useMultiBorder = (ref, borders) => {
   }
   const rectangleWidth = availableWidth + outsideBorderFullSize * 2;
   const rectangleHeight = availableHeight + outsideBorderFullSize * 2;
+  let remainingWidth = rectangleWidth;
+  let remainingHeight = rectangleHeight;
+  let x = 0;
+  let y = 0;
+
   for (const resolvedBorder of resolvedBorders) {
     let { width = "50%", height = "50%", minWidth, minHeight } = resolvedBorder;
     let [cornerWidth, cornerHeight] = resolveDimensions({
       width,
       height,
-      availableWidth: rectangleWidth,
-      availableHeight: rectangleHeight,
+      availableWidth: remainingWidth,
+      availableHeight: remainingHeight,
       fontSize,
     });
     minWidth = resolveSize(minWidth, {
-      availableSize: rectangleWidth,
+      availableSize: remainingWidth,
       fontSize,
     });
     if (minWidth && cornerWidth < minWidth) {
       cornerWidth = minWidth;
     }
     minHeight = resolveSize(minHeight, {
-      availableSize: rectangleHeight,
+      availableSize: remainingHeight,
       fontSize,
     });
     if (minHeight && cornerHeight < minHeight) {
@@ -83,6 +88,16 @@ export const useMultiBorder = (ref, borders) => {
     }
     resolvedBorder.width = cornerWidth;
     resolvedBorder.height = cornerHeight;
+    resolvedBorder.x = x;
+    resolvedBorder.y = y;
+    resolvedBorder.rectangleWidth = remainingWidth;
+    resolvedBorder.rectangleHeight = remainingHeight;
+
+    const sizeTakenByBorder = resolvedBorder.size + resolvedBorder.spacing;
+    x += sizeTakenByBorder;
+    y += sizeTakenByBorder;
+    remainingWidth -= sizeTakenByBorder * 2;
+    remainingHeight -= sizeTakenByBorder * 2;
   }
 
   return [
@@ -99,29 +114,10 @@ export const MultiBorder = ({ borders, borderFullSize, width, height }) => {
   if (borders.length === 0) {
     return null;
   }
-
   const children = [];
   let index = 0;
-  let remainingWidth = width;
-  let remainingHeight = height;
-  let x = 0;
-  let y = 0;
   for (const border of borders) {
-    children.push(
-      <Corners
-        key={index}
-        {...border}
-        x={x}
-        y={y}
-        rectangleWidth={remainingWidth}
-        rectangleHeight={remainingHeight}
-      />,
-    );
-    const sizeTakenByBorder = border.size + border.spacing;
-    x += sizeTakenByBorder;
-    y += sizeTakenByBorder;
-    remainingWidth -= sizeTakenByBorder * 2;
-    remainingHeight -= sizeTakenByBorder * 2;
+    children.push(<Corners key={index} {...border} />);
     index++;
   }
   return (
