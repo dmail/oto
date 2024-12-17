@@ -31,7 +31,7 @@ export const MultiBorder = ({ borders }) => {
       let remainingWidth = availableWidth;
       let remainingHeight = availableHeight;
       let previousRadius;
-      let previousSize;
+      let previousBorderSize;
       const corners = [];
       for (const border of borders) {
         const borderSize = border.size;
@@ -50,9 +50,17 @@ export const MultiBorder = ({ borders }) => {
             : borderHeightRaw;
         let radius;
         if (previousRadius === undefined) {
-          radius = borderRadius;
+          radius = borderRadius - borderSize / 2;
+          previousRadius = radius;
         } else {
-          radius = previousRadius - previousSize / 2 - borderSize / 2;
+          radius = previousRadius - previousBorderSize / 2 - borderSize / 2;
+          previousRadius = radius;
+          console.log({
+            radius,
+            previousRadius,
+            previousBorderSize,
+            borderSize,
+          });
         }
         corners.push(
           <Corners
@@ -72,8 +80,8 @@ export const MultiBorder = ({ borders }) => {
         yConsumed += borderSize;
         rightConsumed += borderSize;
         bottomConsumed += borderSize;
-        previousSize = borderSize;
-        previousRadius = radius;
+        previousBorderSize = borderSize;
+
         widthConsumed += borderSize;
         heightConsumed += borderSize;
         remainingWidth = availableWidth - widthConsumed;
@@ -114,7 +122,7 @@ const Corners = ({
   opacity,
 }) => {
   return (
-    <>
+    <g name="corners" data-radius={radius}>
       <TopLeftCorner
         x={x}
         y={y}
@@ -155,7 +163,7 @@ const Corners = ({
         color={color}
         opacity={opacity}
       />
-    </>
+    </g>
   );
 };
 
@@ -187,6 +195,7 @@ const TopLeftCorner = ({
   }
   return (
     <path
+      name="top_left_corner"
       d={d.join(" ")}
       fill="none"
       stroke={color}
@@ -224,6 +233,7 @@ const TopRightCorner = ({
 
   return (
     <path
+      name="top_right_corner"
       d={d.join(" ")}
       fill="none"
       stroke={color}
@@ -261,6 +271,7 @@ const BottomRightCorner = ({
 
   return (
     <path
+      name="bottom_right_corner"
       d={d.join(" ")}
       fill="none"
       stroke={color}
@@ -298,6 +309,7 @@ const BottomLeftCorner = ({
 
   return (
     <path
+      name="bottom_left_corner"
       d={d.join(" ")}
       fill="none"
       stroke={color}
