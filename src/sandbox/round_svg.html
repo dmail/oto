@@ -23,26 +23,6 @@
         const rectangleHeight = height;
 
         // eslint-disable-next-line no-unused-vars
-        const TopLeftCorner = ({ width, height, radius }) => {
-          const strokeWidth = 1;
-          const d = [
-            `M ${radius}, ${height}`,
-            `V ${radius}`,
-            `a ${radius},${radius} 0 0 1 ${radius},${radius}`,
-            `H ${width}`,
-          ];
-
-          return (
-            <path
-              d={d.join("")}
-              fill="none"
-              stroke={color}
-              stroke-width={strokeWidth}
-            />
-          );
-        };
-
-        // eslint-disable-next-line no-unused-vars
         const TopRightCorner = ({
           x = 0,
           y = 0,
@@ -55,26 +35,39 @@
           let d;
           if (radius <= 0) {
             d = [
-              `M ${rectangleWidth - width - x},${y + size / 2}`,
+              `M ${x - width},${y}`,
               `h ${width}`,
-              `M ${rectangleWidth - size / 2 - x},${y + size}`,
-              `v ${height - size}`,
+              `v ${height}`,
+              `h -${size}`,
+              `v -${height - size}`,
+              `h -${width - size}`,
+              `v -${size}`,
             ];
           } else {
+            const innerRadius = radius - size;
             d = [
-              `M ${rectangleWidth - width - x},${y + size / 2}`,
-              `h ${width - size / 2 - radius}`,
+              `M ${x - width},${y}`,
+              `h ${width - radius}`,
               `a ${radius},${radius} 0 0 1 ${radius},${radius}`,
-              `v ${height - size / 2 - radius}`,
+              `v ${height - radius}`,
+              `h -${size}`,
+              ...(innerRadius > 0
+                ? [
+                    `v -${height - size - innerRadius}`,
+                    `a ${innerRadius},${innerRadius} 0 0 0 -${innerRadius},-${innerRadius}`,
+                    `h -${width - innerRadius - size}`,
+                    `v -${size}`,
+                  ]
+                : [`v -${height - size}`, `h ${-width + size}`, `v -${size}`]),
             ];
           }
 
           return (
             <path
               d={d.join(" ")}
-              fill="none"
-              stroke={color}
-              stroke-width={size}
+              stroke-width={1}
+              stroke="black"
+              fill={color}
             />
           );
         };
@@ -83,8 +76,8 @@
         const innerSize = 10;
         const lastSize = 5;
         const outerRadius = radius;
-        const innerRadius = outerRadius - outerSize / 2 - innerSize / 2;
-        const lastRadius = innerRadius - innerSize / 2 - lastSize / 2;
+        const innerRadius = outerRadius - outerSize;
+        const lastRadius = innerRadius - innerSize;
         const outerWidth = width / 2;
         const innerWidth = outerWidth - outerSize;
         const lastWidth = innerWidth - innerSize;
@@ -95,14 +88,15 @@
         return (
           <>
             <TopRightCorner
+              x={rectangleWidth}
               width={outerWidth}
               height={outerHeight}
               radius={outerRadius}
               size={outerSize}
               color={color}
             />
-            <TopRightCorner
-              x={outerSize}
+            {/*<TopRightCorner
+              x={rectangleWidth - outerSize}
               y={outerSize}
               width={innerWidth}
               height={innerHeight}
@@ -111,14 +105,14 @@
               color="red"
             />
             <TopRightCorner
-              x={outerSize + innerSize}
+              x={rectangleWidth - outerSize - innerSize}
               y={outerSize + innerSize}
               width={lastWidth}
               height={lastHeight}
               radius={lastRadius}
               size={lastSize}
               color="green"
-            />
+            />*/}
           </>
         );
       };
@@ -133,7 +127,7 @@
               position: "absolute",
             }}
           >
-            <Rect width={500} height={500} radius={5} color="blue"></Rect>
+            <Rect width={500} height={500} radius={15} color="blue"></Rect>
           </svg>
         );
       };
