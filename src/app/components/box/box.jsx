@@ -192,7 +192,6 @@ const BoxComponent = (
         : height,
     maxWidth: isFinite(maxWidth) ? `${maxWidth}px` : maxWidth,
     maxHeight: isFinite(maxHeight) ? `${maxHeight}px` : maxHeight,
-    backgroundColor,
     cursor,
     ...props.style,
   };
@@ -302,14 +301,16 @@ const BoxComponent = (
       borders.push(border);
     }
   }
+  if (borders.length) {
+    style.borderRadius = borders[0].radius;
+  }
   const needsSpacingContainer = Boolean(
     innerSpacing ||
       innerSpacingX ||
       innerSpacingY ||
       innerSpacingBottom ||
       innerSpacingTop ||
-      innerSpacingLeft ||
-      (borders.length > 0 && backgroundColor),
+      innerSpacingLeft,
   );
   if (!needsSpacingContainer) {
     Object.assign(style, styleForContentPosition);
@@ -326,7 +327,7 @@ const BoxComponent = (
       data-invisible={invisible || undefined}
       style={style}
     >
-      <MultiBorder borders={borders}>
+      <MultiBorder borders={borders} backgroundColor={backgroundColor}>
         {/*
          * This wrapper div ensure children takes dimension - padding into account when
          * they positions and dimensions themselves

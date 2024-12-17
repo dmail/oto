@@ -1,9 +1,24 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 
-export const MultiBorder = ({ borders, children }) => {
-  for (const border of borders.reverse()) {
-    children = <CornersWrapper {...border}>{children}</CornersWrapper>;
+export const MultiBorder = ({ borders, backgroundColor, children }) => {
+  if (borders.length === 0) {
+    return <>{children}</>;
   }
+
+  let i = borders.length;
+  while (i--) {
+    const isLastBorder = i === borders.length - 1;
+    const border = borders[i];
+    children = (
+      <CornersWrapper
+        {...border}
+        backgroundColor={isLastBorder ? backgroundColor : undefined}
+      >
+        {children}
+      </CornersWrapper>
+    );
+  }
+
   return <>{children}</>;
 };
 
@@ -20,10 +35,10 @@ const CornersWrapper = ({
   opacity,
   outside,
   spacing = 0,
+  backgroundColor,
   children,
 }) => {
   const svgRef = useRef();
-  const divRef = useRef();
   const [availableWidth, setAvailableWidth] = useState(0);
   const [availableHeight, setAvailableHeight] = useState(0);
   const [fontSizeComputed, fontSizeComputedSetter] = useState(16);
@@ -46,20 +61,6 @@ const CornersWrapper = ({
       fontSizeComputedSetter(fontSize);
     });
     observer.observe(elementToObserve);
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  useLayoutEffect(() => {
-    const svg = svgRef.current;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) {
-        return;
-      }
-    });
-    observer.observe(svg);
     return () => {
       observer.disconnect();
     };
@@ -103,7 +104,6 @@ const CornersWrapper = ({
     return (
       <>
         <div
-          ref={divRef}
           style={{
             position: "absolute",
             zIndex: "-1",
@@ -143,6 +143,9 @@ const CornersWrapper = ({
         borderWidth: `${cornerSize}px`,
         borderStyle: "solid",
         borderColor: "transparent",
+        borderRadius: `${cornerRadius}px`,
+        backgroundClip: "padding-box",
+        backgroundColor,
         position: "relative",
         display: "inline-flex",
         width: "100%",
