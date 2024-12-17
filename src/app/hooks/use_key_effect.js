@@ -20,7 +20,7 @@ export const useKeyEffect = (keyCallbacks) => {
   useEffect(() => {
     const onKeyDown = (event) => {
       const eventKey = event.key;
-      const keyEffect = keyCallbacks[eventKey];
+      const keyEffect = effects[eventKey];
       if (keyEffect?.enabled) {
         event.preventDefault();
         keyEffect.callback();
