@@ -30,12 +30,18 @@ export const MultiBorder = ({ borders }) => {
       let heightConsumed = 0;
       let remainingWidth = availableWidth;
       let remainingHeight = availableHeight;
-      let previousRadius;
       let previousBorderSize;
       const corners = [];
+      let previousRadius;
       for (const border of borders) {
         const borderSize = border.size;
-        const borderRadius = border.radius || 0;
+        let borderRadiusRaw = border.radius;
+        const borderRadius =
+          borderRadiusRaw === undefined
+            ? 0
+            : borderRadiusRaw === "..."
+              ? previousRadius - previousBorderSize
+              : borderRadiusRaw;
         let borderWidthRaw = border.width;
         if (borderWidthRaw === undefined) borderWidthRaw = "50%";
         const borderWidth =
@@ -48,20 +54,7 @@ export const MultiBorder = ({ borders }) => {
           typeof borderHeightRaw === "string"
             ? (parseInt(borderHeightRaw) / 100) * availableHeight
             : borderHeightRaw;
-        let radius;
-        if (previousRadius === undefined) {
-          radius = borderRadius - borderSize / 2;
-          previousRadius = radius;
-        } else {
-          radius = previousRadius - previousBorderSize / 2 - borderSize / 2;
-          previousRadius = radius;
-          console.log({
-            radius,
-            previousRadius,
-            previousBorderSize,
-            borderSize,
-          });
-        }
+
         corners.push(
           <Corners
             rectangleWidth={remainingWidth}
@@ -71,7 +64,7 @@ export const MultiBorder = ({ borders }) => {
             width={borderWidth - rightConsumed}
             height={borderHeight - bottomConsumed}
             size={borderSize}
-            radius={radius}
+            radius={borderRadius}
             color={border.color}
             opacity={border.opacity}
           />,
@@ -81,7 +74,7 @@ export const MultiBorder = ({ borders }) => {
         rightConsumed += borderSize;
         bottomConsumed += borderSize;
         previousBorderSize = borderSize;
-
+        previousRadius = borderRadius;
         widthConsumed += borderSize;
         heightConsumed += borderSize;
         remainingWidth = availableWidth - widthConsumed;
@@ -178,29 +171,39 @@ const TopLeftCorner = ({
   opacity,
 }) => {
   let d;
-  if (radius <= 0) {
+  if (radius > 0) {
+    const outerRadius = radius;
+    const innerRadius = outerRadius - size;
+    d = [
+      `M ${x},${y + height}`,
+      `v -${height - outerRadius}`,
+      `a ${outerRadius},${outerRadius} 0 0 1 ${outerRadius},-${outerRadius}`,
+      `h ${width - outerRadius}`,
+      `v ${size}`,
+      ...(innerRadius > 0
+        ? [
+            `h -${width - size - innerRadius}`,
+            `a ${innerRadius},${innerRadius} 0 0 0 -${innerRadius},${innerRadius}`,
+            `v ${height - innerRadius - size}`,
+            `h ${-size}`,
+          ]
+        : [`h -${width - size}`, `v ${height - size}`, `h -${size}`]),
+    ];
+  } else {
     d = [
       `M ${x},${y + size / 2}`,
       `h ${width}`,
       `M ${x + size / 2},${y + size}`,
       `v ${height - size}`,
     ];
-  } else {
-    d = [
-      `M ${x + size / 2},${y + height}`,
-      `v -${height - size / 2 - radius}`,
-      `a ${radius},${radius} 0 0 1 ${radius},-${radius}`,
-      `h ${width - size / 2 - radius}`,
-    ];
   }
   return (
     <path
       name="top_left_corner"
       d={d.join(" ")}
-      fill="none"
-      stroke={color}
-      stroke-width={size}
+      fill={color}
       opacity={opacity}
+      stroke-width={1}
     />
   );
 };
@@ -215,19 +218,33 @@ const TopRightCorner = ({
   opacity,
 }) => {
   let d;
-  if (radius <= 0) {
+  if (radius > 0) {
+    const outerRadius = radius;
+    const innerRadius = outerRadius - size;
     d = [
-      `M ${x - width},${y + size / 2}`,
-      `h ${width}`,
-      `M ${x - size / 2},${y + size}`,
-      `v ${height - size}`,
+      `M ${x - width},${y}`,
+      `h ${width - outerRadius}`,
+      `a ${outerRadius},${outerRadius} 0 0 1 ${outerRadius},${outerRadius}`,
+      `v ${height - outerRadius}`,
+      `h -${size}`,
+      ...(innerRadius > 0
+        ? [
+            `v -${height - size - innerRadius}`,
+            `a ${innerRadius},${innerRadius} 0 0 0 -${innerRadius},-${innerRadius}`,
+            `h -${width - innerRadius - size}`,
+            `v -${size}`,
+          ]
+        : [`v -${height - size}`, `h ${-width + size}`, `v -${size}`]),
     ];
   } else {
     d = [
-      `M ${x - width},${y + size / 2}`,
-      `h ${width - size / 2 - radius}`,
-      `a ${radius},${radius} 0 0 1 ${radius},${radius}`,
-      `v ${height - size / 2 - radius}`,
+      `M ${x - width},${y}`,
+      `h ${width}`,
+      `v ${height}`,
+      `h -${size}`,
+      `v -${height - size}`,
+      `h -${width - size}`,
+      `v -${size}`,
     ];
   }
 
@@ -235,9 +252,7 @@ const TopRightCorner = ({
     <path
       name="top_right_corner"
       d={d.join(" ")}
-      fill="none"
-      stroke={color}
-      stroke-width={size}
+      fill={color}
       opacity={opacity}
     />
   );
@@ -253,19 +268,30 @@ const BottomRightCorner = ({
   opacity,
 }) => {
   let d;
-  if (radius <= 0) {
+  if (radius > 0) {
+    const outerRadius = radius;
+    const innerRadius = outerRadius - size;
+    d = [
+      `M ${x},${y - height}`,
+      `v ${height - outerRadius}`,
+      `a ${outerRadius},${outerRadius} 0 0 1 -${outerRadius},${outerRadius}`,
+      `h -${width - outerRadius}`,
+      `v -${size}`,
+      ...(innerRadius > 0
+        ? [
+            `h ${width - innerRadius - size}`,
+            `a ${innerRadius},${innerRadius} 0 0 0 ${innerRadius},-${innerRadius}`,
+            `v -${height - innerRadius - size}`,
+            `h ${size}`,
+          ]
+        : [`h ${width - size}`, `v -${height - size}`, `h ${size}`]),
+    ];
+  } else {
     d = [
       `M ${x - size / 2},${y - height}`,
       `v ${height - size}`,
       `M ${x - width},${y - size / 2}`,
       `h ${width}`,
-    ];
-  } else {
-    d = [
-      `M ${x - size / 2},${y - height}`,
-      `v ${width - size / 2 - radius}`,
-      `a ${radius},${radius} 0 0 1 -${radius},${radius}`,
-      `h -${width - size / 2 - radius}`,
     ];
   }
 
@@ -273,9 +299,7 @@ const BottomRightCorner = ({
     <path
       name="bottom_right_corner"
       d={d.join(" ")}
-      fill="none"
-      stroke={color}
-      stroke-width={size}
+      fill={color}
       opacity={opacity}
     />
   );
@@ -291,19 +315,31 @@ const BottomLeftCorner = ({
   opacity,
 }) => {
   let d;
-  if (radius <= 0) {
+
+  if (radius > 0) {
+    const outerRadius = radius;
+    const innerRadius = outerRadius - size;
+    d = [
+      `M ${x + width},${y}`,
+      `h -${width - outerRadius}`,
+      `a ${outerRadius},${outerRadius} 0 0 1 -${outerRadius},-${outerRadius}`,
+      `v -${height - outerRadius}`,
+      `h ${size}`,
+      ...(innerRadius > 0
+        ? [
+            `v ${height - innerRadius - size}`,
+            `a ${innerRadius},${innerRadius} 0 0 0 ${innerRadius},${innerRadius}`,
+            `h ${width - innerRadius - size}`,
+            `v ${size}`,
+          ]
+        : [`v ${height - size}`, `h ${width - size}`, `v ${size}`]),
+    ];
+  } else {
     d = [
       `M ${x},${y - size / 2}`,
       `h ${width}`,
       `M ${x + size / 2},${y - size / 2}`,
       `v -${height - size / 2}`,
-    ];
-  } else {
-    d = [
-      `M ${x + width},${y - size / 2}`,
-      `h -${width - size / 2 - radius}`,
-      `a ${radius},${radius} 0 0 1 -${radius},-${radius}`,
-      `v -${height - size / 2 - radius}`,
     ];
   }
 
@@ -311,9 +347,7 @@ const BottomLeftCorner = ({
     <path
       name="bottom_left_corner"
       d={d.join(" ")}
-      fill="none"
-      stroke={color}
-      stroke-width={size}
+      fill={color}
       opacity={opacity}
     />
   );

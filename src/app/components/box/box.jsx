@@ -31,13 +31,13 @@ export const borderWithStroke = ({
     {
       size,
       color,
-      radius,
+      radius: "...",
       opacity,
     },
     {
       size: strokeSize,
       color: strokeColor,
-      radius,
+      radius: "...",
       opacity,
     },
   ];
@@ -295,7 +295,7 @@ const BoxComponent = (
     style.borderStyle = "solid";
     style.borderColor = "transparent";
     style.backgroundClip = "padding-box"; // prevent background to be visible behind border
-    // style.borderRadius = borderRadius;
+    style.borderRadius = borders[0].radius;
   }
 
   return (
