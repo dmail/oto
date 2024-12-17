@@ -191,10 +191,13 @@ const TopLeftCorner = ({
     ];
   } else {
     d = [
-      `M ${x},${y + size / 2}`,
+      `M ${x},${y}`,
       `h ${width}`,
-      `M ${x + size / 2},${y + size}`,
+      `v ${size}`,
+      `h -${width - size}`,
       `v ${height - size}`,
+      `h -${size}`,
+      `v -${height}`,
     ];
   }
   return (
@@ -203,7 +206,6 @@ const TopLeftCorner = ({
       d={d.join(" ")}
       fill={color}
       opacity={opacity}
-      stroke-width={1}
     />
   );
 };
@@ -288,10 +290,13 @@ const BottomRightCorner = ({
     ];
   } else {
     d = [
-      `M ${x - size / 2},${y - height}`,
-      `v ${height - size}`,
-      `M ${x - width},${y - size / 2}`,
-      `h ${width}`,
+      `M ${x},${y - height}`,
+      `v ${height}`,
+      `h -${width}`,
+      `v -${size}`,
+      `h ${width - size}`,
+      `v -${height - size}`,
+      `h ${size}`,
     ];
   }
 
@@ -336,10 +341,13 @@ const BottomLeftCorner = ({
     ];
   } else {
     d = [
-      `M ${x},${y - size / 2}`,
-      `h ${width}`,
-      `M ${x + size / 2},${y - size / 2}`,
-      `v -${height - size / 2}`,
+      `M ${x + width},${y}`,
+      `h ${-width}`,
+      `v -${height}`,
+      `h ${size}`,
+      `v ${height - size}`,
+      `h ${width - size}`,
+      `v ${size}`,
     ];
   }
 
