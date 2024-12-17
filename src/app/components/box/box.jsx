@@ -2,8 +2,8 @@ import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
 import { getAvailableSize } from "../../utils/get_available_size.js";
 import boxStylesheet from "./box.css" with { type: "css" };
+import { getInnerSpacingStyles } from "./inner_spacing_styles.js";
 import { MultiBorder, useMultiBorder } from "./multi_border.jsx";
-import { Spacing } from "./spacing.jsx";
 
 document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];
 if (import.meta.hot) {
@@ -258,6 +258,16 @@ const BoxComponent = (
     style.borderRadius = borders[0].radius;
   }
   Object.assign(style, styleForContentPosition);
+  const spacingStyle = getInnerSpacingStyles({
+    around: innerSpacing,
+    x: innerSpacingX,
+    y: innerSpacingY,
+    top: innerSpacingTop,
+    bottom: innerSpacingBottom,
+    left: innerSpacingLeft,
+    right: innerSpacingRight,
+  });
+  Object.assign(style, spacingStyle);
 
   const [
     resolvedBorders,
@@ -293,17 +303,7 @@ const BoxComponent = (
         height={borderHeight}
         borderFullSize={borderFullSize}
       />
-      <Spacing
-        around={innerSpacing}
-        x={innerSpacingX}
-        y={innerSpacingY}
-        top={innerSpacingTop}
-        bottom={innerSpacingBottom}
-        left={innerSpacingLeft}
-        right={innerSpacingRight}
-      >
-        {children}
-      </Spacing>
+      {children}
     </NodeName>
   );
 };

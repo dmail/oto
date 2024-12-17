@@ -1,4 +1,4 @@
-export const Spacing = ({
+export const getInnerSpacingStyles = ({
   around,
   left,
   top,
@@ -6,18 +6,11 @@ export const Spacing = ({
   y,
   right,
   bottom,
-  children,
 }) => {
   if (!around && !y && !x && !top && !left && !right && !bottom) {
-    return <>{children}</>;
+    return {};
   }
-
-  const style = {
-    display: "inline-flex",
-    width: "100%",
-    height: "100%",
-    position: "relative",
-  };
+  const style = {};
   if (around !== undefined) {
     style.padding = isFinite(around)
       ? parseInt(around)
@@ -54,7 +47,7 @@ export const Spacing = ({
       : SPACING_SIZES[bottom] || bottom;
   }
 
-  return <div style={style}> {children}</div>;
+  return style;
 };
 
 const SPACING_SIZES = {
