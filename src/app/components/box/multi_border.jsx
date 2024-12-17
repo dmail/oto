@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 
 export const MultiBorder = ({ borders }) => {
-  borders = [borders[0], borders[1]];
   const svgRef = useRef();
   let fullSize = borders.reduce((acc, border) => acc + border.size, 0);
   const deps = [];
@@ -173,9 +172,9 @@ const TopLeftCorner = ({
   let d;
   if (radius <= 0) {
     d = [
-      `M ${x - width},${y + size / 2}`,
+      `M ${x},${y + size / 2}`,
       `h ${width}`,
-      `M ${size / 2 - x},${y + size}`,
+      `M ${x + size / 2},${y + size}`,
       `v ${height - size}`,
     ];
   } else {
@@ -211,7 +210,7 @@ const TopRightCorner = ({
     d = [
       `M ${x - width},${y + size / 2}`,
       `h ${width}`,
-      `M ${size / 2 - x},${y + size}`,
+      `M ${x - size / 2},${y + size}`,
       `v ${height - size}`,
     ];
   } else {
@@ -246,10 +245,10 @@ const BottomRightCorner = ({
   let d;
   if (radius <= 0) {
     d = [
-      `M ${x - width},${y + size / 2}`,
-      `h ${width}`,
-      `M ${size / 2 - x},${y + size}`,
+      `M ${x - size / 2},${y - height}`,
       `v ${height - size}`,
+      `M ${x - width},${y - size / 2}`,
+      `h ${width}`,
     ];
   } else {
     d = [
@@ -283,10 +282,10 @@ const BottomLeftCorner = ({
   let d;
   if (radius <= 0) {
     d = [
-      `M ${x - width},${y + size / 2}`,
+      `M ${x},${y - size / 2}`,
       `h ${width}`,
-      `M ${size / 2 - x},${y + size}`,
-      `v ${height - size}`,
+      `M ${x + size / 2},${y - size / 2}`,
+      `v -${height - size / 2}`,
     ];
   } else {
     d = [
