@@ -1,13 +1,26 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 
-export const MultiBorder = ({ borders }) => {
-  const svgRef = useRef();
-  let fullSize = borders.reduce((acc, border) => acc + border.size, 0);
-  const deps = [];
+export const MultiBorder = ({ borders, children }) => {
   for (const border of borders) {
-    deps.push(border.size, border.color, border.radius);
+    children = <CornersWrapper {...border}>{children}</CornersWrapper>;
   }
-  const [svgChildren, svgChildrenSetter] = useState([]);
+  return <>{children}</>;
+};
+
+const CornersWrapper = ({
+  width,
+  height,
+  size,
+  color,
+  radius,
+  opacity,
+  children,
+}) => {
+  const divRef = useRef();
+  const svgRef = useRef();
+  const [availableWidth, setAvailableWidth] = useState(0);
+  const [availableHeight, setAvailableHeight] = useState(0);
+  const [borderWidth, borderWidthSetter] = useState(0);
 
   useLayoutEffect(() => {
     const svg = svgRef.current;
@@ -17,87 +30,72 @@ export const MultiBorder = ({ borders }) => {
       if (!entry) {
         return;
       }
-      const availableWidth = svg.parentNode.offsetWidth;
-      const availableHeight = svg.parentNode.offsetHeight;
-      svg.setAttribute("width", availableWidth);
-      svg.setAttribute("height", availableHeight);
-
-      let xConsumed = 0;
-      let yConsumed = 0;
-      let rightConsumed = 0;
-      let bottomConsumed = 0;
-      let widthConsumed = 0;
-      let heightConsumed = 0;
-      let remainingWidth = availableWidth;
-      let remainingHeight = availableHeight;
-      let previousBorderSize;
-      const corners = [];
-      let previousRadius;
-      for (const border of borders) {
-        const borderSize = border.size;
-        let borderRadiusRaw = border.radius;
-        const borderRadius =
-          borderRadiusRaw === undefined
-            ? 0
-            : borderRadiusRaw === "..."
-              ? previousRadius - previousBorderSize
-              : borderRadiusRaw;
-        let borderWidthRaw = border.width;
-        if (borderWidthRaw === undefined) borderWidthRaw = "50%";
-        const borderWidth =
-          typeof borderWidthRaw === "string"
-            ? (parseInt(borderWidthRaw) / 100) * availableWidth
-            : borderWidthRaw;
-        let borderHeightRaw = border.height;
-        if (borderHeightRaw === undefined) borderHeightRaw = "50%";
-        const borderHeight =
-          typeof borderHeightRaw === "string"
-            ? (parseInt(borderHeightRaw) / 100) * availableHeight
-            : borderHeightRaw;
-
-        corners.push(
-          <Corners
-            rectangleWidth={remainingWidth}
-            rectangleHeight={remainingHeight}
-            x={xConsumed}
-            y={yConsumed}
-            width={borderWidth - rightConsumed}
-            height={borderHeight - bottomConsumed}
-            size={borderSize}
-            radius={borderRadius}
-            color={border.color}
-            opacity={border.opacity}
-          />,
-        );
-        xConsumed += borderSize;
-        yConsumed += borderSize;
-        rightConsumed += borderSize;
-        bottomConsumed += borderSize;
-        previousBorderSize = borderSize;
-        previousRadius = borderRadius;
-        widthConsumed += borderSize;
-        heightConsumed += borderSize;
-        remainingWidth = availableWidth - widthConsumed;
-        remainingHeight = availableHeight - heightConsumed;
-      }
-      svgChildrenSetter(corners);
+      const availableWidth = svgParentNode.offsetWidth;
+      const availableHeight = svgParentNode.offsetHeight;
+      setAvailableWidth(availableWidth);
+      setAvailableHeight(availableHeight);
+      const div = divRef.current;
+      const { borderWidth } = window.getComputedStyle(div, null);
+      borderWidthSetter(parseFloat(borderWidth));
     });
     observer.observe(svgParentNode);
     return () => {
       observer.disconnect();
     };
-  }, deps);
+  }, [size, color, radius]);
+
+  // si c'est en em comment on fait?
+  const borderWidthComputed = isFinite(size) ? `${parseInt(size)}px` : size;
+  const cornerWidth =
+    typeof width === "string" && width.endsWith("%")
+      ? availableWidth * (parseInt(width) / 100)
+      : width;
+  const cornerHeight =
+    typeof height === "string" && height.endsWith("%")
+      ? availableHeight * (parseInt(height) / 100)
+      : height;
+  const cornerRadius = radius;
 
   return (
     <div
+      ref={divRef}
       style={{
-        position: "absolute",
-        inset: `-${fullSize}px`,
+        borderWidth: borderWidthComputed,
+        borderStyle: "solid",
+        borderColor: "transparent",
+        position: "relative",
+        display: "inline-flex",
+        width: "100%",
+        height: "100%",
       }}
     >
-      <svg ref={svgRef} style={{ overflow: "visible" }}>
-        {svgChildren}
-      </svg>
+      <div
+        style={{
+          position: "absolute",
+          inset: `-${borderWidthComputed}`,
+        }}
+      >
+        <svg
+          ref={svgRef}
+          style={{ overflow: "visible" }}
+          width={availableWidth}
+          height={availableHeight}
+        >
+          <Corners
+            rectangleWidth={availableWidth}
+            rectangleHeight={availableHeight}
+            x={0}
+            y={0}
+            width={cornerWidth}
+            height={cornerHeight}
+            size={borderWidth}
+            radius={cornerRadius}
+            color={color}
+            opacity={opacity}
+          />
+        </svg>
+      </div>
+      {children}
     </div>
   );
 };
@@ -170,6 +168,12 @@ const TopLeftCorner = ({
   color,
   opacity,
 }) => {
+  if (size > width) {
+    size = width;
+  }
+  if (size > height) {
+    size = height;
+  }
   let d;
   if (radius > 0) {
     const outerRadius = radius;
@@ -219,6 +223,13 @@ const TopRightCorner = ({
   color,
   opacity,
 }) => {
+  if (size > width) {
+    size = width;
+  }
+  if (size > height) {
+    size = height;
+  }
+
   let d;
   if (radius > 0) {
     const outerRadius = radius;
@@ -269,6 +280,13 @@ const BottomRightCorner = ({
   color,
   opacity,
 }) => {
+  if (size > width) {
+    size = width;
+  }
+  if (size > height) {
+    size = height;
+  }
+
   let d;
   if (radius > 0) {
     const outerRadius = radius;
@@ -319,6 +337,13 @@ const BottomLeftCorner = ({
   color,
   opacity,
 }) => {
+  if (size > width) {
+    size = width;
+  }
+  if (size > height) {
+    size = height;
+  }
+
   let d;
 
   if (radius > 0) {

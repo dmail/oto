@@ -31,14 +31,26 @@ export const borderWithStroke = ({
     {
       size,
       color,
-      radius: "...",
+      radius: radius - strokeSize,
       opacity,
     },
     {
       size: strokeSize,
       color: strokeColor,
-      radius: "...",
+      radius: radius - strokeSize - size,
       opacity,
+    },
+  ];
+};
+
+export const outlinePartial = ({ size, color = "lightblue", opacity }) => {
+  return [
+    {
+      size,
+      color,
+      opacity,
+      width: "10%",
+      height: "10%",
     },
   ];
 };
@@ -99,7 +111,6 @@ const BoxComponent = (
           element.style.alignSelf = "flex-start";
         } else {
           element.style.left = "0";
-          // element.style.right = undefined;
         }
       } else if (x === "center") {
         if (vertical) {
@@ -107,18 +118,13 @@ const BoxComponent = (
         } else {
           const elementWidth = elementDimensions.width;
           const halfWidth = (availableWidth - elementWidth) / 2;
-          // Math.floor is important otherwise the float imprecision
-          // might cause element to resize due to margings, then
-          // be resized again due to the new widht infinite loop of resizing
           element.style.left = `${halfWidth}px`;
-          // element.style.right = `${halfWidth}px`;
         }
       } else if (x === "end") {
         if (vertical) {
           element.style.alignSelf = "flex-end";
         } else {
           element.style.left = "auto";
-          // element.style.right = undefined;
         }
       } else if (isFinite(x)) {
         element.style.left = `${parseInt(x)}px`;
@@ -289,14 +295,6 @@ const BoxComponent = (
   if (!needsSpacingContainer) {
     Object.assign(style, styleForContentPosition);
   }
-  if (borders.length) {
-    let fullSize = borders.reduce((acc, border) => acc + border.size, 0);
-    style.borderWidth = `${fullSize}px`;
-    style.borderStyle = "solid";
-    style.borderColor = "transparent";
-    style.backgroundClip = "padding-box"; // prevent background to be visible behind border
-    style.borderRadius = borders[0].radius;
-  }
 
   return (
     <NodeName
@@ -309,28 +307,28 @@ const BoxComponent = (
       data-invisible={invisible || undefined}
       style={style}
     >
-      {borders.length > 0 && <MultiBorder borders={borders} />}
-
-      {/*
-       * This wrapper div ensure children takes dimension - padding into account when
-       * they positions and dimensions themselves
-       */}
-      {needsSpacingContainer ? (
-        <div
-          name="spacing_container"
-          style={{
-            ...styleForContentPosition,
-            display: "inline-flex",
-            width: "100%",
-            height: "100%",
-            position: "relative",
-          }}
-        >
-          {children}
-        </div>
-      ) : (
-        children
-      )}
+      <MultiBorder borders={borders}>
+        {/*
+         * This wrapper div ensure children takes dimension - padding into account when
+         * they positions and dimensions themselves
+         */}
+        {needsSpacingContainer ? (
+          <div
+            name="spacing_container"
+            style={{
+              ...styleForContentPosition,
+              display: "inline-flex",
+              width: "100%",
+              height: "100%",
+              position: "relative",
+            }}
+          >
+            {children}
+          </div>
+        ) : (
+          children
+        )}
+      </MultiBorder>
     </NodeName>
   );
 };
