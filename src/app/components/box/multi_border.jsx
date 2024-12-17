@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 
 export const MultiBorder = ({ borders, children }) => {
-  for (const border of borders) {
+  for (const border of borders.reverse()) {
     children = <CornersWrapper {...border}>{children}</CornersWrapper>;
   }
   return <>{children}</>;
@@ -266,7 +266,9 @@ const TopLeftCorner = ({
     size = height;
   }
   let d;
-  if (radius > 0) {
+  if (size === 0) {
+    d = [];
+  } else if (radius > 0) {
     const outerRadius = radius;
     const innerRadius = outerRadius - size;
     d = [
@@ -326,7 +328,9 @@ const TopRightCorner = ({
   }
 
   let d;
-  if (radius > 0) {
+  if (size === 0) {
+    d = [];
+  } else if (radius > 0) {
     const outerRadius = radius;
     const innerRadius = outerRadius - size;
     d = [
@@ -387,7 +391,9 @@ const BottomRightCorner = ({
   }
 
   let d;
-  if (radius > 0) {
+  if (size === 0) {
+    d = [];
+  } else if (radius > 0) {
     const outerRadius = radius;
     const innerRadius = outerRadius - size;
     d = [
@@ -448,8 +454,9 @@ const BottomLeftCorner = ({
   }
 
   let d;
-
-  if (radius > 0) {
+  if (size === 0) {
+    d = [];
+  } else if (radius > 0) {
     const outerRadius = radius;
     const innerRadius = outerRadius - size;
     d = [
