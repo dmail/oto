@@ -46,9 +46,15 @@ export const borderWithStroke = ({
 export const outlinePartial = ({
   width = "10%",
   height = "10%",
+  minWidth = "0.7em",
+  minHeight = "0.7em",
+  spacing = 0,
   size,
-  color = "lightblue",
+  color = "dodgerblue",
   opacity,
+  strokeColor = "black",
+  strokeSize = 1,
+  radius = "0.2em",
 }) => {
   return [
     {
@@ -57,6 +63,13 @@ export const outlinePartial = ({
       opacity,
       width,
       height,
+      radius,
+      outside: true,
+      spacing,
+      minWidth,
+      minHeight,
+      strokeSize,
+      strokeColor,
     },
   ];
 };

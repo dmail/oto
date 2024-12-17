@@ -10,58 +10,137 @@ export const MultiBorder = ({ borders, children }) => {
 const CornersWrapper = ({
   width = "50%",
   height = "50%",
+  minWidth,
+  minHeight,
   size,
-  color,
   radius = 0,
+  color,
+  strokeColor,
+  strokeSize = 0,
   opacity,
+  outside,
+  spacing = 0,
   children,
 }) => {
-  const divRef = useRef();
   const svgRef = useRef();
+  const divRef = useRef();
   const [availableWidth, setAvailableWidth] = useState(0);
   const [availableHeight, setAvailableHeight] = useState(0);
-  const [borderWidthComputed, borderWidthComputedSetter] = useState(0);
+  const [fontSizeComputed, fontSizeComputedSetter] = useState(16);
 
   useLayoutEffect(() => {
     const svg = svgRef.current;
-    const svgParentNode = svg.parentNode;
+    const elementToObserve = svg.parentNode;
     const observer = new ResizeObserver((entries) => {
       const entry = entries[0];
       if (!entry) {
         return;
       }
-      const availableWidth = svgParentNode.offsetWidth;
-      const availableHeight = svgParentNode.offsetHeight;
+      const availableWidth = elementToObserve.offsetWidth;
+      const availableHeight = elementToObserve.offsetHeight;
       setAvailableWidth(availableWidth);
       setAvailableHeight(availableHeight);
-      const div = divRef.current;
-      let { borderWidth } = window.getComputedStyle(div, null);
-      borderWidth = parseFloat(borderWidth);
-      borderWidthComputedSetter(borderWidth);
+
+      let { fontSize } = window.getComputedStyle(svg, null);
+      fontSize = parseFloat(fontSize);
+      fontSizeComputedSetter(fontSize);
     });
-    observer.observe(svgParentNode);
+    observer.observe(elementToObserve);
     return () => {
       observer.disconnect();
     };
-  }, [size, color, radius]);
+  }, []);
 
-  // si c'est en em comment on fait?
-  const borderWidthCssValue = isFinite(size) ? `${parseInt(size)}px` : size;
-  const cornerWidth =
-    typeof width === "string" && width.endsWith("%")
-      ? availableWidth * (parseInt(width) / 100)
-      : width;
-  const cornerHeight =
-    typeof height === "string" && height.endsWith("%")
-      ? availableHeight * (parseInt(height) / 100)
-      : height;
-  const cornerRadius = radius;
+  useLayoutEffect(() => {
+    const svg = svgRef.current;
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) {
+        return;
+      }
+    });
+    observer.observe(svg);
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const cornerSize = resolveSize(size, {
+    availableSize: availableWidth,
+    fontSize: fontSizeComputed,
+  });
+  let [cornerWidth, cornerHeight] = resolveDimensions({
+    width,
+    height,
+    availableWidth,
+    availableHeight,
+    fontSize: fontSizeComputed,
+  });
+  minWidth = resolveSize(minWidth, {
+    availableSize: availableWidth,
+    fontSize: fontSizeComputed,
+  });
+  if (minWidth && cornerWidth < minWidth) {
+    cornerWidth = minWidth;
+  }
+  minHeight = resolveSize(minHeight, {
+    availableSize: availableHeight,
+    fontSize: fontSizeComputed,
+  });
+  if (minHeight && cornerHeight < minHeight) {
+    cornerHeight = minHeight;
+  }
+  spacing = resolveSize(spacing, {
+    availableSize: availableWidth,
+    fontSize: fontSizeComputed,
+  });
+  const cornerRadius = resolveSize(radius, {
+    availableSize: availableWidth,
+    fontSize: fontSizeComputed,
+  });
+
+  if (outside) {
+    return (
+      <>
+        <div
+          ref={divRef}
+          style={{
+            position: "absolute",
+            zIndex: "-1",
+            inset: `-${cornerSize + spacing + strokeSize}px`,
+          }}
+        >
+          <svg
+            ref={svgRef}
+            style={{ overflow: "visible" }}
+            width={availableWidth}
+            height={availableHeight}
+          >
+            <Corners
+              rectangleWidth={availableWidth}
+              rectangleHeight={availableHeight}
+              x={0}
+              y={0}
+              width={cornerWidth}
+              height={cornerHeight}
+              size={cornerSize}
+              radius={cornerRadius}
+              color={color}
+              opacity={opacity}
+              strokeColor={strokeColor}
+              strokeSize={strokeSize}
+            />
+          </svg>
+        </div>
+        {children}
+      </>
+    );
+  }
 
   return (
     <div
-      ref={divRef}
       style={{
-        borderWidth: borderWidthCssValue,
+        borderWidth: `${cornerSize}px`,
         borderStyle: "solid",
         borderColor: "transparent",
         position: "relative",
@@ -73,7 +152,7 @@ const CornersWrapper = ({
       <div
         style={{
           position: "absolute",
-          inset: `-${borderWidthCssValue}`,
+          inset: `-${cornerSize}px`,
         }}
       >
         <svg
@@ -89,7 +168,7 @@ const CornersWrapper = ({
             y={0}
             width={cornerWidth}
             height={cornerHeight}
-            size={borderWidthComputed}
+            size={cornerSize}
             radius={cornerRadius}
             color={color}
             opacity={opacity}
@@ -111,6 +190,8 @@ const Corners = ({
   size,
   radius,
   color,
+  strokeColor,
+  strokeSize,
   opacity,
 }) => {
   return (
@@ -123,6 +204,8 @@ const Corners = ({
         size={size}
         radius={radius}
         color={color}
+        strokeColor={strokeColor}
+        strokeSize={strokeSize}
         opacity={opacity}
       />
       <TopRightCorner
@@ -133,6 +216,8 @@ const Corners = ({
         size={size}
         radius={radius}
         color={color}
+        strokeColor={strokeColor}
+        strokeSize={strokeSize}
         opacity={opacity}
       />
       <BottomRightCorner
@@ -143,6 +228,8 @@ const Corners = ({
         size={size}
         radius={radius}
         color={color}
+        strokeColor={strokeColor}
+        strokeSize={strokeSize}
         opacity={opacity}
       />
       <BottomLeftCorner
@@ -153,12 +240,13 @@ const Corners = ({
         size={size}
         radius={radius}
         color={color}
+        strokeColor={strokeColor}
+        strokeSize={strokeSize}
         opacity={opacity}
       />
     </g>
   );
 };
-
 const TopLeftCorner = ({
   x,
   y,
@@ -167,6 +255,8 @@ const TopLeftCorner = ({
   size,
   radius,
   color,
+  strokeColor,
+  strokeSize,
   opacity,
 }) => {
   if (size > width) {
@@ -211,6 +301,8 @@ const TopLeftCorner = ({
       d={d.join(" ")}
       fill={color}
       opacity={opacity}
+      stroke={strokeColor}
+      stroke-width={strokeSize}
     />
   );
 };
@@ -222,6 +314,8 @@ const TopRightCorner = ({
   size,
   radius,
   color,
+  strokeColor,
+  strokeSize,
   opacity,
 }) => {
   if (size > width) {
@@ -268,6 +362,8 @@ const TopRightCorner = ({
       d={d.join(" ")}
       fill={color}
       opacity={opacity}
+      stroke={strokeColor}
+      stroke-width={strokeSize}
     />
   );
 };
@@ -279,6 +375,8 @@ const BottomRightCorner = ({
   size,
   radius,
   color,
+  strokeColor,
+  strokeSize,
   opacity,
 }) => {
   if (size > width) {
@@ -325,6 +423,8 @@ const BottomRightCorner = ({
       d={d.join(" ")}
       fill={color}
       opacity={opacity}
+      stroke={strokeColor}
+      stroke-width={strokeSize}
     />
   );
 };
@@ -336,6 +436,8 @@ const BottomLeftCorner = ({
   size,
   radius,
   color,
+  strokeColor,
+  strokeSize,
   opacity,
 }) => {
   if (size > width) {
@@ -383,6 +485,41 @@ const BottomLeftCorner = ({
       d={d.join(" ")}
       fill={color}
       opacity={opacity}
+      stroke={strokeColor}
+      stroke-width={strokeSize}
     />
   );
+};
+
+const resolveSize = (size, { availableSize, fontSize }) => {
+  if (typeof size === "string") {
+    if (size.endsWith("%")) {
+      return availableSize * (parseFloat(size) / 100);
+    }
+    if (size.endsWith("px")) {
+      return parseFloat(size);
+    }
+    if (size.endsWith("em")) {
+      return parseFloat(size) * fontSize;
+    }
+    return parseFloat(size);
+  }
+  return size;
+};
+const resolveDimensions = ({
+  width,
+  height,
+  availableWidth,
+  availableHeight,
+  fontSize,
+}) => {
+  const widthNumber = resolveSize(width, {
+    availableSize: availableWidth,
+    fontSize,
+  });
+  const heightNumber = resolveSize(height, {
+    availableSize: availableHeight,
+    fontSize,
+  });
+  return [widthNumber, heightNumber];
 };
