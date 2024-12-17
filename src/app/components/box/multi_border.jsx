@@ -140,7 +140,7 @@ const CornersWrapper = ({
       style={{
         borderWidth: `${cornerSize + strokeSize}px`,
         borderStyle: "solid",
-        borderColor: "transparent",
+        borderColor: backgroundColor || "transparent",
         borderRadius: `${cornerRadius}px`,
         backgroundClip: "padding-box",
         backgroundColor,

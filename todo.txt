@@ -1,3 +1,10 @@
+- lorsque les corner sont full il faudrait qui soient fait en un seul path
+c'est seulement lorsqu'ils sont partial qu'on va les couper en quatres
+(ça rend mieux, meme en svg)
+
+- utiliser ce mode partial corner pour la selection de l'ennemi
+- utiliser ce mode partial corner pour l'état focus d'un bouton
+
 - afficher des boite de dialogue lorsqu'on attaque / enemie attaque
   pour dialogue text box
   - vérif qu'on peut afficher sur plusieurs lignes
