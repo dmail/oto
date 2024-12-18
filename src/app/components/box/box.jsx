@@ -83,6 +83,9 @@ const BoxComponent = (
     hidden = false,
     invisible = false,
     focused = false,
+    focusedOutlineRadius = 16,
+    focusedOutlineSize = 5,
+    focusedOutlineStrokeSize = 5,
     children,
     innerSpacing = 0,
     innerSpacingY,
@@ -259,14 +262,13 @@ const BoxComponent = (
     style.borderRadius = borders[0].radius;
   }
   if (focused) {
-    const focusedStrokeSize = 10;
     borders.unshift(
       ...borderOutsidePartial({
         color: "dodgerblue",
         strokeColor: "black",
-        size: 5,
-        strokeSize: focusedStrokeSize,
-        radius: 16,
+        size: focusedOutlineSize,
+        strokeSize: focusedOutlineStrokeSize,
+        radius: focusedOutlineRadius,
       }),
     );
   }
