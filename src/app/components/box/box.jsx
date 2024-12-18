@@ -74,13 +74,6 @@ export const borderOutsidePartial = ({
   ];
 };
 
-const BORDER_FOCUSED = borderOutsidePartial({
-  color: "dodgerblue",
-  strokeColor: "black",
-  size: 5,
-  strokeSize: 10,
-});
-
 const BoxComponent = (
   {
     NodeName = "div",
@@ -255,9 +248,6 @@ const BoxComponent = (
   if (outline) {
     borders.push(outline);
   }
-  if (focused) {
-    borders.push(...BORDER_FOCUSED);
-  }
   if (border) {
     if (Array.isArray(border)) {
       borders.push(...border);
@@ -268,6 +258,19 @@ const BoxComponent = (
   if (borders.length) {
     style.borderRadius = borders[0].radius;
   }
+  if (focused) {
+    const focusedStrokeSize = 10;
+    borders.unshift(
+      ...borderOutsidePartial({
+        color: "dodgerblue",
+        strokeColor: "black",
+        size: 5,
+        strokeSize: focusedStrokeSize,
+        radius: 16,
+      }),
+    );
+  }
+
   Object.assign(style, styleForContentPosition);
   const spacingStyle = getInnerSpacingStyles({
     around: innerSpacing,

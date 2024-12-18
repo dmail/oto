@@ -12,15 +12,20 @@
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
       // eslint-disable-next-line no-unused-vars
-      import { Button } from "./button.jsx";
+      import { Button, ButtonMessage } from "./button.jsx";
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
         return (
           <>
             <div style="display: flex; margin: 30px;">
-              <Button border={{ color: "red", size: 10 }}>Click me</Button>
+              <Button>Click me</Button>
             </div>
+
+            {/*}
+            <div style="display: flex; margin: 30px;">
+              <ButtonMessage>Click me</ButtonMessage>
+            </div>*/}
           </>
         );
       };
