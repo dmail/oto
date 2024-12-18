@@ -74,6 +74,13 @@ export const borderOutsidePartial = ({
   ];
 };
 
+const BORDER_FOCUSED = borderOutsidePartial({
+  color: "dodgerblue",
+  strokeColor: "black",
+  size: 5,
+  strokeSize: 10,
+});
+
 const BoxComponent = (
   {
     NodeName = "div",
@@ -82,6 +89,7 @@ const BoxComponent = (
     absolute = false,
     hidden = false,
     invisible = false,
+    focused = false,
     children,
     innerSpacing = 0,
     innerSpacingY,
@@ -247,6 +255,9 @@ const BoxComponent = (
   if (outline) {
     borders.push(outline);
   }
+  if (focused) {
+    borders.push(...BORDER_FOCUSED);
+  }
   if (border) {
     if (Array.isArray(border)) {
       borders.push(...border);
@@ -292,6 +303,7 @@ const BoxComponent = (
       name={name}
       className="box"
       {...props}
+      data-focused={focused || undefined}
       data-vertical={vertical || undefined}
       data-hidden={hidden || undefined}
       data-invisible={invisible || undefined}

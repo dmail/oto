@@ -16,28 +16,36 @@ if (import.meta.hot) {
 }
 
 export const Button = ({ children, ...props }) => {
-  // const [focused, focusedSetter] = useState(false);
+  const [focused, focusedSetter] = useState(false);
   const [hovered, hoveredSetter] = useState(false);
 
   return (
     <Box.button
-      //   onFocus={() => {
-      //     focusedSetter(true);
-      //   }}
-      //   onBlur={() => {
-      //     focusedSetter(false);
-      //   }}
+      focused={true}
+      onFocus={() => {
+        focusedSetter(true);
+      }}
+      onBlur={() => {
+        focusedSetter(false);
+      }}
       onMouseEnter={() => {
         hoveredSetter(true);
       }}
       onMouseLeave={() => {
         hoveredSetter(false);
       }}
+      color={hovered ? "dodgerblue" : undefined}
       {...props}
     >
-      <Message color={hovered ? "dodgerblue" : undefined} cursor="pointer">
-        {children}
-      </Message>
+      {children}
     </Box.button>
+  );
+};
+
+export const ButtonMessage = ({ children }) => {
+  return (
+    <Button>
+      <Message cursor="pointer">{children}</Message>
+    </Button>
   );
 };

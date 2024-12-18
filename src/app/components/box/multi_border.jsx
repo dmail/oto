@@ -31,9 +31,10 @@ export const useMultiBorder = (ref, borders) => {
   let borderFullSize = 0;
   const resolvedBorders = [];
   for (const border of borders) {
-    let { size, spacing = 0, radius = 0 } = border;
+    let { size = 1, strokeSize = 0, radius = 0, spacing = 0 } = border;
     const resolvedBorder = {
       ...border,
+      strokeSize,
       size: resolveSize(size, {
         availableSize: availableWidth,
         fontSize,
@@ -47,7 +48,8 @@ export const useMultiBorder = (ref, borders) => {
         fontSize,
       }),
     };
-    const sizeTakenByBorder = resolvedBorder.size + resolvedBorder.spacing;
+    const sizeTakenByBorder =
+      resolvedBorder.size + resolvedBorder.strokeSize + resolvedBorder.spacing;
     borderFullSize += sizeTakenByBorder;
     if (border.outside) {
       outsideBorderFullSize += sizeTakenByBorder;
@@ -150,7 +152,7 @@ const Corners = ({
   opacity,
 }) => {
   return (
-    <g name="corners" data-radius={radius}>
+    <g name="corners" data-radius={radius} data-size={size}>
       <TopLeftCorner
         x={x}
         y={y}
@@ -223,6 +225,8 @@ const TopLeftCorner = ({
   if (size > height) {
     size = height;
   }
+  x += strokeSize / 2;
+  y += strokeSize / 2;
   let d;
   if (radius > 0) {
     const outerRadius = radius;
@@ -253,6 +257,7 @@ const TopLeftCorner = ({
       `v -${height}`,
     ];
   }
+  d.push("z");
   return (
     <path
       name="top_left_corner"
@@ -261,6 +266,8 @@ const TopLeftCorner = ({
       opacity={opacity}
       stroke={strokeColor}
       stroke-width={strokeSize}
+      // eslint-disable-next-line react/no-unknown-property
+      paint-order="stroke"
     />
   );
 };
@@ -285,7 +292,8 @@ const TopRightCorner = ({
   if (size > height) {
     size = height;
   }
-
+  x -= strokeSize / 2;
+  y += strokeSize / 2;
   let d;
   if (radius > 0) {
     const outerRadius = radius;
@@ -316,7 +324,7 @@ const TopRightCorner = ({
       `v -${size}`,
     ];
   }
-
+  d.push("z");
   return (
     <path
       name="top_right_corner"
@@ -325,6 +333,8 @@ const TopRightCorner = ({
       opacity={opacity}
       stroke={strokeColor}
       stroke-width={strokeSize}
+      // eslint-disable-next-line react/no-unknown-property
+      paint-order="stroke"
     />
   );
 };
@@ -350,6 +360,8 @@ const BottomRightCorner = ({
     size = height;
   }
 
+  x -= strokeSize / 2;
+  y -= strokeSize / 2;
   let d;
   if (radius > 0) {
     const outerRadius = radius;
@@ -380,6 +392,7 @@ const BottomRightCorner = ({
       `h ${size}`,
     ];
   }
+  d.push("z");
 
   return (
     <path
@@ -389,6 +402,8 @@ const BottomRightCorner = ({
       opacity={opacity}
       stroke={strokeColor}
       stroke-width={strokeSize}
+      // eslint-disable-next-line react/no-unknown-property
+      paint-order="stroke"
     />
   );
 };
@@ -413,7 +428,8 @@ const BottomLeftCorner = ({
   if (size > height) {
     size = height;
   }
-
+  x += strokeSize / 2;
+  y -= strokeSize / 2;
   let d;
   if (radius > 0) {
     const outerRadius = radius;
@@ -444,6 +460,7 @@ const BottomLeftCorner = ({
       `v ${size}`,
     ];
   }
+  d.push("z");
 
   return (
     <path
@@ -453,6 +470,8 @@ const BottomLeftCorner = ({
       opacity={opacity}
       stroke={strokeColor}
       stroke-width={strokeSize}
+      // eslint-disable-next-line react/no-unknown-property
+      paint-order="stroke"
     />
   );
 };

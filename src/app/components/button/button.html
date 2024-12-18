@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>Button</title>
+  </head>
+  <body>
+    <div id="root" style="position: relative"></div>
+
+    <script type="module" jsenv-type="module/jsx">
+      import { render } from "preact";
+      // eslint-disable-next-line no-unused-vars
+      import { Button } from "./button.jsx";
+
+      // eslint-disable-next-line no-unused-vars
+      const App = () => {
+        return (
+          <>
+            <div style="display: flex; margin: 30px;">
+              <Button border={{ color: "red", size: 10 }}>Click me</Button>
+            </div>
+          </>
+        );
+      };
+
+      render(<App />, document.querySelector("#root"));
+    </script>
+  </body>
+</html>
