@@ -235,6 +235,8 @@ const Corner = ({
       strokeHeight = height + strokeSize;
       fillX = x - strokeSize / 2;
       fillY = y + strokeSize / 2;
+    } else if (name === "bottom_right") {
+    } else if (name === "bottom_left") {
     }
 
     const strokePath = buildPath({
@@ -344,7 +346,7 @@ const buildTopLeftCornerPath = ({
     }
     if (innerRadiusX >= 1 && innerRadiusY >= 1) {
       const bottomLineWidth = width - sizeX - innerRadiusX;
-      const rightLineHeight = height - sizeY - innerRadiusX;
+      const rightLineHeight = height - sizeY - innerRadiusY;
       if (bottomLineWidth < 0) {
         const xDiff = -bottomLineWidth;
         innerRadiusX -= xDiff;
@@ -353,20 +355,13 @@ const buildTopLeftCornerPath = ({
         const yDiff = -rightLineHeight;
         innerRadiusY -= yDiff;
       }
-      if (innerRadiusX >= 1 && innerRadiusY >= 1) {
-        d.push(`v ${sizeY}`);
-        if (bottomLineWidth > 0) {
-          d.push(`h -${bottomLineWidth}`);
-        }
-        d.push(
-          `a ${innerRadiusX},${innerRadiusY} 0 0 0 -${innerRadiusX},${innerRadiusY}`,
-        );
-      } else {
-        d.push(`v ${height}`);
-        if (bottomLineWidth > 0) {
-          d.push(`h -${bottomLineWidth}`);
-        }
+      d.push(`v ${sizeY}`);
+      if (bottomLineWidth > 0) {
+        d.push(`h -${bottomLineWidth}`);
       }
+      d.push(
+        `a ${innerRadiusX},${innerRadiusY} 0 0 0 -${innerRadiusX},${innerRadiusY}`,
+      );
       if (rightLineHeight > 0) {
         d.push(`v ${rightLineHeight}`);
       }
