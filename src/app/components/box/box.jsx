@@ -1,5 +1,10 @@
 import { forwardRef } from "preact/compat";
-import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
+import {
+  useImperativeHandle,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "preact/hooks";
 import { getAvailableSize } from "../../utils/get_available_size.js";
 import boxStylesheet from "./box.css" with { type: "css" };
 import { getInnerSpacingStyles } from "./inner_spacing_styles.js";
@@ -82,6 +87,7 @@ const BoxComponent = (
     absolute = false,
     hidden = false,
     invisible = false,
+    focusable = false,
     focused = false,
     focusedOutlineRadius = 16,
     focusedOutlineSize = 5,
@@ -95,6 +101,7 @@ const BoxComponent = (
     innerSpacingRight,
     innerSpacingBottom,
     ratio,
+    color,
     backgroundColor,
     border,
     outline,
@@ -111,6 +118,8 @@ const BoxComponent = (
   },
   ref,
 ) => {
+  const [innerIsFocused, innerIsFocusedSetter] = useState(focused);
+
   const innerRef = useRef();
   useImperativeHandle(ref, () => innerRef.current);
 
@@ -194,6 +203,7 @@ const BoxComponent = (
         : height,
     maxWidth: isFinite(maxWidth) ? `${maxWidth}px` : maxWidth,
     maxHeight: isFinite(maxHeight) ? `${maxHeight}px` : maxHeight,
+    color,
     backgroundColor,
     cursor,
     ...props.style,
@@ -261,7 +271,7 @@ const BoxComponent = (
   if (borders.length) {
     style.borderRadius = borders[0].radius;
   }
-  if (focused) {
+  if (innerIsFocused) {
     borders.unshift(
       ...borderOutsidePartial({
         color: "dodgerblue",
@@ -307,8 +317,19 @@ const BoxComponent = (
       ref={innerRef}
       name={name}
       className="box"
+      {...(focusable
+        ? {
+            tabIndex: NodeName === "button" ? undefined : -1,
+            onFocus: () => {
+              innerIsFocusedSetter(true);
+            },
+            onBlur: () => {
+              innerIsFocusedSetter(false);
+            },
+          }
+        : {})}
       {...props}
-      data-focused={focused || undefined}
+      data-focused={innerIsFocused || undefined}
       data-vertical={vertical || undefined}
       data-hidden={hidden || undefined}
       data-invisible={invisible || undefined}

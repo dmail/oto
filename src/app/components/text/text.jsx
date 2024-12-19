@@ -402,10 +402,11 @@ const Tspan = ({
       font-family={fontFamily}
       font-weight={fontWeight}
       letter-spacing={letterSpacing}
-      fill={color}
+      fill={color === "inherit" ? "currentColor" : color}
       {...(outlineColor
         ? {
-            "stroke": outlineColor,
+            "stroke":
+              outlineColor === "inherit" ? "currentColor" : outlineColor,
             "stroke-width": thickness + outlineSize,
             "paint-order": "stroke",
           }

@@ -13,7 +13,7 @@ const MessageComponent = (
   {
     children,
     backgroundColor = "black",
-    color = "white",
+    color = "inherit",
     borderColor = "white",
     borderStrokeColor = "black",
     borderSize = 5,
