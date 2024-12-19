@@ -154,7 +154,7 @@ const Corners = ({
 }) => {
   return (
     <g name="corners" data-radius={radius} data-size={size}>
-      <TopLeftCorner
+      {/* <TopLeftCorner
         x={x}
         y={y}
         width={width}
@@ -177,8 +177,8 @@ const Corners = ({
         strokeColor={strokeColor}
         strokeSize={strokeSize}
         opacity={opacity}
-      />
-      {/* <BottomRightCorner
+      /> */}
+      <BottomRightCorner
         x={x + rectangleWidth}
         y={y + rectangleHeight}
         width={width}
@@ -201,7 +201,7 @@ const Corners = ({
         strokeColor={strokeColor}
         strokeSize={strokeSize}
         opacity={opacity}
-      />  */}
+      />
     </g>
   );
 };
@@ -236,7 +236,15 @@ const Corner = ({
       fillX = x - strokeSize / 2;
       fillY = y + strokeSize / 2;
     } else if (name === "bottom_right") {
+      strokeWidth = width + strokeSize;
+      strokeHeight = height + strokeSize;
+      fillX = x - strokeSize / 2;
+      fillY = y - strokeSize / 2;
     } else if (name === "bottom_left") {
+      strokeWidth = width + strokeSize;
+      strokeHeight = height + strokeSize;
+      fillX = x + strokeSize / 2;
+      fillY = y - strokeSize / 2;
     }
 
     const strokePath = buildPath({
@@ -294,9 +302,27 @@ const TopRightCorner = (props) => {
     <Corner name="top_right" buildPath={buildTopRightCornerPath} {...props} />
   );
 };
+const BottomRightCorner = (props) => {
+  return (
+    <Corner
+      name="bottom_right"
+      buildPath={buildBottomRightCornerPath}
+      {...props}
+    />
+  );
+};
+const BottomLeftCorner = (props) => {
+  return (
+    <Corner
+      name="bottom_left"
+      buildPath={buildBottomLeftCornerPath}
+      {...props}
+    />
+  );
+};
 
 const buildTopLeftCornerPath = ({
-  // isStroke,
+  isStroke,
   x,
   y,
   width,
@@ -324,10 +350,16 @@ const buildTopLeftCornerPath = ({
     if (leftLineHeight < 0) {
       const xDiff = -leftLineHeight;
       outerRadiusX += xDiff;
+      if (!isStroke) {
+        x += xDiff / 6;
+      }
     }
     if (topLineWidth < 0) {
       const yDiff = -topLineWidth;
       outerRadiusY += yDiff;
+      if (!isStroke) {
+        y += yDiff / 6;
+      }
     }
     let outerRadiusDX = Math.min(outerRadiusX, width);
     let outerRadiusDY = Math.min(outerRadiusY, height);
@@ -389,7 +421,15 @@ const buildTopLeftCornerPath = ({
   d = d.join(" ");
   return d;
 };
-const buildTopRightCornerPath = ({ x, y, width, height, size, radius }) => {
+const buildTopRightCornerPath = ({
+  isStroke,
+  x,
+  y,
+  width,
+  height,
+  size,
+  radius,
+}) => {
   if (size <= 0 || width <= 0 || height <= 0) {
     return null;
   }
@@ -410,10 +450,16 @@ const buildTopRightCornerPath = ({ x, y, width, height, size, radius }) => {
     if (topLineWidth < 0) {
       const xDiff = -topLineWidth;
       outerRadiusX += xDiff;
+      if (!isStroke) {
+        x -= xDiff / 6;
+      }
     }
     if (rightLineHeight < 0) {
       const yDiff = -rightLineHeight;
       outerRadiusY += yDiff;
+      if (!isStroke) {
+        y += yDiff / 6;
+      }
     }
     let outerRadiusDX = Math.min(outerRadiusX, width);
     let outerRadiusDY = Math.min(outerRadiusY, height);
@@ -441,17 +487,13 @@ const buildTopRightCornerPath = ({ x, y, width, height, size, radius }) => {
         const xDiff = -bottomLineWidth;
         innerRadiusX -= xDiff;
       }
-      if (innerRadiusX >= 1 && innerRadiusY >= 1) {
-        d.push(`h -${sizeX}`);
-        if (leftLineHeight > 0) {
-          d.push(`v -${leftLineHeight}`);
-        }
-        d.push(
-          `a ${innerRadiusX},${innerRadiusY} 0 0 0 -${innerRadiusX},-${innerRadiusY}`,
-        );
-      } else {
-        d.push(`v -${height}`);
+      d.push(`h -${sizeX}`);
+      if (leftLineHeight > 0) {
+        d.push(`v -${leftLineHeight}`);
       }
+      d.push(
+        `a ${innerRadiusX},${innerRadiusY} 0 0 0 -${innerRadiusX},-${innerRadiusY}`,
+      );
       if (bottomLineWidth > 0) {
         d.push(`h -${bottomLineWidth}`);
       }
@@ -474,143 +516,205 @@ const buildTopRightCornerPath = ({ x, y, width, height, size, radius }) => {
   d = d.join(" ");
   return d;
 };
-
-const BottomRightCorner = ({
+const buildBottomRightCornerPath = ({
+  isStroke,
   x,
   y,
   width,
   height,
   size,
   radius,
-  color,
-  strokeColor,
-  strokeSize,
-  opacity,
 }) => {
-  if (size <= 0 || width <= 0) {
+  if (size <= 0 || width <= 0 || height <= 0) {
     return null;
   }
+  let sizeX = size;
   if (size > width) {
-    size = width;
+    sizeX = width;
   }
+  let sizeY = size;
   if (size > height) {
-    size = height;
+    sizeY = height;
   }
-
-  x -= strokeSize / 2;
-  y -= strokeSize / 2;
-  let d;
+  let d = [];
   if (radius > 0) {
-    const outerRadius = radius;
-    const innerRadius = outerRadius - size;
-    d = [
-      `M ${x},${y - height}`,
-      `v ${height - outerRadius}`,
-      `a ${outerRadius},${outerRadius} 0 0 1 -${outerRadius},${outerRadius}`,
-      `h -${width - outerRadius}`,
-      `v -${size}`,
-      ...(innerRadius > 0
-        ? [
-            `h ${width - innerRadius - size}`,
-            `a ${innerRadius},${innerRadius} 0 0 0 ${innerRadius},-${innerRadius}`,
-            `v -${height - innerRadius - size}`,
-            `h ${size}`,
-          ]
-        : [`h ${width - size}`, `v -${height - size}`, `h ${size}`]),
-    ];
-  } else {
-    d = [
-      `M ${x},${y - height}`,
-      `v ${height}`,
-      `h -${width}`,
-      `v -${size}`,
-      `h ${width - size}`,
-      `v -${height - size}`,
-      `h ${size}`,
-    ];
-  }
-  d.push("z");
+    let outerRadiusX = radius;
+    let outerRadiusY = radius;
+    const rightLineHeight = height - outerRadiusY;
+    const bottomLineWidth = width - outerRadiusX;
+    if (rightLineHeight < 0) {
+      const yDiff = -rightLineHeight;
+      outerRadiusY += yDiff;
+      if (!isStroke) {
+        y -= yDiff / 6;
+      }
+    }
+    if (bottomLineWidth < 0) {
+      const xDiff = -bottomLineWidth;
+      outerRadiusX += xDiff;
+      if (!isStroke) {
+        x -= xDiff / 6;
+      }
+    }
+    let outerRadiusDX = Math.min(outerRadiusX, width);
+    let outerRadiusDY = Math.min(outerRadiusY, height);
+    let innerRadiusX = outerRadiusX - sizeX;
+    let innerRadiusY = outerRadiusY - sizeY;
 
-  return (
-    <path
-      name="bottom_right_corner"
-      d={d.join(" ")}
-      fill={color}
-      opacity={opacity}
-      stroke={strokeColor}
-      stroke-width={strokeSize}
-      // eslint-disable-next-line react/no-unknown-property
-      paint-order="stroke"
-    />
-  );
-};
-const BottomLeftCorner = ({
-  x,
-  y,
-  width,
-  height,
-  size,
-  radius,
-  color,
-  strokeColor,
-  strokeSize,
-  opacity,
-}) => {
-  if (size <= 0 || width <= 0) {
-    return null;
-  }
-  if (size > width) {
-    size = width;
-  }
-  if (size > height) {
-    size = height;
-  }
-  x += strokeSize / 2;
-  y -= strokeSize / 2;
-  let d;
-  if (radius > 0) {
-    const outerRadius = radius;
-    const innerRadius = outerRadius - size;
-    d = [
-      `M ${x + width},${y}`,
-      `h -${width - outerRadius}`,
-      `a ${outerRadius},${outerRadius} 0 0 1 -${outerRadius},-${outerRadius}`,
-      `v -${height - outerRadius}`,
-      `h ${size}`,
-      ...(innerRadius > 0
-        ? [
-            `v ${height - innerRadius - size}`,
-            `a ${innerRadius},${innerRadius} 0 0 0 ${innerRadius},${innerRadius}`,
-            `h ${width - innerRadius - size}`,
-            `v ${size}`,
-          ]
-        : [`v ${height - size}`, `h ${width - size}`, `v ${size}`]),
-    ];
+    d.push(`M ${x},${y - height}`);
+    if (rightLineHeight > 0) {
+      d.push(`v ${rightLineHeight}`);
+    }
+    d.push(
+      `a ${outerRadiusX},${outerRadiusY} 0 0 1 -${outerRadiusDX},${outerRadiusDY}`,
+    );
+    if (bottomLineWidth > 0) {
+      d.push(`h ${bottomLineWidth}`);
+    }
+    if (innerRadiusX >= 1 && innerRadiusY >= 1) {
+      const topLineWidth = width - sizeX - innerRadiusX;
+      const leftLineHeight = height - sizeY - innerRadiusY;
+      if (topLineWidth < 0) {
+        const xDiff = -topLineWidth;
+        innerRadiusX -= xDiff;
+      }
+      if (leftLineHeight < 0) {
+        const yDiff = -leftLineHeight;
+        innerRadiusY -= yDiff;
+      }
+      d.push(`v -${sizeY}`);
+      if (topLineWidth > 0) {
+        d.push(`h -${topLineWidth}`);
+      }
+      d.push(
+        `a ${innerRadiusX},${innerRadiusY} 0 0 0 ${innerRadiusX},-${innerRadiusY}`,
+      );
+      if (leftLineHeight > 0) {
+        d.push(`v -${leftLineHeight}`);
+      }
+      d.push(`h ${sizeX}`);
+    } else {
+      d.push(
+        `h ${sizeX}`,
+        `v -${height - sizeY}`,
+        `h ${width - sizeX}`,
+        `v ${sizeY}`,
+      );
+    }
   } else {
-    d = [
-      `M ${x + width},${y}`,
-      `h ${-width}`,
-      `v -${height}`,
-      `h ${size}`,
-      `v ${height - size}`,
-      `h ${width - size}`,
+    d.push(
+      `M ${x - width},${y - height}`,
+      `h ${width}`,
       `v ${size}`,
-    ];
+      `h -${width - size}`,
+      `v ${height - size}`,
+      `h -${size}`,
+      `v -${height}`,
+    );
   }
   d.push("z");
+  d = d.join(" ");
+  return d;
+};
+const buildBottomLeftCornerPath = ({
+  isStroke,
+  x,
+  y,
+  width,
+  height,
+  size,
+  radius,
+}) => {
+  if (size <= 0 || width <= 0 || height <= 0) {
+    return null;
+  }
+  let sizeX = size;
+  if (size > width) {
+    sizeX = width;
+  }
+  let sizeY = size;
+  if (size > height) {
+    sizeY = height;
+  }
+  let d = [];
+  if (radius > 0) {
+    let outerRadiusX = radius;
+    let outerRadiusY = radius;
+    const bottomLineWidth = width - outerRadiusX;
+    const leftLineHeight = height - outerRadiusY;
+    if (bottomLineWidth < 0) {
+      const xDiff = -bottomLineWidth;
+      outerRadiusX += xDiff;
+      if (!isStroke) {
+        x += xDiff / 6;
+      }
+    }
+    if (leftLineHeight < 0) {
+      const yDiff = -leftLineHeight;
+      outerRadiusY += yDiff;
+      if (!isStroke) {
+        y -= yDiff / 6;
+      }
+    }
+    let outerRadiusDX = Math.min(outerRadiusX, width);
+    let outerRadiusDY = Math.min(outerRadiusY, height);
+    let innerRadiusX = outerRadiusX - sizeX;
+    let innerRadiusY = outerRadiusY - sizeY;
 
-  return (
-    <path
-      name="bottom_left_corner"
-      d={d.join(" ")}
-      fill={color}
-      opacity={opacity}
-      stroke={strokeColor}
-      stroke-width={strokeSize}
-      // eslint-disable-next-line react/no-unknown-property
-      paint-order="stroke"
-    />
-  );
+    d.push(`M ${x + width},${y}`);
+    if (bottomLineWidth > 0) {
+      d.push(`h -${bottomLineWidth}`);
+    }
+    d.push(
+      `a ${outerRadiusX},${outerRadiusY} 0 0 1 -${outerRadiusDX},-${outerRadiusDY}`,
+    );
+    if (leftLineHeight > 0) {
+      d.push(`v -${leftLineHeight}`);
+    }
+    if (innerRadiusX >= 1 && innerRadiusY >= 1) {
+      const leftLineHeight = height - sizeY - innerRadiusY;
+      const topLineWidth = width - sizeX - innerRadiusX;
+      if (leftLineHeight < 0) {
+        const yDiff = -leftLineHeight;
+        innerRadiusY -= yDiff;
+      }
+      if (topLineWidth < 0) {
+        const xDiff = -topLineWidth;
+        innerRadiusX -= xDiff;
+      }
+      d.push(`h ${sizeX}`);
+      if (leftLineHeight > 0) {
+        d.push(`v ${leftLineHeight}`);
+      }
+      d.push(
+        `a ${innerRadiusX},${innerRadiusY} 0 0 0 ${innerRadiusX},${innerRadiusY}`,
+      );
+      if (topLineWidth > 0) {
+        d.push(`h ${topLineWidth}`);
+      }
+      d.push(`v ${sizeY}`);
+    } else {
+      d.push(
+        `v -${sizeY}`,
+        `h ${width - sizeX}`,
+        `v -${height - sizeY}`,
+        `h ${sizeX}`,
+      );
+    }
+  } else {
+    d.push(
+      `M ${x},${y}`,
+      `h ${size}`,
+      `v ${height}`,
+      `h -${size}`,
+      `v -${height - size}`,
+      `h -${width - size}`,
+      `v ${size}`,
+    );
+  }
+  d.push("z");
+  d = d.join(" ");
+  return d;
 };
 
 const resolveSize = (size, { availableSize, fontSize }) => {
