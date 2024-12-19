@@ -1,8 +1,11 @@
 import { render } from "preact";
 import { forwardRef } from "preact/compat";
 import { useCallback, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useResizeObserver } from "/app/hooks/use_resize_observer.js";
 import { useStructuredMemo } from "/app/hooks/use_structured_memo.js";
 import { getAvailableSize } from "/app/utils/get_available_size.js";
+
+let isUpdatingText = false;
 
 export const useTextController = () => {
   const [index, indexSetter] = useState(-1);
@@ -75,7 +78,6 @@ const TextComponent = ({
   const index = controller?.index;
   const onParagraphChange = controller?.onParagraphChange;
   const fontReady = useFontsReady(fontFamily);
-
   const lineAsDeps = [];
   for (const line of lines) {
     for (const lineChild of line) {
@@ -130,37 +132,20 @@ const TextComponent = ({
   ]);
 
   useLayoutEffect(() => {
-    const svgElement = svgInnerRef.current;
-    const elementToObserve = svgElement.parentNode;
-    let previousWidth;
-    let previousHeight;
-    let disconnect = () => {};
-
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) {
-        return;
-      }
-      if (
-        entry.contentRect.width === previousWidth &&
-        entry.contentRect.height === previousHeight
-      ) {
-        return;
-      }
-      previousWidth = entry.contentRect.width;
-      previousHeight = entry.contentRect.height;
-      observer.unobserve(elementToObserve);
-      update();
-      observer.observe(elementToObserve);
-    });
-    observer.observe(elementToObserve);
-    disconnect = () => {
-      observer.disconnect();
-    };
-    return () => {
-      disconnect();
-    };
+    update();
   }, [update]);
+
+  useResizeObserver({
+    ref: svgInnerRef,
+    getElementToObserve: (svg) => svg.parentNode,
+    onResize: () => {
+      isUpdatingText = true;
+      update();
+      requestAnimationFrame(() => {
+        isUpdatingText = false;
+      });
+    },
+  });
 
   useLayoutEffect(() => {
     if (typeof index === "number" && setParagraphRef.current) {
@@ -546,6 +531,7 @@ const splitLines = (text) => {
  */
 window.addEventListener("error", (errorEvent) => {
   if (
+    isUpdatingText &&
     errorEvent.message.includes(
       "ResizeObserver loop completed with undelivered notifications.",
     )
