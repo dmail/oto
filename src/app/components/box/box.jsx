@@ -87,7 +87,7 @@ const BoxComponent = (
     absolute = false,
     hidden = false,
     invisible = false,
-    focusable = false,
+    focusable = NodeName === "button",
     focused = false,
     focusedOutlineRadius = 16,
     focusedOutlineSize = 5,
@@ -303,6 +303,7 @@ const BoxComponent = (
     solidBorderFullSize,
     borderRadius,
   ] = useMultiBorder(innerRef, borders);
+  console.log({ resolvedBorders });
 
   if (solidBorderFullSize) {
     style.borderWidth = `${solidBorderFullSize}px`;

@@ -20,7 +20,6 @@ export const Button = ({ children, color, ...props }) => {
 
   return (
     <Box.button
-      focused={true}
       onMouseEnter={() => {
         hoveredSetter(true);
       }}
@@ -35,9 +34,9 @@ export const Button = ({ children, color, ...props }) => {
   );
 };
 
-export const ButtonMessage = ({ children }) => {
+export const ButtonMessage = ({ children, ...props }) => {
   return (
-    <Button color="white">
+    <Button color="white" {...props}>
       <Message cursor="pointer">{children}</Message>
     </Button>
   );
