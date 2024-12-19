@@ -349,14 +349,12 @@ const buildTopLeftCornerPath = ({
     const topLineWidth = width - outerRadiusX;
     if (leftLineHeight < 0) {
       const xDiff = -leftLineHeight;
-      outerRadiusX += xDiff;
       if (!isStroke) {
         x += xDiff / 6;
       }
     }
     if (topLineWidth < 0) {
       const yDiff = -topLineWidth;
-      outerRadiusY += yDiff;
       if (!isStroke) {
         y += yDiff / 6;
       }
@@ -449,14 +447,12 @@ const buildTopRightCornerPath = ({
     const rightLineHeight = height - outerRadiusY;
     if (topLineWidth < 0) {
       const xDiff = -topLineWidth;
-      outerRadiusX += xDiff;
       if (!isStroke) {
         x -= xDiff / 6;
       }
     }
     if (rightLineHeight < 0) {
       const yDiff = -rightLineHeight;
-      outerRadiusY += yDiff;
       if (!isStroke) {
         y += yDiff / 6;
       }
@@ -544,14 +540,12 @@ const buildBottomRightCornerPath = ({
     const bottomLineWidth = width - outerRadiusX;
     if (rightLineHeight < 0) {
       const yDiff = -rightLineHeight;
-      outerRadiusY += yDiff;
       if (!isStroke) {
         y -= yDiff / 6;
       }
     }
     if (bottomLineWidth < 0) {
       const xDiff = -bottomLineWidth;
-      outerRadiusX += xDiff;
       if (!isStroke) {
         x -= xDiff / 6;
       }
@@ -644,14 +638,12 @@ const buildBottomLeftCornerPath = ({
     const leftLineHeight = height - outerRadiusY;
     if (bottomLineWidth < 0) {
       const xDiff = -bottomLineWidth;
-      outerRadiusX += xDiff;
       if (!isStroke) {
         x += xDiff / 6;
       }
     }
     if (leftLineHeight < 0) {
       const yDiff = -leftLineHeight;
-      outerRadiusY += yDiff;
       if (!isStroke) {
         y -= yDiff / 6;
       }
