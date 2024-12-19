@@ -281,7 +281,14 @@ const Corner = ({
       </>
     );
   }
-  const fillPath = buildPath({});
+  const fillPath = buildPath({
+    x,
+    y,
+    width,
+    height,
+    size,
+    radius,
+  });
   return (
     <path
       name={`${name}_corner_fill`}
@@ -294,29 +301,29 @@ const Corner = ({
 
 const TopLeftCorner = (props) => {
   return (
-    <Corner name="top_left" buildPath={buildTopLeftCornerPath} {...props} />
+    <Corner {...props} name="top_left" buildPath={buildTopLeftCornerPath} />
   );
 };
 const TopRightCorner = (props) => {
   return (
-    <Corner name="top_right" buildPath={buildTopRightCornerPath} {...props} />
+    <Corner {...props} name="top_right" buildPath={buildTopRightCornerPath} />
   );
 };
 const BottomRightCorner = (props) => {
   return (
     <Corner
+      {...props}
       name="bottom_right"
       buildPath={buildBottomRightCornerPath}
-      {...props}
     />
   );
 };
 const BottomLeftCorner = (props) => {
   return (
     <Corner
+      {...props}
       name="bottom_left"
       buildPath={buildBottomLeftCornerPath}
-      {...props}
     />
   );
 };
@@ -597,13 +604,13 @@ const buildBottomRightCornerPath = ({
     }
   } else {
     d.push(
-      `M ${x - width},${y - height}`,
-      `h ${width}`,
-      `v ${size}`,
-      `h -${width - size}`,
-      `v ${height - size}`,
-      `h -${size}`,
-      `v -${height}`,
+      `M ${x},${y - height}`,
+      `v ${height}`,
+      `h -${width}`,
+      `v -${size}`,
+      `h ${width - size}`,
+      `v -${height - size}`,
+      `h ${size}`,
     );
   }
   d.push("z");
@@ -695,12 +702,12 @@ const buildBottomLeftCornerPath = ({
     }
   } else {
     d.push(
-      `M ${x},${y}`,
+      `M ${x + width},${y}`,
+      `h -${width}`,
+      `v -${height}`,
       `h ${size}`,
-      `v ${height}`,
-      `h -${size}`,
-      `v -${height - size}`,
-      `h -${width - size}`,
+      `v ${height - size}`,
+      `h ${width - size}`,
       `v ${size}`,
     );
   }

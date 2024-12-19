@@ -303,7 +303,6 @@ const BoxComponent = (
     solidBorderFullSize,
     borderRadius,
   ] = useMultiBorder(innerRef, borders);
-  console.log({ resolvedBorders });
 
   if (solidBorderFullSize) {
     style.borderWidth = `${solidBorderFullSize}px`;
