@@ -405,7 +405,6 @@ const buildTopLeftCornerPath = ({
       d.push(`h -${sizeX}`);
     } else {
       d.push(
-        `h ${sizeX}`,
         `v ${sizeY}`,
         `h -${width - sizeX}`,
         `v ${height - sizeY}`,
@@ -503,7 +502,12 @@ const buildTopRightCornerPath = ({
       }
       d.push(`v -${sizeY}`);
     } else {
-      d.push(`v -${height - size}`, `h ${-width + size}`, `v -${size}`);
+      d.push(
+        `h -${sizeX}`,
+        `v -${height - sizeY}`,
+        `h -${width - sizeX}`,
+        `v -${sizeY}`,
+      );
     }
   } else {
     d = [
@@ -597,10 +601,10 @@ const buildBottomRightCornerPath = ({
       d.push(`h ${sizeX}`);
     } else {
       d.push(
-        `h ${sizeX}`,
-        `v -${height - sizeY}`,
+        `v -${sizeY}`,
         `h ${width - sizeX}`,
-        `v ${sizeY}`,
+        `v -${height - sizeY}`,
+        `h ${sizeX}`,
       );
     }
   } else {
@@ -695,10 +699,10 @@ const buildBottomLeftCornerPath = ({
       d.push(`v ${sizeY}`);
     } else {
       d.push(
-        `v -${sizeY}`,
-        `h ${width - sizeX}`,
-        `v -${height - sizeY}`,
         `h ${sizeX}`,
+        `v ${height - sizeY}`,
+        `h ${width - sizeX}`,
+        `v ${sizeY}`,
       );
     }
   } else {
