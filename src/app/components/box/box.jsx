@@ -306,7 +306,7 @@ const BoxComponent = (
 
   if (solidBorderFullSize) {
     style.borderWidth = `${solidBorderFullSize}px`;
-    style.borderColor = backgroundColor || "transparent";
+    style.borderColor = "transparent";
     style.borderStyle = "solid";
     style.backgroundClip = "padding-box";
     style.borderRadius = borderRadius;
