@@ -163,10 +163,6 @@ const TextComponent = ({
   }, [update]);
 
   useLayoutEffect(() => {
-    update();
-  }, [update]);
-
-  useLayoutEffect(() => {
     if (typeof index === "number" && setParagraphRef.current) {
       setParagraphRef.current(controller.index);
     }

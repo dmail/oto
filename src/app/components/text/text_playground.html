@@ -36,10 +36,16 @@
       const TextWithForm = () => {
         const [text, textSetter] = useLocalStorageState("text", "Coucou");
         const [color, colorSetter] = useLocalStorageState("color", "black");
+        const [fontSize, fontSizeSetter] = useLocalStorageState(
+          "font_size",
+          18,
+        );
 
         return (
           <div>
-            <Text fontSize="18px">{text}</Text>
+            <Text fontSize={fontSize} color={color}>
+              {text}
+            </Text>
             <fieldset>
               <legend>Text props</legend>
 
@@ -52,7 +58,6 @@
                 />
               </label>
               <br />
-
               <label>
                 Color:
                 <select
@@ -64,6 +69,17 @@
                   <option value="black">black</option>
                   <option value="red">red</option>
                 </select>
+              </label>
+              <br />
+              <label>
+                Font size:
+                <input
+                  type="number"
+                  min="1"
+                  max="40"
+                  value={fontSize}
+                  onInput={(event) => fontSizeSetter(event.target.value)}
+                />
               </label>
             </fieldset>
           </div>
