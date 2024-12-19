@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>Text playground</title>
+  </head>
+  <body>
+    <div id="root" style="position: relative"></div>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+    </style>
+    <script type="module" jsenv-type="module/jsx">
+      import { render } from "preact";
+      import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
+      import {
+        // eslint-disable-next-line no-unused-vars
+        Text,
+      } from "./text.jsx";
+
+      // eslint-disable-next-line no-unused-vars
+      const App = () => {
+        return (
+          <div style="display:inline-flex; flex-direction: column">
+            <div style="display:inline-flex; margin: 10px">
+              <TextWithForm />
+            </div>
+          </div>
+        );
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const TextWithForm = () => {
+        const [text, textSetter] = useLocalStorageState("text", "Coucou");
+        const [color, colorSetter] = useLocalStorageState("color", "black");
+
+        return (
+          <div>
+            <Text fontSize="18px">{text}</Text>
+            <fieldset>
+              <legend>Text props</legend>
+
+              <label>
+                Text:
+                <input
+                  type="text"
+                  value={text}
+                  onInput={(event) => textSetter(event.target.value)}
+                />
+              </label>
+              <br />
+
+              <label>
+                Color:
+                <select
+                  defaultValue={color}
+                  onChange={(e) => {
+                    colorSetter(e.target.value);
+                  }}
+                >
+                  <option value="black">black</option>
+                  <option value="red">red</option>
+                </select>
+              </label>
+            </fieldset>
+          </div>
+        );
+      };
+
+      render(<App />, document.querySelector("#root"));
+    </script>
+  </body>
+</html>

@@ -1,5 +1,3 @@
-// TODO: we must update also when color changes, not only on size changes
-
 import { render } from "preact";
 import { forwardRef } from "preact/compat";
 import { useCallback, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -80,9 +78,11 @@ const TextComponent = ({
 
   const lineAsDeps = [];
   for (const line of lines) {
-    lineAsDeps.push(line.type);
-    lineAsDeps.push(line.value);
-    lineAsDeps.push(line.char);
+    for (const lineChild of line) {
+      lineAsDeps.push(lineChild.type);
+      lineAsDeps.push(lineChild.value);
+      lineAsDeps.push(lineChild.char);
+    }
   }
 
   const update = useCallback(() => {
