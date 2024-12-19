@@ -87,12 +87,15 @@ const TextComponent = ({
     }
   }
 
-  const [, , { start, stop }] = useResizeObserver({
+  const [, , observe, unobserve] = useResizeObserver({
     ref: svgInnerRef,
     getElementToObserve: (svg) => svg.parentNode,
     onResize: () => {
-      console.log("resize effect");
+      isUpdatingText = true;
       update();
+      requestAnimationFrame(() => {
+        isUpdatingText = false;
+      });
     },
   });
 
@@ -114,8 +117,7 @@ const TextComponent = ({
   ];
 
   const update = () => {
-    isUpdatingText = true;
-    stop();
+    unobserve();
     const svgElement = svgInnerRef.current;
     const textElement = textRef.current;
     const [paragraphs, setParagraph] = initTextFiller(lines, {
@@ -142,8 +144,7 @@ const TextComponent = ({
     } else {
       setParagraph(0);
     }
-    start();
-    isUpdatingText = false;
+    observe();
   };
 
   useLayoutEffect(() => {
@@ -534,7 +535,7 @@ const splitLines = (text) => {
  */
 window.addEventListener("error", (errorEvent) => {
   if (
-    //  isUpdatingText &&
+    isUpdatingText &&
     errorEvent.message.includes(
       "ResizeObserver loop completed with undelivered notifications.",
     )
