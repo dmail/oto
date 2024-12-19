@@ -1,10 +1,3 @@
-/*
-* // message doit pouvoir avoir un
-// borderInnerColor
-// et un borderOuterColor
-// donc a priori du svg la dedans
-*/
-
 import { forwardRef } from "preact/compat";
 import { Box, borderWithStroke } from "/app/components/box/box.jsx";
 import { Text } from "/app/components/text/text.jsx";

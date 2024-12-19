@@ -49,10 +49,12 @@ export const borderWithStroke = ({
   ];
 };
 export const borderOutsidePartial = ({
-  width = "10%",
-  height = "10%",
+  width = "30%",
+  height = "auto",
   minWidth = "0.7em",
   minHeight = "0.7em",
+  maxWidth = "40%",
+  maxHeight = "40%",
   spacing = 0,
   size,
   color = "dodgerblue",
@@ -73,6 +75,8 @@ export const borderOutsidePartial = ({
       spacing,
       minWidth,
       minHeight,
+      maxWidth,
+      maxHeight,
       strokeSize,
       strokeColor,
     },
@@ -89,9 +93,11 @@ const BoxComponent = (
     invisible = false,
     focusable = NodeName === "button",
     focused = false,
-    focusedOutlineRadius = 16,
-    focusedOutlineSize = 5,
-    focusedOutlineStrokeSize = 5,
+    focusedOutlineColor = "dodgerblue",
+    focusedOutlineRadius = 0,
+    focusedOutlineSize = 2,
+    focusedOutlineStrokeSize = 1,
+    focusedOutlineSpacing = 1,
     children,
     innerSpacing = 0,
     innerSpacingY,
@@ -271,11 +277,13 @@ const BoxComponent = (
   if (innerIsFocused) {
     borders.unshift(
       ...borderOutsidePartial({
-        color: "dodgerblue",
+        width: "30%",
+        color: focusedOutlineColor,
         strokeColor: "black",
         size: focusedOutlineSize,
         strokeSize: focusedOutlineStrokeSize,
         radius: focusedOutlineRadius,
+        spacing: focusedOutlineSpacing,
       }),
     );
   }

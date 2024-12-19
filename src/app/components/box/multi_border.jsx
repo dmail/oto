@@ -56,28 +56,25 @@ export const useMultiBorder = (ref, borders) => {
   let y = 0;
 
   for (const resolvedBorder of resolvedBorders) {
-    let { width = "50%", height = "50%", minWidth, minHeight } = resolvedBorder;
+    let {
+      width = "50%",
+      height = "50%",
+      minWidth,
+      minHeight,
+      maxWidth,
+      maxHeight,
+    } = resolvedBorder;
     let [cornerWidth, cornerHeight] = resolveDimensions({
       width,
       height,
       availableWidth: remainingWidth,
       availableHeight: remainingHeight,
       fontSize,
+      minWidth,
+      maxWidth,
+      minHeight,
+      maxHeight,
     });
-    minWidth = resolveSize(minWidth, {
-      availableSize: remainingWidth,
-      fontSize,
-    });
-    if (minWidth && cornerWidth < minWidth) {
-      cornerWidth = minWidth;
-    }
-    minHeight = resolveSize(minHeight, {
-      availableSize: remainingHeight,
-      fontSize,
-    });
-    if (minHeight && cornerHeight < minHeight) {
-      cornerHeight = minHeight;
-    }
     resolvedBorder.width = cornerWidth;
     resolvedBorder.height = cornerHeight;
     resolvedBorder.x = x;
@@ -742,14 +739,57 @@ const resolveDimensions = ({
   availableWidth,
   availableHeight,
   fontSize,
+  minWidth,
+  maxWidth,
+  minHeight,
+  maxHeight,
 }) => {
-  const widthNumber = resolveSize(width, {
+  const ratio = availableWidth / availableHeight;
+  const minWidthResolved = resolveSize(minWidth, {
     availableSize: availableWidth,
     fontSize,
   });
-  const heightNumber = resolveSize(height, {
+  const maxWidthResolved = resolveSize(maxWidth, {
+    availableSize: availableWidth,
+    fontSize,
+  });
+  const minHeightResolved = resolveSize(minHeight, {
     availableSize: availableHeight,
     fontSize,
   });
-  return [widthNumber, heightNumber];
+  const maxHeightResolved = resolveSize(maxHeight, {
+    availableSize: availableHeight,
+    fontSize,
+  });
+  let widthResolved;
+  if (width === "auto") {
+    widthResolved = height * ratio;
+  } else {
+    widthResolved = resolveSize(width, {
+      availableSize: availableWidth,
+      fontSize,
+    });
+  }
+  if (minWidth && widthResolved < minWidthResolved) {
+    widthResolved = minWidthResolved;
+  }
+  if (maxWidth && widthResolved > maxWidthResolved) {
+    widthResolved = maxWidthResolved;
+  }
+  let heightResolved;
+  if (height === "auto") {
+    heightResolved = widthResolved / ratio;
+  } else {
+    heightResolved = resolveSize(height, {
+      availableSize: availableHeight,
+      fontSize,
+    });
+  }
+  if (minHeight && heightResolved < minHeightResolved) {
+    heightResolved = minHeightResolved;
+  }
+  if (maxHeight && heightResolved > maxHeightResolved) {
+    heightResolved = maxHeightResolved;
+  }
+  return [widthResolved, heightResolved];
 };
