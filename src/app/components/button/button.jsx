@@ -34,10 +34,18 @@ export const Button = ({ children, color, ...props }) => {
   );
 };
 
-export const ButtonMessage = ({ children, ...props }) => {
+export const ButtonMessage = ({ children, width, height, ...props }) => {
   return (
-    <Button color="white" {...props}>
-      <Message cursor="pointer">{children}</Message>
+    <Button
+      color="white"
+      cursor="pointer"
+      width={width}
+      height={height}
+      {...props}
+    >
+      <Message width={width} height={height} cursor="pointer">
+        {children}
+      </Message>
     </Button>
   );
 };

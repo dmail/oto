@@ -1,3 +1,5 @@
+// TODO: we must update also when color changes, not only on size changes
+
 import { render } from "preact";
 import { forwardRef } from "preact/compat";
 import { useCallback, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -36,6 +38,19 @@ export const useTextController = () => {
   });
 };
 
+export const useFontsReady = (fontFamily) => {
+  const checkResult = document.fonts.check(`12px ${fontFamily}`);
+  const [ready, readySetter] = useState(false);
+
+  if (checkResult) {
+    return true;
+  }
+  document.fonts.ready.then(() => {
+    readySetter(true);
+  });
+  return ready;
+};
+
 const TextComponent = ({
   // name,
   controller,
@@ -61,6 +76,7 @@ const TextComponent = ({
   const setParagraphRef = useRef();
   const index = controller?.index;
   const onParagraphChange = controller?.onParagraphChange;
+  const fontReady = useFontsReady(fontFamily);
 
   const lineAsDeps = [];
   for (const line of lines) {
@@ -110,6 +126,7 @@ const TextComponent = ({
     outlineColor,
     outlineSize,
     onParagraphChange,
+    fontReady,
   ]);
 
   useLayoutEffect(() => {
@@ -143,6 +160,10 @@ const TextComponent = ({
     return () => {
       disconnect();
     };
+  }, [update]);
+
+  useLayoutEffect(() => {
+    update();
   }, [update]);
 
   useLayoutEffect(() => {

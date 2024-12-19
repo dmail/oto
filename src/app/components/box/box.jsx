@@ -268,9 +268,6 @@ const BoxComponent = (
       borders.push(border);
     }
   }
-  if (borders.length) {
-    style.borderRadius = borders[0].radius;
-  }
   if (innerIsFocused) {
     borders.unshift(
       ...borderOutsidePartial({

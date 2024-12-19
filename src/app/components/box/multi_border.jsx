@@ -30,6 +30,7 @@ export const useMultiBorder = (ref, borders) => {
   let outsideBorderFullSize = 0;
   let borderFullSize = 0;
   const resolvedBorders = [];
+  let solidOuterBorderRadius = 0;
   for (const border of borders) {
     let { size = 1, strokeSize = 0, radius = 0, spacing = 0 } = border;
     const resolvedBorder = {
@@ -55,6 +56,9 @@ export const useMultiBorder = (ref, borders) => {
       outsideBorderFullSize += sizeTakenByBorder;
     } else {
       solidBorderFullSize += sizeTakenByBorder;
+      if (solidOuterBorderRadius === undefined) {
+        solidOuterBorderRadius = resolvedBorder.radius;
+      }
     }
     resolvedBorders.push(resolvedBorder);
   }
@@ -109,7 +113,7 @@ export const useMultiBorder = (ref, borders) => {
     rectangleHeight,
     borderFullSize,
     solidBorderFullSize,
-    resolvedBorders.length ? resolvedBorders[0].radius : 0,
+    solidOuterBorderRadius,
   ];
 };
 
@@ -129,6 +133,7 @@ export const MultiBorder = ({ borders, borderFullSize, width, height }) => {
       style={{
         position: "absolute",
         inset: `-${borderFullSize}px`,
+        pointerEvents: "none",
       }}
     >
       <svg style={{ overflow: "visible" }} width={width} height={height}>

@@ -12,8 +12,8 @@ import { Text } from "/app/components/text/text.jsx";
 const MessageComponent = (
   {
     children,
-    backgroundColor = "yellow",
-    color = "inherit",
+    backgroundColor = "black",
+    color = "white",
     borderColor = "white",
     borderStrokeColor = "black",
     borderSize = 5,

@@ -1,14 +1,14 @@
-import { Button } from "/app/components/button/button.jsx";
+import { ButtonMessage } from "/app/components/button/button.jsx";
 
 export const MenuFight = ({ onAttack }) => {
   return (
-    <Button
+    <ButtonMessage
       y="end"
       onClick={() => {
         onAttack();
       }}
     >
       Attaque
-    </Button>
+    </ButtonMessage>
   );
 };
