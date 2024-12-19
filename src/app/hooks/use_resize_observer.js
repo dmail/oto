@@ -40,7 +40,10 @@ export const useResizeObserver = ({
         height: boundingClientRect.height,
       };
       previousSizeRef.current = currentSize;
-      if (!ignoreInitial) {
+      if (ignoreInitial) {
+      } else if (onResize) {
+        onResize(currentSize, elementToObserve);
+      } else {
         sizeSetter(currentSize);
       }
       isMountedRef.current = true;
@@ -48,7 +51,7 @@ export const useResizeObserver = ({
     return () => {
       isMountedRef.current = false;
     };
-  }, [ref, ignoreInitial]);
+  }, [ref, onResize, ignoreInitial]);
 
   const resizeObserverRef = useRef(null);
   const resizeObserverStateRef = useRef("idle");
@@ -74,9 +77,7 @@ export const useResizeObserver = ({
         if (!hasChanged) {
           return;
         }
-
         previousSizeRef.current = newSize;
-
         if (onResize) {
           unobserve();
           onResize(newSize, elementToObserve);
@@ -88,10 +89,11 @@ export const useResizeObserver = ({
       resizeObserverRef.current = resizeObserver;
     }
     const boundingClientRect = elementToObserve.getBoundingClientRect();
-    previousSizeRef.current = {
+    const currentSize = {
       width: boundingClientRect.width,
       height: boundingClientRect.height,
     };
+    previousSizeRef.current = currentSize;
     resizeObserverStateRef.current = "observing";
     resizeObserver.observe(elementToObserve);
   }, [onResize]);
@@ -111,8 +113,11 @@ export const useResizeObserver = ({
   useEffect(() => {
     observe();
     return () => {
-      unobserve();
-      resizeObserverRef.current = null;
+      const resizeObserver = resizeObserverRef.current;
+      if (resizeObserver) {
+        resizeObserver.disconnect();
+        resizeObserverRef.current = null;
+      }
     };
   }, [ref, onResize, observe, unobserve]);
 
