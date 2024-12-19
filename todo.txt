@@ -1,6 +1,3 @@
-- le hook useMultiBorder devrait retourner le composant au lieu 
-de devoir l'instancier correctement ensuite + useMemo sur le composant
-
 - lorsque les corner sont full il faudrait qui soient fait en un seul path
 c'est seulement lorsqu'ils sont partial qu'on va les couper en quatres
 (ça rend mieux, meme en svg)

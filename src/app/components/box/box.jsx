@@ -292,22 +292,11 @@ const BoxComponent = (
   });
   Object.assign(style, spacingStyle);
 
-  const [
-    resolvedBorders,
-    borderWidth,
-    borderHeight,
-    borderFullSize,
-    solidBorderFullSize,
-    borderRadius,
-  ] = useMultiBorder(innerRef, borders);
-
-  if (solidBorderFullSize) {
-    style.borderWidth = `${solidBorderFullSize}px`;
-    style.borderColor = "transparent";
-    style.borderStyle = "solid";
-    style.backgroundClip = "padding-box";
-    style.borderRadius = borderRadius;
-  }
+  const [multiBorderParentStyles, multiBorderProps] = useMultiBorder(
+    innerRef,
+    borders,
+  );
+  Object.assign(style, multiBorderParentStyles);
 
   return (
     <NodeName
@@ -332,12 +321,7 @@ const BoxComponent = (
       data-invisible={invisible || undefined}
       style={style}
     >
-      <MultiBorder
-        borders={resolvedBorders}
-        width={borderWidth}
-        height={borderHeight}
-        borderFullSize={borderFullSize}
-      />
+      <MultiBorder {...multiBorderProps} />
       {children}
     </NodeName>
   );

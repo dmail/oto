@@ -32,7 +32,7 @@ export const useMultiBorder = (ref, borders) => {
   let outsideBorderFullSize = 0;
   let borderFullSize = 0;
   const resolvedBorders = [];
-  let solidOuterBorderRadius = 0;
+  let solidOuterBorderRadius;
   for (const border of borders) {
     let { size = 1, strokeSize = 0, radius = 0, spacing = 0 } = border;
     const resolvedBorder = {
@@ -109,14 +109,23 @@ export const useMultiBorder = (ref, borders) => {
     remainingHeight -= sizeTakenByBorder * 2;
   }
 
-  return [
-    resolvedBorders,
-    rectangleWidth,
-    rectangleHeight,
+  const multiBorderProps = {
+    borders: resolvedBorders,
     borderFullSize,
-    solidBorderFullSize,
-    solidOuterBorderRadius,
-  ];
+    width: rectangleWidth,
+    height: rectangleHeight,
+  };
+
+  const parentStyles = {};
+  if (solidBorderFullSize) {
+    parentStyles.borderWidth = `${solidBorderFullSize}px`;
+    parentStyles.borderColor = "transparent";
+    parentStyles.borderStyle = "solid";
+    parentStyles.backgroundClip = "padding-box";
+    parentStyles.borderRadius = solidOuterBorderRadius;
+  }
+
+  return [parentStyles, multiBorderProps];
 };
 
 export const MultiBorder = ({ borders, borderFullSize, width, height }) => {
