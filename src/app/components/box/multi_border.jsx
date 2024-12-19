@@ -154,7 +154,7 @@ const Corners = ({
 }) => {
   return (
     <g name="corners" data-radius={radius} data-size={size}>
-      {/* <TopLeftCorner
+      <TopLeftCorner
         x={x}
         y={y}
         width={width}
@@ -177,7 +177,7 @@ const Corners = ({
         strokeColor={strokeColor}
         strokeSize={strokeSize}
         opacity={opacity}
-      /> */}
+      />
       <BottomRightCorner
         x={x + rectangleWidth}
         y={y + rectangleHeight}
@@ -376,7 +376,7 @@ const buildTopLeftCornerPath = ({
     if (topLineWidth > 0) {
       d.push(`h ${topLineWidth}`);
     }
-    if (innerRadiusX >= 1 && innerRadiusY >= 1) {
+    if (innerRadiusX >= 0 && innerRadiusY >= 0) {
       const bottomLineWidth = width - sizeX - innerRadiusX;
       const rightLineHeight = height - sizeY - innerRadiusY;
       if (bottomLineWidth < 0) {
@@ -476,7 +476,7 @@ const buildTopRightCornerPath = ({
     if (rightLineHeight > 0) {
       d.push(`v ${rightLineHeight}`);
     }
-    if (innerRadiusX >= 1 && innerRadiusY >= 1) {
+    if (innerRadiusX >= 0 && innerRadiusY >= 0) {
       const leftLineHeight = height - sizeY - innerRadiusY;
       const bottomLineWidth = width - sizeX - innerRadiusX;
       if (leftLineHeight < 0) {
@@ -569,9 +569,9 @@ const buildBottomRightCornerPath = ({
       `a ${outerRadiusX},${outerRadiusY} 0 0 1 -${outerRadiusDX},${outerRadiusDY}`,
     );
     if (bottomLineWidth > 0) {
-      d.push(`h ${bottomLineWidth}`);
+      d.push(`h -${bottomLineWidth}`);
     }
-    if (innerRadiusX >= 1 && innerRadiusY >= 1) {
+    if (innerRadiusX > 0 && innerRadiusY > 0) {
       const topLineWidth = width - sizeX - innerRadiusX;
       const leftLineHeight = height - sizeY - innerRadiusY;
       if (topLineWidth < 0) {
@@ -584,7 +584,7 @@ const buildBottomRightCornerPath = ({
       }
       d.push(`v -${sizeY}`);
       if (topLineWidth > 0) {
-        d.push(`h -${topLineWidth}`);
+        d.push(`h ${topLineWidth}`);
       }
       d.push(
         `a ${innerRadiusX},${innerRadiusY} 0 0 0 ${innerRadiusX},-${innerRadiusY}`,
@@ -671,7 +671,7 @@ const buildBottomLeftCornerPath = ({
     if (leftLineHeight > 0) {
       d.push(`v -${leftLineHeight}`);
     }
-    if (innerRadiusX >= 1 && innerRadiusY >= 1) {
+    if (innerRadiusX >= 0 && innerRadiusY >= 0) {
       const leftLineHeight = height - sizeY - innerRadiusY;
       const topLineWidth = width - sizeX - innerRadiusX;
       if (leftLineHeight < 0) {
