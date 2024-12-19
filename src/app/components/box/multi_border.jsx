@@ -11,8 +11,10 @@ export const useMultiBorder = (ref, borders) => {
       if (!entry) {
         return;
       }
-      const availableWidth = elementToObserve.offsetWidth;
-      const availableHeight = elementToObserve.offsetHeight;
+      const elementToObserveBoundingRect =
+        elementToObserve.getBoundingClientRect();
+      const availableWidth = elementToObserveBoundingRect.width;
+      const availableHeight = elementToObserveBoundingRect.height;
       setAvailableWidth(availableWidth);
       setAvailableHeight(availableHeight);
 

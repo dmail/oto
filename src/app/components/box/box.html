@@ -230,6 +230,22 @@
                 </Box>
               </div>
             </div>
+
+            {/* test background color take full space (no yellow must be visible) */}
+            <div style="display: flex; padding: 30px; background: yellow">
+              <Box
+                width="17.78"
+                height="18.78"
+                border={[
+                  {
+                    size: 2,
+                    color: "red",
+                  },
+                ]}
+                backgroundColor="black"
+                color="white"
+              ></Box>
+            </div>
           </>
         );
       };
