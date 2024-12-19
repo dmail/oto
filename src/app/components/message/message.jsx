@@ -12,7 +12,7 @@ import { Text } from "/app/components/text/text.jsx";
 const MessageComponent = (
   {
     children,
-    backgroundColor = "black",
+    backgroundColor = "yellow",
     color = "inherit",
     borderColor = "white",
     borderStrokeColor = "black",

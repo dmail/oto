@@ -341,11 +341,11 @@ const buildTopLeftCornerPath = ({
     return null;
   }
   let sizeX = size;
-  if (size > width) {
+  if (sizeX > width) {
     sizeX = width;
   }
   let sizeY = size;
-  if (size > height) {
+  if (sizeY > height) {
     sizeY = height;
   }
   let d = [];
@@ -405,6 +405,7 @@ const buildTopLeftCornerPath = ({
       d.push(`h -${sizeX}`);
     } else {
       d.push(
+        `h ${sizeX}`,
         `v ${sizeY}`,
         `h -${width - sizeX}`,
         `v ${height - sizeY}`,
@@ -413,13 +414,13 @@ const buildTopLeftCornerPath = ({
     }
   } else {
     d.push(
-      `M ${x},${y}`,
-      `h ${width}`,
-      `v ${size}`,
-      `h -${width - size}`,
-      `v ${height - size}`,
-      `h -${size}`,
+      `M ${x},${y + height}`,
       `v -${height}`,
+      `h ${width}`,
+      `v ${sizeY}`,
+      `h -${width - sizeX}`,
+      `v ${height - sizeY}`,
+      `h -${sizeX}`,
     );
   }
   d.push("z");
@@ -509,10 +510,10 @@ const buildTopRightCornerPath = ({
       `M ${x - width},${y}`,
       `h ${width}`,
       `v ${height}`,
-      `h -${size}`,
-      `v -${height - size}`,
-      `h -${width - size}`,
-      `v -${size}`,
+      `h -${sizeX}`,
+      `v -${height - sizeY}`,
+      `h -${width - sizeX}`,
+      `v -${sizeY}`,
     ];
   }
   d.push("z");
