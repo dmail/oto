@@ -1,32 +1,16 @@
 import { useLayoutEffect, useState } from "preact/hooks";
+import { useResizeObserver } from "/app/hooks/use_resize_observer.js";
 
 export const useMultiBorder = (ref, borders) => {
-  const [availableWidth, setAvailableWidth] = useState(0);
-  const [availableHeight, setAvailableHeight] = useState(0);
   const [fontSize, fontSizeSetter] = useState(16);
   useLayoutEffect(() => {
-    const elementToObserve = ref.current;
-    const observer = new ResizeObserver((entries) => {
-      const entry = entries[0];
-      if (!entry) {
-        return;
-      }
-      const elementToObserveBoundingRect =
-        elementToObserve.getBoundingClientRect();
-      const availableWidth = elementToObserveBoundingRect.width;
-      const availableHeight = elementToObserveBoundingRect.height;
-      setAvailableWidth(availableWidth);
-      setAvailableHeight(availableHeight);
-
-      let { fontSize } = window.getComputedStyle(elementToObserve, null);
-      fontSize = parseFloat(fontSize);
-      fontSizeSetter(fontSize);
-    });
-    observer.observe(elementToObserve);
-    return () => {
-      observer.disconnect();
-    };
+    let { fontSize } = window.getComputedStyle(ref.current, null);
+    fontSize = parseFloat(fontSize);
+    fontSizeSetter(fontSize);
   }, []);
+  const [availableWidth = 0, availableHeight = 0] = useResizeObserver({
+    ref,
+  });
 
   let solidBorderFullSize = 0;
   let outsideBorderFullSize = 0;

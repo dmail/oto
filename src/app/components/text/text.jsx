@@ -97,6 +97,7 @@ const TextComponent = ({
         isUpdatingText = false;
       });
     },
+    ignoreInitial: true,
   });
 
   const deps = [

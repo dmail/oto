@@ -9,8 +9,8 @@ import {
 export const useResizeObserver = ({
   ref,
   getElementToObserve = (refElement) => refElement,
-  box = "content-box",
   onResize,
+  ignoreInitial = false,
 }) => {
   const [size, sizeSetter] = useState({
     width: undefined,
@@ -20,13 +20,6 @@ export const useResizeObserver = ({
   const previousSizeRef = useRef(size);
   const getElementToObserveRef = useRef(getElementToObserve);
   const elementToObserveRef = useRef(null);
-
-  const boxProp =
-    box === "border-box"
-      ? "borderBoxSize"
-      : box === "device-pixel-content-box"
-        ? "devicePixelContentBoxSize"
-        : "contentBoxSize";
 
   useLayoutEffect(() => {
     let elementToObserve = ref.current;
@@ -42,16 +35,20 @@ export const useResizeObserver = ({
     elementToObserveRef.current = elementToObserve;
     if (!isMountedRef.current) {
       const boundingClientRect = elementToObserve.getBoundingClientRect();
-      previousSizeRef.current = {
+      const currentSize = {
         width: boundingClientRect.width,
         height: boundingClientRect.height,
       };
+      previousSizeRef.current = currentSize;
+      if (!ignoreInitial) {
+        sizeSetter(currentSize);
+      }
       isMountedRef.current = true;
     }
     return () => {
       isMountedRef.current = false;
     };
-  }, [ref]);
+  }, [ref, ignoreInitial]);
 
   const resizeObserverRef = useRef(null);
   const resizeObserverStateRef = useRef("idle");
@@ -66,15 +63,18 @@ export const useResizeObserver = ({
         if (!entry) {
           return;
         }
-        const newWidth = extractSize(entry, boxProp, "inlineSize");
-        const newHeight = extractSize(entry, boxProp, "blockSize");
+        const boundingClientRect = elementToObserve.getBoundingClientRect();
+        const newSize = {
+          width: boundingClientRect.width,
+          height: boundingClientRect.height,
+        };
         const hasChanged =
-          previousSizeRef.current.width !== newWidth ||
-          previousSizeRef.current.height !== newHeight;
+          previousSizeRef.current.width !== newSize.width ||
+          previousSizeRef.current.height !== newSize.height;
         if (!hasChanged) {
           return;
         }
-        const newSize = { width: newWidth, height: newHeight };
+
         previousSizeRef.current = newSize;
 
         if (onResize) {
@@ -93,7 +93,7 @@ export const useResizeObserver = ({
       height: boundingClientRect.height,
     };
     resizeObserverStateRef.current = "observing";
-    resizeObserver.observe(elementToObserve, { box });
+    resizeObserver.observe(elementToObserve);
   }, [onResize]);
   const unobserve = useCallback(() => {
     if (resizeObserverStateRef.current === "idle") {
@@ -114,19 +114,7 @@ export const useResizeObserver = ({
       unobserve();
       resizeObserverRef.current = null;
     };
-  }, [box, ref, onResize, observe, unobserve]);
+  }, [ref, onResize, observe, unobserve]);
 
   return [size.width, size.height, observe, unobserve];
-};
-
-const extractSize = (entry, box, sizeType) => {
-  if (!entry[box]) {
-    if (box === "contentBoxSize") {
-      return entry.contentRect[sizeType === "inlineSize" ? "width" : "height"];
-    }
-    return undefined;
-  }
-  return Array.isArray(entry[box])
-    ? entry[box][0][sizeType]
-    : entry[box][sizeType];
 };
