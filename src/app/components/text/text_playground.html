@@ -34,6 +34,7 @@
 
       // eslint-disable-next-line no-unused-vars
       const TextWithForm = () => {
+        const [width, widthSetter] = useLocalStorageState("width", 300);
         const [text, textSetter] = useLocalStorageState("text", "Coucou");
         const [color, colorSetter] = useLocalStorageState("color", "black");
         const [fontSize, fontSizeSetter] = useLocalStorageState(
@@ -42,7 +43,7 @@
         );
 
         return (
-          <div>
+          <div style={{ width }}>
             <Text fontSize={fontSize} color={color}>
               {text}
             </Text>
@@ -78,7 +79,21 @@
                   min="1"
                   max="40"
                   value={fontSize}
-                  onInput={(event) => fontSizeSetter(event.target.value)}
+                  onInput={(event) =>
+                    fontSizeSetter(event.target.valueAsNumber)
+                  }
+                />
+              </label>
+
+              <br />
+              <label>
+                Container width :
+                <input
+                  type="number"
+                  min="1"
+                  max="400"
+                  value={width}
+                  onInput={(event) => widthSetter(event.target.valueAsNumber)}
                 />
               </label>
             </fieldset>

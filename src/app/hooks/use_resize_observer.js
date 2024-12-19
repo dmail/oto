@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 export const useResizeObserver = ({
   ref,
   getElementToObserve = (refElement) => refElement,
   box = "content-box",
   onResize,
+  deps = [],
 }) => {
   const [size, sizeSetter] = useState({
     width: undefined,
@@ -13,6 +14,7 @@ export const useResizeObserver = ({
   const isMountedRef = useRef(false);
   const previousSizeRef = useRef(size);
   const getElementToObserveRef = useRef(getElementToObserve);
+  const elementToObserveRef = useRef(null);
   const onResizeRef = useRef(onResize);
   const boxProp =
     box === "border-box"
@@ -21,42 +23,91 @@ export const useResizeObserver = ({
         ? "devicePixelContentBoxSize"
         : "contentBoxSize";
 
-  useEffect(() => {
-    isMountedRef.current = true;
-
+  useLayoutEffect(() => {
     let elementToObserve = ref.current;
     if (!elementToObserve) {
-      return null;
+      isMountedRef.current = false;
+      return;
     }
     elementToObserve = getElementToObserveRef.current(elementToObserve);
     if (!elementToObserve) {
-      return null;
+      isMountedRef.current = false;
+      return;
     }
-    const observer = new ResizeObserver(([entry]) => {
-      const newWidth = extractSize(entry, boxProp, "inlineSize");
-      const newHeight = extractSize(entry, boxProp, "blockSize");
-      const hasChanged =
-        previousSizeRef.current.width !== newWidth ||
-        previousSizeRef.current.height !== newHeight;
-      if (!hasChanged) {
+    if (!isMountedRef.current) {
+      const boundingClientRect = elementToObserve.getBoundingClientRect();
+      previousSizeRef.current = {
+        width: boundingClientRect.width,
+        height: boundingClientRect.height,
+      };
+      isMountedRef.current = true;
+    }
+    elementToObserveRef.current = elementToObserve;
+  }, [ref]);
+
+  const resizeObserverRef = useRef(null);
+  const resizeObserverMethodsRef = useRef({
+    start: () => {
+      if (resizeObserverMethodsRef.current.state === "observing") {
         return;
       }
-      const newSize = { width: newWidth, height: newHeight };
-      previousSizeRef.current = newSize;
-      if (onResizeRef.current) {
-        observer.unobserve(elementToObserve);
-        onResizeRef.current(newSize);
-        observer.observe(elementToObserve);
-      } else if (isMountedRef.current) {
-        sizeSetter(newSize);
+      let resizeObserver = resizeObserverRef.current;
+      if (!resizeObserver) {
+        resizeObserver = new ResizeObserver(([entry]) => {
+          if (!entry) {
+            return;
+          }
+          const newWidth = extractSize(entry, boxProp, "inlineSize");
+          const newHeight = extractSize(entry, boxProp, "blockSize");
+          const hasChanged =
+            previousSizeRef.current.width !== newWidth ||
+            previousSizeRef.current.height !== newHeight;
+          if (!hasChanged) {
+            return;
+          }
+          const newSize = { width: newWidth, height: newHeight };
+          previousSizeRef.current = newSize;
+          if (onResizeRef.current) {
+            onResizeRef.current(newSize, elementToObserve);
+          } else if (isMountedRef.current) {
+            sizeSetter(newSize);
+          }
+        });
+        resizeObserverRef.current = resizeObserver;
       }
-    });
-    observer.observe(elementToObserve, { box });
+      const elementToObserve = elementToObserveRef.current;
+      const boundingClientRect = elementToObserve.getBoundingClientRect();
+      previousSizeRef.current = {
+        width: boundingClientRect.width,
+        height: boundingClientRect.height,
+      };
+      resizeObserverMethodsRef.current.state = "observing";
+      resizeObserver.observe(elementToObserveRef.current, { box });
+    },
+    stop: () => {
+      if (resizeObserverMethodsRef.current.state === "paused") {
+        return;
+      }
+      const resizeObserver = resizeObserverRef.current;
+      if (!resizeObserver) {
+        return;
+      }
+      resizeObserverMethodsRef.current.state = "paused";
+      resizeObserver.disconnect();
+    },
+  });
+
+  useEffect(() => {
+    resizeObserverMethodsRef.current.start();
     return () => {
       isMountedRef.current = false;
-      observer.disconnect();
+      resizeObserverMethodsRef.current.stop();
+      resizeObserverRef.current = null;
+      resizeObserverMethodsRef.current = null;
     };
-  }, [box, ref, isMountedRef]);
+  }, [box, ref, isMountedRef, ...deps]);
+
+  return [size.width, size.height, resizeObserverMethodsRef.current];
 };
 
 const extractSize = (entry, box, sizeType) => {

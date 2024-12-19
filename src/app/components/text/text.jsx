@@ -87,7 +87,35 @@ const TextComponent = ({
     }
   }
 
-  const update = useCallback(() => {
+  const [, , { start, stop }] = useResizeObserver({
+    ref: svgInnerRef,
+    getElementToObserve: (svg) => svg.parentNode,
+    onResize: () => {
+      console.log("resize effect");
+      update();
+    },
+  });
+
+  const deps = [
+    ...lineAsDeps,
+    dx,
+    dy,
+    lineHeight,
+    overflow,
+    fontSize,
+    fontFamily,
+    fontWeight,
+    letterSpacing,
+    color,
+    outlineColor,
+    outlineSize,
+    onParagraphChange,
+    fontReady,
+  ];
+
+  const update = () => {
+    isUpdatingText = true;
+    stop();
     const svgElement = svgInnerRef.current;
     const textElement = textRef.current;
     const [paragraphs, setParagraph] = initTextFiller(lines, {
@@ -114,38 +142,13 @@ const TextComponent = ({
     } else {
       setParagraph(0);
     }
-  }, [
-    ...lineAsDeps,
-    dx,
-    dy,
-    lineHeight,
-    overflow,
-    fontSize,
-    fontFamily,
-    fontWeight,
-    letterSpacing,
-    color,
-    outlineColor,
-    outlineSize,
-    onParagraphChange,
-    fontReady,
-  ]);
+    start();
+    isUpdatingText = false;
+  };
 
   useLayoutEffect(() => {
     update();
-  }, [update]);
-
-  useResizeObserver({
-    ref: svgInnerRef,
-    getElementToObserve: (svg) => svg.parentNode,
-    onResize: () => {
-      isUpdatingText = true;
-      update();
-      requestAnimationFrame(() => {
-        isUpdatingText = false;
-      });
-    },
-  });
+  }, deps);
 
   useLayoutEffect(() => {
     if (typeof index === "number" && setParagraphRef.current) {
@@ -531,7 +534,7 @@ const splitLines = (text) => {
  */
 window.addEventListener("error", (errorEvent) => {
   if (
-    isUpdatingText &&
+    //  isUpdatingText &&
     errorEvent.message.includes(
       "ResizeObserver loop completed with undelivered notifications.",
     )
