@@ -1,8 +1,4 @@
-- lorsque les corner sont full il faudrait qui soient fait en un seul path
-c'est seulement lorsqu'ils sont partial qu'on va les couper en quatres
-(ça rend mieux, meme en svg)
 
-- utiliser ce mode partial corner pour la selection de l'ennemi
 - animation mort du monstre
 - écran de game over (choix retry/revenir a la carte du monde)
 - faire la carte du monde

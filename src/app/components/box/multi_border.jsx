@@ -116,7 +116,7 @@ export const MultiBorder = ({ borders, borderFullSize, width, height }) => {
   const children = [];
   let index = 0;
   for (const border of borders) {
-    children.push(<Corners key={index} {...border} />);
+    children.push(<Borders key={index} {...border} />);
     index++;
   }
   return (
@@ -135,7 +135,7 @@ export const MultiBorder = ({ borders, borderFullSize, width, height }) => {
   );
 };
 
-const Corners = ({
+const Borders = ({
   rectangleWidth,
   rectangleHeight,
   x,
@@ -149,61 +149,149 @@ const Corners = ({
   strokeSize,
   opacity,
 }) => {
+  const topLeftPaths = buildBorderPaths({
+    name: "top_left",
+    buildPath: buildTopLeftCornerPath,
+    x,
+    y,
+    width,
+    height,
+    size,
+    radius,
+    strokeSize,
+  });
+  const topRightPaths = buildBorderPaths({
+    name: "top_right",
+    buildPath: buildTopRightCornerPath,
+    x: x + rectangleWidth,
+    y,
+    width,
+    height,
+    size,
+    radius,
+    strokeSize,
+  });
+  const bottomRightPaths = buildBorderPaths({
+    name: "bottom_right",
+    buildPath: buildBottomRightCornerPath,
+    x: x + rectangleWidth,
+    y: y + rectangleHeight,
+    width,
+    height,
+    size,
+    radius,
+    strokeSize,
+  });
+  const bottomLeftPaths = buildBorderPaths({
+    name: "bottom_left",
+    buildPath: buildBottomLeftCornerPath,
+    x,
+    y: y + rectangleHeight,
+    width,
+    height,
+    size,
+    radius,
+    strokeSize,
+  });
+
+  if (width * 2 === rectangleWidth && height * 2 === rectangleHeight) {
+    const bordersPaths = {
+      // it's ok to add all paths together because:
+      // - they don't overlao
+      // - they can be null and null + null gives 0 which will be ignored
+      //   by <Border> component that will not try to render a path
+      //   being null
+      fill:
+        topLeftPaths.fill +
+        topRightPaths.fill +
+        bottomRightPaths.fill +
+        bottomLeftPaths.fill,
+      stroke:
+        topLeftPaths.stroke +
+        topRightPaths.stroke +
+        bottomRightPaths.stroke +
+        bottomLeftPaths.stroke,
+    };
+    return (
+      <g name="borders" data-radius={radius} data-size={size}>
+        <Border
+          name="border"
+          paths={bordersPaths}
+          color={color}
+          strokeColor={strokeColor}
+          opacity={opacity}
+        ></Border>
+      </g>
+    );
+  }
+
   return (
     <g name="corners" data-radius={radius} data-size={size}>
-      <TopLeftCorner
-        x={x}
-        y={y}
-        width={width}
-        height={height}
-        size={size}
-        radius={radius}
+      <Border
+        name="top_left"
+        paths={topLeftPaths}
         color={color}
         strokeColor={strokeColor}
-        strokeSize={strokeSize}
         opacity={opacity}
       />
-      <TopRightCorner
-        x={x + rectangleWidth}
-        y={y}
-        width={width}
-        height={height}
-        size={size}
-        radius={radius}
+      <Border
+        name="top_right"
+        paths={topRightPaths}
         color={color}
         strokeColor={strokeColor}
-        strokeSize={strokeSize}
         opacity={opacity}
       />
-      <BottomRightCorner
-        x={x + rectangleWidth}
-        y={y + rectangleHeight}
-        width={width}
-        height={height}
-        size={size}
-        radius={radius}
+      <Border
+        name="bottom_right"
+        paths={bottomRightPaths}
         color={color}
         strokeColor={strokeColor}
-        strokeSize={strokeSize}
         opacity={opacity}
       />
-      <BottomLeftCorner
-        x={x}
-        y={y + rectangleHeight}
-        width={width}
-        height={height}
-        size={size}
-        radius={radius}
+      <Border
+        name="bottom_left"
+        paths={bottomLeftPaths}
         color={color}
         strokeColor={strokeColor}
-        strokeSize={strokeSize}
         opacity={opacity}
       />
     </g>
   );
 };
 
-const Corner = ({
+const Border = ({ name, paths, color, strokeColor, opacity }) => {
+  if (paths.stroke) {
+    return (
+      <>
+        <path
+          name={`${name}_stroke`}
+          d={paths.stroke}
+          fill={strokeColor}
+          opacity={opacity}
+        />
+        <path
+          name={`${name}_fill`}
+          d={paths.fill}
+          fill={color}
+          opacity={opacity}
+        />
+      </>
+    );
+  }
+  if (paths.fill) {
+    return (
+      <path
+        name={`${name}_fill`}
+        d={paths.fill}
+        fill={color}
+        opacity={opacity}
+      />
+    );
+  }
+  return null;
+};
+
+const buildBorderPaths = ({
   name,
   buildPath,
   x,
@@ -212,10 +300,7 @@ const Corner = ({
   height,
   size,
   radius,
-  color,
-  strokeColor,
   strokeSize,
-  opacity,
 }) => {
   if (strokeSize) {
     let strokeWidth;
@@ -243,8 +328,7 @@ const Corner = ({
       fillX = x + strokeSize / 2;
       fillY = y - strokeSize / 2;
     }
-
-    const strokePath = buildPath({
+    const stroke = buildPath({
       isStroke: true,
       x,
       y,
@@ -253,7 +337,7 @@ const Corner = ({
       size: size + strokeSize,
       radius,
     });
-    const fillPath = buildPath({
+    const fill = buildPath({
       x: fillX,
       y: fillY,
       width,
@@ -261,24 +345,9 @@ const Corner = ({
       size,
       radius: radius - strokeSize / 2,
     });
-    return (
-      <>
-        <path
-          name={`${name}_corner_stroke`}
-          d={strokePath}
-          fill={strokeColor}
-          opacity={opacity}
-        />
-        <path
-          name={`${name}_corner_fill`}
-          d={fillPath}
-          fill={color}
-          opacity={opacity}
-        />
-      </>
-    );
+    return { stroke, fill };
   }
-  const fillPath = buildPath({
+  const fill = buildPath({
     x,
     y,
     width,
@@ -286,45 +355,8 @@ const Corner = ({
     size,
     radius,
   });
-  return (
-    <path
-      name={`${name}_corner_fill`}
-      d={fillPath}
-      fill={color}
-      opacity={opacity}
-    />
-  );
+  return { fill };
 };
-
-const TopLeftCorner = (props) => {
-  return (
-    <Corner {...props} name="top_left" buildPath={buildTopLeftCornerPath} />
-  );
-};
-const TopRightCorner = (props) => {
-  return (
-    <Corner {...props} name="top_right" buildPath={buildTopRightCornerPath} />
-  );
-};
-const BottomRightCorner = (props) => {
-  return (
-    <Corner
-      {...props}
-      name="bottom_right"
-      buildPath={buildBottomRightCornerPath}
-    />
-  );
-};
-const BottomLeftCorner = (props) => {
-  return (
-    <Corner
-      {...props}
-      name="bottom_left"
-      buildPath={buildBottomLeftCornerPath}
-    />
-  );
-};
-
 const buildTopLeftCornerPath = ({
   isStroke,
   x,
