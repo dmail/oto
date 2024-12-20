@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>Layout flexbox</title>
+  </head>
+  <body>
+    <div id="root" style="position: relative"></div>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      .one,
+      .two,
+      .three,
+      .four,
+      .five,
+      .six {
+        background-color: #f1f1f1;
+        border: 1px solid #ccc;
+        width: 100px;
+        height: 200px;
+      }
+    </style>
+    <script type="module" jsenv-type="module/jsx">
+      import { render } from "preact";
+      import { useState } from "preact/hooks";
+      import {
+        // eslint-disable-next-line no-unused-vars
+        Box,
+      } from "./box.jsx";
+      import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
+
+      // eslint-disable-next-line no-unused-vars
+      const App = () => {
+        const [contentWidth, contentWidthSetter] = useState();
+        const [contentHeight, contentHeightSetter] = useState();
+        const [width, widthSetter] = useState();
+        const [height, heightSetter] = useState();
+        const [containerWidth, containerWidthSetter] = useState();
+        const [containerHeight, containerHeightSetter] = useState();
+        const [x, xSetter] = useState("start");
+        const [y, ySetter] = useState("start");
+        const [contentX, contentXSetter] = useState("start");
+        const [contentY, contentYSetter] = useState("start");
+
+        return (
+          <>
+            <div style="display: flex; flex-direction: row">
+              <div
+                style={{
+                  border: "1px solid black",
+                  width: "350px",
+                  height: "350px",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    backgroundColor: "green",
+                    width: containerWidth,
+                    height: containerHeight,
+                  }}
+                >
+                  <Box
+                    backgroundColor="violet"
+                    width={width}
+                    height={height}
+                    x={x}
+                    y={y}
+                    contentX={contentX}
+                    contentY={contentY}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        background: "orange",
+                        width: contentWidth,
+                        height: contentHeight,
+                      }}
+                    ></div>
+                  </Box>
+                </div>
+              </div>
+              <div style="margin-top: 0px; margin-left: 20px ">
+                <fieldset>
+                  <legend>Position</legend>
+
+                  <EnumSelector
+                    style={{
+                      backgroundColor: "violet",
+                    }}
+                    name="x"
+                    values={["start", "center", "end"]}
+                    onChange={(value) => {
+                      xSetter(value);
+                    }}
+                  />
+                  <EnumSelector
+                    style={{
+                      backgroundColor: "violet",
+                    }}
+                    name="y"
+                    values={["start", "center", "end"]}
+                    onChange={(value) => {
+                      ySetter(value);
+                    }}
+                  />
+
+                  <EnumSelector
+                    style={{
+                      backgroundColor: "orange",
+                    }}
+                    name="content-x"
+                    values={["start", "center", "end"]}
+                    onChange={(value) => {
+                      contentXSetter(value);
+                    }}
+                  />
+                  <EnumSelector
+                    style={{
+                      backgroundColor: "orange",
+                    }}
+                    name="content-y"
+                    values={["start", "center", "end"]}
+                    onChange={(value) => {
+                      contentYSetter(value);
+                    }}
+                  />
+                </fieldset>
+
+                <fieldset>
+                  <legend>Dimensions</legend>
+
+                  <SizeController
+                    style={{
+                      backgroundColor: "violet",
+                    }}
+                    name="box-width"
+                    onChange={(value) => {
+                      widthSetter(value);
+                    }}
+                  ></SizeController>
+                  <SizeController
+                    style={{
+                      backgroundColor: "violet",
+                    }}
+                    name="box-height"
+                    onChange={(value) => {
+                      heightSetter(value);
+                    }}
+                  ></SizeController>
+
+                  <SizeController
+                    style={{
+                      backgroundColor: "orange",
+                    }}
+                    name="content-width"
+                    onChange={(value) => {
+                      contentWidthSetter(value);
+                    }}
+                  ></SizeController>
+                  <SizeController
+                    style={{
+                      backgroundColor: "orange",
+                    }}
+                    name="content-height"
+                    onChange={(value) => {
+                      contentHeightSetter(value);
+                    }}
+                  ></SizeController>
+
+                  <SizeController
+                    style={{
+                      backgroundColor: "green",
+                    }}
+                    name="container-width"
+                    onChange={(value) => {
+                      containerWidthSetter(value);
+                    }}
+                  ></SizeController>
+                  <SizeController
+                    style={{
+                      backgroundColor: "green",
+                    }}
+                    name="container-height"
+                    onChange={(value) => {
+                      containerHeightSetter(value);
+                    }}
+                  ></SizeController>
+                </fieldset>
+              </div>
+            </div>
+          </>
+        );
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const SizeController = ({ name, onChange, ...props }) => {
+        const [size, sizeSetter] = useLocalStorageState(name, "auto");
+        const [sizeAsNumber, sizeAsNumberSetter] = useLocalStorageState(
+          `${name}_number`,
+          0,
+        );
+
+        onChange(size);
+
+        return (
+          <fieldset {...props}>
+            <legend>{name}</legend>
+            <label>
+              <label>
+                Auto
+                <input
+                  name={name}
+                  type="radio"
+                  checked={size === "auto"}
+                  onInput={(e) => {
+                    if (e.target.checked) {
+                      sizeSetter("auto");
+                      onChange("auto");
+                    }
+                  }}
+                />
+              </label>
+              <label>
+                Number
+                <input
+                  name={name}
+                  type="radio"
+                  checked={size !== "auto"}
+                  onInput={(e) => {
+                    if (e.target.checked) {
+                      sizeSetter(sizeAsNumber);
+                      onChange(sizeAsNumber);
+                    }
+                  }}
+                />
+                <input
+                  type="number"
+                  min="0"
+                  max="300"
+                  value={sizeAsNumber}
+                  onInput={(e) => {
+                    sizeAsNumberSetter(e.target.valueAsNumber);
+                    if (size !== "auto") {
+                      onChange(e.target.valueAsNumber);
+                    }
+                  }}
+                />
+              </label>
+            </label>
+          </fieldset>
+        );
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const EnumSelector = ({ name, values, onChange, ...props }) => {
+        const [selectedValue, selectedValueSetter] = useLocalStorageState(
+          name,
+          values[0],
+        );
+        onChange(selectedValue);
+
+        return (
+          <fieldset {...props}>
+            <legend>{name}</legend>
+            {values.map((value, index) => {
+              return (
+                <label key={index}>
+                  {value}
+                  <input
+                    type="radio"
+                    name={name}
+                    checked={selectedValue === value}
+                    onInput={(e) => {
+                      if (e.target.checked) {
+                        selectedValueSetter(value);
+                        onChange(value);
+                      }
+                    }}
+                  />
+                </label>
+              );
+            })}
+          </fieldset>
+        );
+      };
+
+      render(<App />, document.querySelector("#root"));
+    </script>
+  </body>
+</html>

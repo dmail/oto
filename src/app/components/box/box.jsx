@@ -161,7 +161,7 @@ const BoxComponent = (
         if (vertical) {
           element.style.alignSelf = "flex-end";
         } else {
-          element.style.left = "auto";
+          element.style.left = `${availableWidth - elementDimensions.width}px`;
         }
       } else if (isFinite(x)) {
         element.style.left = `${parseInt(x)}px`;
@@ -182,7 +182,7 @@ const BoxComponent = (
         }
       } else if (y === "end") {
         if (vertical) {
-          element.style.top = "auto";
+          element.style.top = `${availableHeight - elementDimensions.height}px`;
         } else {
           element.style.alignSelf = "flex-end";
         }
