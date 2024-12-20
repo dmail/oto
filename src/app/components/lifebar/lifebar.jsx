@@ -10,7 +10,6 @@ export const Lifebar = ({
       <LifebarSvg
         bars={bars}
         barWidth={2}
-        maxBars={40}
         fullColor={fullColor}
         emptyColor={emptyColor}
       />
@@ -38,7 +37,6 @@ export const Lifebar = ({
         <div style="height: 70%">
           <LifebarSvg
             bars={smallBars}
-            maxBars={40}
             barWidth={2}
             emptyColor={emptyColor}
             fullColor={fullColor}
@@ -48,7 +46,6 @@ export const Lifebar = ({
           <div style="height: 100%">
             <LifebarSvg
               bars={mediumBars}
-              maxBars={20}
               barWidth={5}
               emptyColor={emptyColor}
               fullColor={fullColor}
@@ -69,7 +66,6 @@ export const Lifebar = ({
         <LifebarSvg
           bars={smallBars}
           barWidth={2}
-          maxBars={40}
           emptyColor={emptyColor}
           fullColor={fullColor}
         />
@@ -79,7 +75,6 @@ export const Lifebar = ({
           <div style="height: 100%">
             <LifebarSvg
               bars={mediumBarsFirstRow}
-              maxBars={20}
               barWidth={5}
               emptyColor={emptyColor}
               fullColor={fullColor}
@@ -90,7 +85,6 @@ export const Lifebar = ({
           <div style="height: 100%">
             <LifebarSvg
               bars={mediumBarsSecondRow}
-              maxBars={20}
               barWidth={5}
               emptyColor={emptyColor}
               fullColor={fullColor}
@@ -119,26 +113,19 @@ const createBars = (filledCount, totalCount) => {
 const LifebarSvg = ({
   barWidth,
   bars,
-  maxBars,
   barSpacing = 1,
   fullColor,
   emptyColor,
 }) => {
-  const totalWidth = maxBars * (barWidth + barSpacing);
+  const barHeight = 20;
 
   return (
     <svg
-      viewBox={`0 0 ${totalWidth} 100`}
-      xmlns="http://www.w3.org/2000/svg"
+      width="100%"
+      height="100%"
+      viewBox={`0 0 120 ${barHeight}`}
+      style={{ display: "flex" }}
       preserveAspectRatio="none"
-      style={{
-        display: "flex",
-        alignSelf: "center",
-        height: "100%",
-        maxWidth: "100%",
-        maxHeight: "30px",
-        aspectRatio: `10/1`,
-      }}
     >
       <g>
         {bars.map((bar, index) => {
@@ -150,7 +137,7 @@ const LifebarSvg = ({
               x={x}
               y="0"
               width={barWidth}
-              height="100"
+              height={barHeight}
               fill={bar.filled ? fullColor : emptyColor}
             ></rect>
           );

@@ -221,7 +221,7 @@ export const App = () => {
               strokeColor: "black",
             })}
           >
-            <Box name="lifebar_box" ratio="120/100" width="80%" y="center">
+            <Box name="lifebar_box" width="80%" height="30" y="center">
               <Lifebar value={heroHp} max={heroMaxHp} />
             </Box>
             <Box name="weapon_box" ratio="1/1" width="20%" x="end" y="center">
