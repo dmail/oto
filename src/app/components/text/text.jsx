@@ -68,6 +68,7 @@ const TextComponent = ({
   letterSpacing,
   lineHeight = 1.4,
   visible = true,
+  logResize,
   overflow = "visible",
   ...props
 }) => {
@@ -105,12 +106,14 @@ const TextComponent = ({
     fontReady,
   ];
 
-  const [, , observe, unobserve] = useResizeObserver(
+  const [, , performSizeSideEffects] = useResizeObserver(
     {
       ref: svgInnerRef,
       getElementToObserve: (svg) => svg.parentNode,
       onResize: () => {
-        console.log("reiszing");
+        if (logResize) {
+          console.log("update after resize");
+        }
         isUpdatingText = true;
         update();
         requestAnimationFrame(() => {
@@ -123,40 +126,40 @@ const TextComponent = ({
   );
 
   const update = () => {
-    unobserve();
-    const svgElement = svgInnerRef.current;
-    const textElement = textRef.current;
-    const computedStyle = window.getComputedStyle(svgInnerRef.current, null);
-    const fontSizeReference = parseFloat(computedStyle.fontSize);
-    const fontSizeResolved = resolveSize(fontSize, {
-      fontSize: fontSizeReference,
-      autoIsRelativeToFont: true,
-    });
-    const [paragraphs, setParagraph] = initTextFiller(lines, {
-      dx,
-      dy,
-      lineHeight,
-      overflow,
+    performSizeSideEffects(() => {
+      const svgElement = svgInnerRef.current;
+      const textElement = textRef.current;
+      const computedStyle = window.getComputedStyle(svgInnerRef.current, null);
+      const fontSizeReference = parseFloat(computedStyle.fontSize);
+      const fontSizeResolved = resolveSize(fontSize, {
+        fontSize: fontSizeReference,
+        autoIsRelativeToFont: true,
+      });
+      const [paragraphs, setParagraph] = initTextFiller(lines, {
+        dx,
+        dy,
+        lineHeight,
+        overflow,
 
-      fontSize: fontSizeResolved,
-      fontFamily,
-      fontWeight,
-      letterSpacing,
-      color,
-      outlineColor,
-      outlineSize,
+        fontSize: fontSizeResolved,
+        fontFamily,
+        fontWeight,
+        letterSpacing,
+        color,
+        outlineColor,
+        outlineSize,
 
-      controller,
-      svgElement,
-      textElement,
+        controller,
+        svgElement,
+        textElement,
+      });
+      setParagraphRef.current = setParagraph;
+      if (onParagraphChange) {
+        onParagraphChange(paragraphs);
+      } else {
+        setParagraph(0);
+      }
     });
-    setParagraphRef.current = setParagraph;
-    if (onParagraphChange) {
-      onParagraphChange(paragraphs);
-    } else {
-      setParagraph(0);
-    }
-    observe();
   };
 
   useLayoutEffect(() => {

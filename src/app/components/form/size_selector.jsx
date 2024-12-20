@@ -6,17 +6,28 @@ export const SizeSelector = ({
   onChange,
   min = "0",
   max = "300",
+  em,
   ...props
 }) => {
-  const [size, sizeSetter] = useLocalStorageState(name, "auto");
+  const [typeSelected, typeSelectedSetter] = useLocalStorageState(
+    `${name}_type`,
+    "auto",
+  );
   const [sizeAsNumber, sizeAsNumberSetter] = useLocalStorageState(
     `${name}_number`,
     0,
   );
+  const [sizeAsEm, sizeAsEmSetter] = useLocalStorageState(`${name}_em`, 0);
 
   useEffect(() => {
-    onChange(size);
-  }, []);
+    if (typeSelected === "auto") {
+      onChange("auto");
+    } else if (typeSelected === "number") {
+      onChange(sizeAsNumber);
+    } else if (typeSelected === "em") {
+      onChange(`${sizeAsEm}em`);
+    }
+  }, [typeSelected, sizeAsNumber, sizeAsEm]);
 
   return (
     <fieldset {...props}>
@@ -26,11 +37,10 @@ export const SizeSelector = ({
           <input
             name={name}
             type="radio"
-            checked={size === "auto"}
+            checked={typeSelected === "auto"}
             onInput={(e) => {
               if (e.target.checked) {
-                sizeSetter("auto");
-                onChange("auto");
+                typeSelectedSetter("auto");
               }
             }}
           />
@@ -40,11 +50,10 @@ export const SizeSelector = ({
           <input
             name={name}
             type="radio"
-            checked={size !== "auto"}
+            checked={typeSelected === "number"}
             onInput={(e) => {
               if (e.target.checked) {
-                sizeSetter(sizeAsNumber);
-                onChange(sizeAsNumber);
+                typeSelectedSetter("number");
               }
             }}
           />
@@ -55,14 +64,35 @@ export const SizeSelector = ({
             max={max}
             value={sizeAsNumber}
             onInput={(e) => {
-              const newSize = e.target.valueAsNumber;
-              if (size !== "auto") {
-                onChange(newSize);
-              }
-              sizeAsNumberSetter(newSize);
+              sizeAsNumberSetter(e.target.valueAsNumber);
             }}
           />
         </label>
+        {em && (
+          <label>
+            Em
+            <input
+              type="radio"
+              name={name}
+              checked={typeSelected === "em"}
+              onInput={(e) => {
+                if (e.target.checked) {
+                  typeSelectedSetter("em");
+                }
+              }}
+            />
+            <input
+              type="number"
+              min={em.min}
+              max={em.max}
+              step="0.1"
+              value={sizeAsEm}
+              onInput={(e) => {
+                sizeAsEmSetter(e.target.valueAsNumber);
+              }}
+            />
+          </label>
+        )}
       </label>
     </fieldset>
   );

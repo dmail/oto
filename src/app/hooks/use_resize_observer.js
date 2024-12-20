@@ -113,6 +113,12 @@ export const useResizeObserver = (
     resizeObserver.unobserve(elementToObserve);
   }, []);
 
+  const performSizeSideEffects = useCallback((callback) => {
+    unobserve();
+    callback();
+    observe();
+  }, []);
+
   useEffect(() => {
     observe();
     return () => {
@@ -124,5 +130,5 @@ export const useResizeObserver = (
     };
   }, [ref, observe, unobserve, ...deps]);
 
-  return [size.width, size.height, observe, unobserve];
+  return [size.width, size.height, performSizeSideEffects];
 };
