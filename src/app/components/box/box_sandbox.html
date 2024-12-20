@@ -34,6 +34,8 @@
       } from "./box.jsx";
       // eslint-disable-next-line no-unused-vars
       import { EnumSelector } from "/app/components/form/enum_selector.jsx";
+      // eslint-disable-next-line no-unused-vars
+      import { SizeSelector } from "/app/components/form/size_selector.jsx";
       import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
 
       // eslint-disable-next-line no-unused-vars
@@ -139,7 +141,7 @@
                 <fieldset>
                   <legend>Dimensions</legend>
 
-                  <SizeController
+                  <SizeSelector
                     style={{
                       backgroundColor: "violet",
                     }}
@@ -147,8 +149,8 @@
                     onChange={(value) => {
                       widthSetter(value);
                     }}
-                  ></SizeController>
-                  <SizeController
+                  ></SizeSelector>
+                  <SizeSelector
                     style={{
                       backgroundColor: "violet",
                     }}
@@ -156,9 +158,9 @@
                     onChange={(value) => {
                       heightSetter(value);
                     }}
-                  ></SizeController>
+                  ></SizeSelector>
 
-                  <SizeController
+                  <SizeSelector
                     style={{
                       backgroundColor: "orange",
                     }}
@@ -166,8 +168,8 @@
                     onChange={(value) => {
                       contentWidthSetter(value);
                     }}
-                  ></SizeController>
-                  <SizeController
+                  ></SizeSelector>
+                  <SizeSelector
                     style={{
                       backgroundColor: "orange",
                     }}
@@ -175,9 +177,9 @@
                     onChange={(value) => {
                       contentHeightSetter(value);
                     }}
-                  ></SizeController>
+                  ></SizeSelector>
 
-                  <SizeController
+                  <SizeSelector
                     style={{
                       backgroundColor: "green",
                     }}
@@ -185,8 +187,8 @@
                     onChange={(value) => {
                       containerWidthSetter(value);
                     }}
-                  ></SizeController>
-                  <SizeController
+                  ></SizeSelector>
+                  <SizeSelector
                     style={{
                       backgroundColor: "green",
                     }}
@@ -194,7 +196,7 @@
                     onChange={(value) => {
                       containerHeightSetter(value);
                     }}
-                  ></SizeController>
+                  ></SizeSelector>
                 </fieldset>
                 <fieldset>
                   <legend>Props</legend>
@@ -213,65 +215,6 @@
               </div>
             </div>
           </>
-        );
-      };
-
-      // eslint-disable-next-line no-unused-vars
-      const SizeController = ({ name, onChange, ...props }) => {
-        const [size, sizeSetter] = useLocalStorageState(name, "auto");
-        const [sizeAsNumber, sizeAsNumberSetter] = useLocalStorageState(
-          `${name}_number`,
-          0,
-        );
-
-        onChange(size);
-
-        return (
-          <fieldset {...props}>
-            <legend>{name}</legend>
-            <label>
-              <label>
-                <input
-                  name={name}
-                  type="radio"
-                  checked={size === "auto"}
-                  onInput={(e) => {
-                    if (e.target.checked) {
-                      sizeSetter("auto");
-                      onChange("auto");
-                    }
-                  }}
-                />
-                Auto
-              </label>
-              <label>
-                <input
-                  name={name}
-                  type="radio"
-                  checked={size !== "auto"}
-                  onInput={(e) => {
-                    if (e.target.checked) {
-                      sizeSetter(sizeAsNumber);
-                      onChange(sizeAsNumber);
-                    }
-                  }}
-                />
-                Number
-                <input
-                  type="number"
-                  min="0"
-                  max="300"
-                  value={sizeAsNumber}
-                  onInput={(e) => {
-                    sizeAsNumberSetter(e.target.valueAsNumber);
-                    if (size !== "auto") {
-                      onChange(e.target.valueAsNumber);
-                    }
-                  }}
-                />
-              </label>
-            </label>
-          </fieldset>
         );
       };
 

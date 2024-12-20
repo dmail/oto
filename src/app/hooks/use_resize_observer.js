@@ -6,12 +6,15 @@ import {
   useState,
 } from "preact/hooks";
 
-export const useResizeObserver = ({
-  ref,
-  getElementToObserve = (refElement) => refElement,
-  onResize,
-  ignoreInitial = false,
-}) => {
+export const useResizeObserver = (
+  {
+    ref,
+    getElementToObserve = (refElement) => refElement,
+    onResize,
+    ignoreInitial = false,
+  },
+  deps = [],
+) => {
   const [size, sizeSetter] = useState({
     width: undefined,
     height: undefined,
@@ -51,7 +54,7 @@ export const useResizeObserver = ({
     return () => {
       isMountedRef.current = false;
     };
-  }, [ref, onResize, ignoreInitial]);
+  }, [ref, ignoreInitial]);
 
   const resizeObserverRef = useRef(null);
   const resizeObserverStateRef = useRef("idle");
@@ -119,7 +122,7 @@ export const useResizeObserver = ({
         resizeObserverRef.current = null;
       }
     };
-  }, [ref, onResize, observe, unobserve]);
+  }, [ref, observe, unobserve, ...deps]);
 
   return [size.width, size.height, observe, unobserve];
 };

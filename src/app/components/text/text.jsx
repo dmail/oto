@@ -78,6 +78,7 @@ const TextComponent = ({
   const index = controller?.index;
   const onParagraphChange = controller?.onParagraphChange;
   const fontReady = useFontsReady(fontFamily);
+  const fontSizeResolvedRef = useRef(fontSize);
   const lineAsDeps = [];
   for (const line of lines) {
     for (const lineChild of line) {
@@ -86,19 +87,6 @@ const TextComponent = ({
       lineAsDeps.push(lineChild.char);
     }
   }
-
-  const [, , observe, unobserve] = useResizeObserver({
-    ref: svgInnerRef,
-    getElementToObserve: (svg) => svg.parentNode,
-    onResize: () => {
-      isUpdatingText = true;
-      update();
-      requestAnimationFrame(() => {
-        isUpdatingText = false;
-      });
-    },
-    ignoreInitial: true,
-  });
 
   const deps = [
     ...lineAsDeps,
@@ -116,6 +104,23 @@ const TextComponent = ({
     onParagraphChange,
     fontReady,
   ];
+
+  const [, , observe, unobserve] = useResizeObserver(
+    {
+      ref: svgInnerRef,
+      getElementToObserve: (svg) => svg.parentNode,
+      onResize: () => {
+        console.log("reiszing");
+        isUpdatingText = true;
+        update();
+        requestAnimationFrame(() => {
+          isUpdatingText = false;
+        });
+      },
+      ignoreInitial: true,
+    },
+    deps,
+  );
 
   const update = () => {
     unobserve();
@@ -149,6 +154,9 @@ const TextComponent = ({
   };
 
   useLayoutEffect(() => {
+    let { fontSize } = window.getComputedStyle(svgInnerRef.current, null);
+    fontSize = parseFloat(fontSize);
+    fontSizeResolvedRef.current = fontSize;
     update();
   }, deps);
 
@@ -199,7 +207,6 @@ const initTextFiller = (
   },
 ) => {
   lines = [...lines];
-  const fontSizeBase = 10;
   let widthTaken;
   let heightTaken;
   let hasOverflowX;
@@ -217,7 +224,7 @@ const initTextFiller = (
           x="0"
           y="0"
           dx={dx}
-          dy={dy + lineHeight * fontSizeBase * lineIndex}
+          dy={dy + lineHeight * fontSize * lineIndex}
           fontSize={fontSize}
           fontFamily={fontFamily}
           fontWeight={fontWeight}
