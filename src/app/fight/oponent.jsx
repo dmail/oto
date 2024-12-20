@@ -7,7 +7,6 @@ import { Box } from "/app/components/box/box.jsx";
 import { Message } from "/app/components/message/message.jsx";
 import { Digits } from "/app/components/text/digits.jsx";
 import { Enemy } from "/app/enemy/enemy.jsx";
-import { Selector } from "/app/fight/selector.jsx";
 import { SwordA } from "/app/fight/sword_a.jsx";
 
 export const Opponent = forwardRef(
@@ -103,13 +102,15 @@ export const Opponent = forwardRef(
           height="..."
           x="center"
           innerSpacing="10"
+          focused={turnState === "player_is_selecting_target"}
+          onClick={
+            turnState === "player_is_selecting_target"
+              ? () => {
+                  onSelect();
+                }
+              : undefined
+          }
         >
-          <Selector
-            hidden={turnState !== "player_is_selecting_target"}
-            onClick={() => {
-              onSelect();
-            }}
-          />
           <Enemy
             elementRef={elementRef}
             url={enemyPropsFromState.url || enemyImageUrl}

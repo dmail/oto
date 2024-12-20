@@ -68,7 +68,6 @@ const DialogTextBoxComponent = (
       ref={messageElementRef}
       textController={textController}
       color={color}
-      outlineColor="black"
       backgroundColor={backgroundColor}
       invisible={!text}
       width="100%"

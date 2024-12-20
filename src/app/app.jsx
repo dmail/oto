@@ -8,7 +8,7 @@ import {
 } from "preact/hooks";
 import appStyleSheet from "./app.css" with { type: "css" };
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
-import { Box } from "./components/box/box.jsx";
+import { Box, borderWithStroke } from "./components/box/box.jsx";
 import { DialogTextBox } from "./components/dialog_text_box/dialog_text_box.jsx";
 import { Lifebar } from "./components/lifebar/lifebar.jsx";
 import { taurus } from "./enemy/taurus.js";
@@ -215,9 +215,11 @@ export const App = () => {
             height="100%"
             maxHeight="100%"
             innerSpacing="s"
-            style={{
-              border: "2px solid white",
-            }}
+            border={borderWithStroke({
+              color: "white",
+              size: 2,
+              strokeColor: "black",
+            })}
           >
             <Box name="lifebar_box" ratio="120/100" width="80%" y="center">
               <Lifebar value={heroHp} max={heroMaxHp} />
@@ -230,9 +232,11 @@ export const App = () => {
             name="ally_hud"
             width="50%"
             height="100%"
-            style={{
-              border: "2px solid white",
-            }}
+            border={borderWithStroke({
+              color: "white",
+              size: 2,
+              strokeColor: "black",
+            })}
           >
             Empty
           </Box>

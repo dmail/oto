@@ -15,6 +15,7 @@ const MessageComponent = (
     textOutlineColor = "black",
     overflow,
     textController,
+    onClick,
     ...props
   },
   ref,
@@ -26,7 +27,7 @@ const MessageComponent = (
       height="100%"
       innerSpacing="0.4em"
       maxWidth="100%"
-      cursor="default"
+      cursor={onClick ? undefined : "default"}
       backgroundColor={backgroundColor}
       border={borderWithStroke({
         color: borderColor,
@@ -35,6 +36,7 @@ const MessageComponent = (
         strokeSize: borderStrokeSize,
         radius: borderRadius,
       })}
+      onClick={onClick}
       {...props}
       style={{
         userSelect: "none",

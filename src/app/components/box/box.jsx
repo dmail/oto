@@ -119,7 +119,8 @@ const BoxComponent = (
     y = "start",
     contentX = "start",
     contentY = "start",
-    cursor,
+    onClick,
+    cursor = onClick ? "pointer" : undefined,
     ...props
   },
   ref,
@@ -311,6 +312,11 @@ const BoxComponent = (
       ref={innerRef}
       name={name}
       className="box"
+      data-focused={innerIsFocused || undefined}
+      data-vertical={vertical || undefined}
+      data-hidden={hidden || undefined}
+      data-invisible={invisible || undefined}
+      onClick={onClick}
       {...(focusable
         ? {
             tabIndex: NodeName === "button" ? undefined : -1,
@@ -323,10 +329,6 @@ const BoxComponent = (
           }
         : {})}
       {...props}
-      data-focused={innerIsFocused || undefined}
-      data-vertical={vertical || undefined}
-      data-hidden={hidden || undefined}
-      data-invisible={invisible || undefined}
       style={style}
     >
       <MultiBorder {...multiBorderProps} />
