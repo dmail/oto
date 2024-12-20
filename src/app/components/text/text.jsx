@@ -226,7 +226,7 @@ const initTextFiller = (
   dimensions each time, the measure of availableWidth might be a bit 
   below the actual availableWidth (float padding can cause this)
   */
-  svgElement.style.visibility = "hidden";
+  svgElement.style.opacity = "0";
   svgElement.style.width = "100vw";
   svgElement.style.height = "100vh";
   svgElement.parentNode.style.maxWidth = "100%";
@@ -234,7 +234,7 @@ const initTextFiller = (
   const [availableWidth, availableHeight] = getAvailableSize(
     svgElement.parentNode,
   );
-  svgElement.style.visibility = "visible";
+  svgElement.style.opacity = "";
   svgElement.style.width = "auto";
   svgElement.style.height = "auto";
 
