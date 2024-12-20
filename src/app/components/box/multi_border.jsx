@@ -102,7 +102,7 @@ export const useMultiBorder = (ref, borders) => {
     parentStyles.borderWidth = `${solidBorderFullSize}px`;
     parentStyles.borderColor = "transparent";
     parentStyles.borderStyle = "solid";
-    parentStyles.backgroundClip = "padding-box";
+    // parentStyles.backgroundClip = "padding-box";
     parentStyles.borderRadius = solidOuterBorderRadius;
   }
 

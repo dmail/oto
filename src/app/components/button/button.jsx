@@ -43,7 +43,7 @@ export const ButtonMessage = ({ children, width, height, ...props }) => {
       height={height}
       {...props}
     >
-      <Message width={width} height={height} cursor="pointer">
+      <Message width={width} height={height} cursor="pointer" color="inherit">
         {children}
       </Message>
     </Button>

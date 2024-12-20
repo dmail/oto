@@ -6,7 +6,15 @@ export const Lifebar = ({
 }) => {
   if (max <= 40) {
     const bars = createBars(value, 40);
-    return <LifebarSvg bars={bars} barWidth={2} maxBars={40} />;
+    return (
+      <LifebarSvg
+        bars={bars}
+        barWidth={2}
+        maxBars={40}
+        fullColor={fullColor}
+        emptyColor={emptyColor}
+      />
+    );
   }
   const moduloResult = value % 40;
   let numbersOfSmallBarsFilled;
@@ -113,8 +121,8 @@ const LifebarSvg = ({
   bars,
   maxBars,
   barSpacing = 1,
-  fullColor = "seagreen",
-  emptyColor = "red",
+  fullColor,
+  emptyColor,
 }) => {
   const totalWidth = maxBars * (barWidth + barSpacing);
 

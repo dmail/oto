@@ -3,21 +3,6 @@ c'est seulement lorsqu'ils sont partial qu'on va les couper en quatres
 (ça rend mieux, meme en svg)
 
 - utiliser ce mode partial corner pour la selection de l'ennemi
-
-- utiliser ce mode partial corner pour l'état focus d'un bouton
-
-- afficher des boite de dialogue lorsqu'on attaque / enemie attaque
-  pour dialogue text box
-  - vérif qu'on peut afficher sur plusieurs lignes
-  - on peut appuyer sur enter/space pour passer a la suite du text
-  - on peut aussi cliquer dessus
-
-- remplacer outline avec un truc (surement svg)
-  parce que la taille est mal prise en compte en plus
-  et puis on veut le inner+outer border color 
-  donc il faut autre chose
-  on fera surement un border transparent de la bonne taille (pour que la taille soit correcte)
-  mais on affichera cela avec du svg
 - animation mort du monstre
 - écran de game over (choix retry/revenir a la carte du monde)
 - faire la carte du monde
