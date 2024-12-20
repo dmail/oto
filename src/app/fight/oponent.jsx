@@ -92,7 +92,11 @@ export const Opponent = forwardRef(
         x="center"
       >
         <Box name="top_ui" width="100%" innerSpacing="0.5em">
-          <Message invisible={turnState !== ""} innerSpacing="0.7em">
+          <Message
+            name="enemy_name"
+            invisible={turnState !== ""}
+            innerSpacing="0.7em"
+          >
             {enemyName}
           </Message>
         </Box>

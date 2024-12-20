@@ -1,4 +1,4 @@
-import { render } from "preact";
+import { render, toChildArray } from "preact";
 import { forwardRef } from "preact/compat";
 import { useCallback, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { useResizeObserver } from "/app/hooks/use_resize_observer.js";
@@ -54,7 +54,7 @@ export const useFontsReady = (fontFamily) => {
 };
 
 const TextComponent = ({
-  // name,
+  name,
   controller,
   dx = 0,
   dy = 0,
@@ -136,6 +136,7 @@ const TextComponent = ({
         autoIsRelativeToFont: true,
       });
       const [paragraphs, setParagraph] = initTextFiller(lines, {
+        name,
         dx,
         dy,
         lineHeight,
@@ -197,6 +198,7 @@ Text.bold = ({ children }) => {
 const initTextFiller = (
   lines,
   {
+    // name,
     dx,
     dy,
     lineHeight,
@@ -246,7 +248,7 @@ const initTextFiller = (
     }
     // render(null, svgElement);
     render(<>{textChildren}</>, textElement);
-    const { width, height } = textElement.getBBox();
+    const { width, height } = textElement.getBoundingClientRect();
     widthTaken = width;
     heightTaken = height;
     svgElement.style.width = `${Math.ceil(widthTaken)}px`;
@@ -321,7 +323,7 @@ const initTextFiller = (
       if (lineChildIndex === 0) {
         childrenFittingOnThatLine = [lineChild];
         const childrenPushedNextLine = line.slice(lineChildIndex + 1);
-        lines.splice(lineIndex + 1, 0, childrenPushedNextLine);
+        lines.splice(lineIndex + 1, 0, ...childrenPushedNextLine);
         if (debug) {
           console.log("overflow on first char", {
             childrenFittingOnThatLine,
@@ -416,6 +418,11 @@ const Tspan = ({
   ...props
 }) => {
   const thickness = fontWeight === "bold" ? 1 : 0;
+  children = toChildArray(children);
+  const onlyStrings = children.every((child) => typeof child === "string");
+  if (onlyStrings) {
+    children = children.join("");
+  }
   return (
     <tspan
       font-size={isFinite(fontSize) ? `${parseInt(fontSize)}px` : fontSize}

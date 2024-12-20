@@ -4,7 +4,7 @@ import { Text } from "/app/components/text/text.jsx";
 
 const MessageComponent = (
   {
-    children,
+    name,
     backgroundColor = "black",
     color = "white",
     borderColor = "white",
@@ -16,6 +16,7 @@ const MessageComponent = (
     overflow,
     textController,
     onClick,
+    children,
     ...props
   },
   ref,
@@ -44,6 +45,7 @@ const MessageComponent = (
       }}
     >
       <Text
+        name={name}
         ref={ref}
         controller={textController}
         color={color}

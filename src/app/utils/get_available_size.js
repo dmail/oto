@@ -8,7 +8,17 @@ export const getAvailableSize = (element) => {
     paddingSizes.right +
     borderSizes.left +
     borderSizes.right;
-  availableHeight -= paddingSizes.top + paddingSizes.bottom;
+  availableHeight -=
+    paddingSizes.top +
+    paddingSizes.bottom +
+    borderSizes.top +
+    borderSizes.bottom;
+  if (availableWidth < 0) {
+    availableWidth = 0;
+  }
+  if (availableHeight < 0) {
+    availableHeight = 0;
+  }
   return [availableWidth, availableHeight];
 };
 
