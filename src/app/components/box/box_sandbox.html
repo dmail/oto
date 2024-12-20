@@ -198,7 +198,6 @@
                   <legend>Props</legend>
 
                   <label>
-                    Focused
                     <input
                       type="checkbox"
                       checked={focused}
@@ -206,6 +205,7 @@
                         focusedSetter(e.target.checked);
                       }}
                     />
+                    Focused
                   </label>
                 </fieldset>
               </div>
@@ -229,7 +229,6 @@
             <legend>{name}</legend>
             <label>
               <label>
-                Auto
                 <input
                   name={name}
                   type="radio"
@@ -241,9 +240,9 @@
                     }
                   }}
                 />
+                Auto
               </label>
               <label>
-                Number
                 <input
                   name={name}
                   type="radio"
@@ -255,6 +254,7 @@
                     }
                   }}
                 />
+                Number
                 <input
                   type="number"
                   min="0"
@@ -287,7 +287,6 @@
             {values.map((value, index) => {
               return (
                 <label key={index}>
-                  {value}
                   <input
                     type="radio"
                     name={name}
@@ -299,6 +298,7 @@
                       }
                     }}
                   />
+                  {value}
                 </label>
               );
             })}

@@ -145,52 +145,63 @@ const BoxComponent = (
         element.parentNode,
       );
 
+      const styleForXPosition = {
+        alignSelf: "",
+        left: "",
+        marginLeft: "",
+      };
       if (x === "start") {
         if (vertical) {
-          element.style.alignSelf = "flex-start";
+          styleForXPosition.alignSelf = "flex-start";
         } else {
-          element.style.left = "0";
+          styleForXPosition.left = "0";
         }
       } else if (x === "center") {
         if (vertical) {
-          element.style.alignSelf = "center";
+          styleForXPosition.alignSelf = "center";
         } else {
           const elementWidth = elementDimensions.width;
           const halfWidth = (availableWidth - elementWidth) / 2;
-          element.style.left = `${halfWidth}px`;
+          styleForXPosition.left = `${halfWidth}px`;
         }
       } else if (x === "end") {
         if (vertical) {
-          element.style.alignSelf = "flex-end";
+          styleForXPosition.alignSelf = "flex-end";
         } else {
-          element.style.left = `${availableWidth - elementDimensions.width}px`;
+          styleForXPosition.marginLeft = "auto";
         }
       } else if (isFinite(x)) {
-        element.style.left = `${parseInt(x)}px`;
+        styleForXPosition.left = `${parseInt(x)}px`;
       }
 
+      const styleForYPosition = {
+        alignSelf: styleForXPosition.alignSelf,
+        top: "",
+        marginTop: "",
+      };
       if (y === "start") {
         if (vertical) {
-          element.style.top = "0";
+          styleForYPosition.top = "0";
         } else {
-          element.style.alignSelf = "flex-start";
+          styleForYPosition.alignSelf = "flex-start";
         }
       } else if (y === "center") {
         if (vertical) {
           const elementHeight = elementDimensions.height;
-          element.style.top = `${(availableHeight - elementHeight) / 2}px`;
+          styleForYPosition.top = `${(availableHeight - elementHeight) / 2}px`;
         } else {
-          element.style.alignSelf = "center";
+          styleForYPosition.alignSelf = "center";
         }
       } else if (y === "end") {
         if (vertical) {
-          element.style.top = `${availableHeight - elementDimensions.height}px`;
+          styleForYPosition.top = `${availableHeight - elementDimensions.height}px`;
         } else {
-          element.style.alignSelf = "flex-end";
+          styleForYPosition.alignSelf = "flex-end";
         }
       } else if (isFinite(y)) {
-        element.style.top = `${parseInt(y)}px`;
+        styleForYPosition.top = `${parseInt(y)}px`;
       }
+      Object.assign(element.style, styleForXPosition, styleForYPosition);
     });
     observer.observe(element);
     return () => {
