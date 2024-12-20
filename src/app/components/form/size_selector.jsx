@@ -1,4 +1,4 @@
-import { useEffect } from "preact/hooks";
+import { useLayoutEffect } from "preact/hooks";
 import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
 
 export const SizeSelector = ({
@@ -19,7 +19,7 @@ export const SizeSelector = ({
   );
   const [sizeAsEm, sizeAsEmSetter] = useLocalStorageState(`${name}_em`, 0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeSelected === "auto") {
       onChange("auto");
     } else if (typeSelected === "number") {
@@ -64,7 +64,12 @@ export const SizeSelector = ({
             max={max}
             value={sizeAsNumber}
             onInput={(e) => {
-              sizeAsNumberSetter(e.target.valueAsNumber);
+              const { valueAsNumber } = e.target;
+              if (isNaN(valueAsNumber)) {
+                // happens when the input is empty (delete key for instance)
+              } else {
+                sizeAsNumberSetter(valueAsNumber);
+              }
             }}
           />
         </label>
@@ -88,7 +93,12 @@ export const SizeSelector = ({
               step="0.1"
               value={sizeAsEm}
               onInput={(e) => {
-                sizeAsEmSetter(e.target.valueAsNumber);
+                const { valueAsNumber } = e.target;
+                if (isNaN(valueAsNumber)) {
+                  // happens when the input is empty (delete key for instance)
+                } else {
+                  sizeAsEmSetter(valueAsNumber);
+                }
               }}
             />
           </label>

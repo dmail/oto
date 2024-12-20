@@ -1,3 +1,4 @@
+import { useLayoutEffect } from "preact/hooks";
 import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
 
 export const EnumSelector = ({ name, values, onChange, ...props }) => {
@@ -5,7 +6,9 @@ export const EnumSelector = ({ name, values, onChange, ...props }) => {
     name,
     values[0],
   );
-  onChange(selectedValue);
+  useLayoutEffect(() => {
+    onChange(selectedValue);
+  }, [selectedValue]);
 
   return (
     <fieldset {...props}>
@@ -20,7 +23,6 @@ export const EnumSelector = ({ name, values, onChange, ...props }) => {
               onInput={(e) => {
                 if (e.target.checked) {
                   selectedValueSetter(value);
-                  onChange(value);
                 }
               }}
             />

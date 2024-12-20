@@ -195,6 +195,7 @@ Text.bold = ({ children }) => {
   return <Text fontWeight="bold">{children}</Text>;
 };
 
+// https://blog.elantha.com/maximum-element-width/
 const initTextFiller = (
   lines,
   {
@@ -219,10 +220,35 @@ const initTextFiller = (
   let heightTaken;
   let hasOverflowX;
   let hasOverflowY;
+
+  /*
+  We test availableWidth this way because if we set the svg
+  dimensions each time, the measure of availableWidth might be a bit 
+  below the actual availableWidth (float padding can cause this)
+  */
+  svgElement.style.visibility = "hidden";
+  svgElement.style.width = "100vw";
+  svgElement.style.height = "100vh";
+  svgElement.parentNode.style.maxWidth = "100%";
+  svgElement.parentNode.style.maxHeight = "100%";
+  const [availableWidth, availableHeight] = getAvailableSize(
+    svgElement.parentNode,
+  );
+  svgElement.style.visibility = "visible";
+  svgElement.style.width = "auto";
+  svgElement.style.height = "auto";
+
+  let currentLines = null;
   const renderLines = (lines) => {
+    if (lines === currentLines) {
+      return;
+    }
+    currentLines = lines;
     const textChildren = [];
     let lineIndex = 0;
+    const childrenToDisplay = [];
     for (const lineChildren of lines) {
+      childrenToDisplay.push(lineChildren);
       const lineChildrenValues = [];
       for (const lineChild of lineChildren) {
         lineChildrenValues.push(lineChild.value);
@@ -251,11 +277,13 @@ const initTextFiller = (
     const { width, height } = textElement.getBoundingClientRect();
     widthTaken = width;
     heightTaken = height;
-    svgElement.style.width = `${Math.ceil(widthTaken)}px`;
-    svgElement.style.height = `${Math.ceil(heightTaken)}px`;
-    const [availableWidth, availableHeight] = getAvailableSize(
-      svgElement.parentNode,
-    );
+    svgElement.style.width = `${widthTaken}px`;
+    svgElement.style.height = `${heightTaken}px`;
+    // let [availableWidth, availableHeight] = getAvailableSize(
+    //   svgElement.parentNode,
+    // );
+    // availableWidth = Math.ceil(availableWidth);
+    // availableHeight = Math.ceil(availableHeight);
     hasOverflowX = widthTaken > availableWidth;
     hasOverflowY = heightTaken > availableHeight;
   };
