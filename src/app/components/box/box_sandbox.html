@@ -46,10 +46,11 @@
         const [y, ySetter] = useState("start");
         const [contentX, contentXSetter] = useState("start");
         const [contentY, contentYSetter] = useState("start");
+        const [focused, focusedSetter] = useLocalStorageState("focused", false);
 
         return (
           <>
-            <div style="display: flex; flex-direction: row">
+            <div style="display: flex; flex-direction: column">
               <div
                 style={{
                   border: "1px solid black",
@@ -73,6 +74,7 @@
                     y={y}
                     contentX={contentX}
                     contentY={contentY}
+                    focused={focused}
                   >
                     <div
                       style={{
@@ -85,7 +87,7 @@
                   </Box>
                 </div>
               </div>
-              <div style="margin-top: 0px; margin-left: 20px ">
+              <div style="margin-top: 0px; margin-left: 20px; display: flex">
                 <fieldset>
                   <legend>Position</legend>
 
@@ -191,6 +193,20 @@
                       containerHeightSetter(value);
                     }}
                   ></SizeController>
+                </fieldset>
+                <fieldset>
+                  <legend>Props</legend>
+
+                  <label>
+                    Focused
+                    <input
+                      type="checkbox"
+                      checked={focused}
+                      onInput={(e) => {
+                        focusedSetter(e.target.checked);
+                      }}
+                    />
+                  </label>
                 </fieldset>
               </div>
             </div>

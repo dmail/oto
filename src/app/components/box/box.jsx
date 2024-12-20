@@ -125,7 +125,7 @@ const BoxComponent = (
   },
   ref,
 ) => {
-  const [innerIsFocused, innerIsFocusedSetter] = useState(focused);
+  const [innerIsFocused, innerIsFocusedSetter] = useState(false);
 
   const innerRef = useRef();
   useImperativeHandle(ref, () => innerRef.current);
@@ -275,7 +275,7 @@ const BoxComponent = (
       borders.push(border);
     }
   }
-  if (innerIsFocused) {
+  if (focused || innerIsFocused) {
     borders.unshift(
       ...borderOutsidePartial({
         width: "30%",
