@@ -1,6 +1,12 @@
 import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
 
-export const SizeSelector = ({ name, onChange, ...props }) => {
+export const SizeSelector = ({
+  name,
+  onChange,
+  min = "0",
+  max = "300",
+  ...props
+}) => {
   const [size, sizeSetter] = useLocalStorageState(name, "auto");
   const [sizeAsNumber, sizeAsNumberSetter] = useLocalStorageState(
     `${name}_number`,
@@ -42,8 +48,8 @@ export const SizeSelector = ({ name, onChange, ...props }) => {
           Number
           <input
             type="number"
-            min="0"
-            max="300"
+            min={min}
+            max={max}
             value={sizeAsNumber}
             onInput={(e) => {
               sizeAsNumberSetter(e.target.valueAsNumber);

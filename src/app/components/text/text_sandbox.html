@@ -21,6 +21,8 @@
       } from "./text.jsx";
       // eslint-disable-next-line no-unused-vars
       import { EnumSelector } from "/app/components/form/enum_selector.jsx";
+      // eslint-disable-next-line no-unused-vars
+      import { SizeSelector } from "/app/components/form/size_selector.jsx";
       import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
 
       // eslint-disable-next-line no-unused-vars
@@ -86,19 +88,14 @@
                 }}
               />
 
-              <br />
-              <label>
-                Font size:
-                <input
-                  type="number"
-                  min="1"
-                  max="40"
-                  value={fontSize}
-                  onInput={(event) =>
-                    fontSizeSetter(event.target.valueAsNumber)
-                  }
-                />
-              </label>
+              <SizeSelector
+                name="font-size"
+                min="1"
+                max="40"
+                onChange={(value) => {
+                  fontSizeSetter(value);
+                }}
+              />
 
               <br />
               <label>

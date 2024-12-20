@@ -4,6 +4,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { useResizeObserver } from "/app/hooks/use_resize_observer.js";
 import { useStructuredMemo } from "/app/hooks/use_structured_memo.js";
 import { getAvailableSize } from "/app/utils/get_available_size.js";
+import { resolveSize } from "/app/utils/size_resolver.js";
 
 let isUpdatingText = false;
 
@@ -126,13 +127,17 @@ const TextComponent = ({
     unobserve();
     const svgElement = svgInnerRef.current;
     const textElement = textRef.current;
+    const fontSizeResolved = resolveSize(fontSize, {
+      fontSize: fontSizeResolvedRef.current,
+      autoIsRelativeToFont: true,
+    });
     const [paragraphs, setParagraph] = initTextFiller(lines, {
       dx,
       dy,
       lineHeight,
       overflow,
 
-      fontSize,
+      fontSize: fontSizeResolved,
       fontFamily,
       fontWeight,
       letterSpacing,
