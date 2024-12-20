@@ -15,6 +15,7 @@
     </style>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
+      import { useState } from "preact/hooks";
       import {
         // eslint-disable-next-line no-unused-vars
         Text,
@@ -38,13 +39,11 @@
 
       // eslint-disable-next-line no-unused-vars
       const TextWithForm = () => {
-        const [width, widthSetter] = useLocalStorageState("width", 300);
+        const [containerWidth, containerWidthSetter] = useState("auto");
+        const [containerHeight, containerHeightSetter] = useState("auto");
         const [text, textSetter] = useLocalStorageState("text", "Coucou");
-        const [color, colorSetter] = useLocalStorageState("color", "black");
-        const [fontSize, fontSizeSetter] = useLocalStorageState(
-          "font_size",
-          18,
-        );
+        const [color, colorSetter] = useState("black");
+        const [fontSize, fontSizeSetter] = useState(18);
         const [lineHeight, lineHeightSetter] = useLocalStorageState(
           "line_height",
           1.4,
@@ -55,8 +54,10 @@
             <div style="border: 1px solid black; width: 500px; height: 150px; ">
               <div
                 style={{
+                  display: "inline-flex",
                   background: "green",
-                  width,
+                  width: containerWidth,
+                  height: containerHeight,
                 }}
               >
                 <Text fontSize={fontSize} lineHeight={lineHeight} color={color}>
@@ -112,17 +113,19 @@
                 />
               </label>
 
-              <br />
-              <label>
-                Container width :
-                <input
-                  type="number"
-                  min="1"
-                  max="400"
-                  value={width}
-                  onInput={(event) => widthSetter(event.target.valueAsNumber)}
-                />
-              </label>
+              <SizeSelector
+                name="container-width"
+                onChange={(value) => {
+                  containerWidthSetter(value);
+                }}
+              />
+
+              <SizeSelector
+                name="container-height"
+                onChange={(value) => {
+                  containerHeightSetter(value);
+                }}
+              />
             </fieldset>
           </div>
         );

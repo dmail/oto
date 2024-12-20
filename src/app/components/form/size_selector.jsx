@@ -1,3 +1,4 @@
+import { useEffect } from "preact/hooks";
 import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
 
 export const SizeSelector = ({
@@ -13,7 +14,9 @@ export const SizeSelector = ({
     0,
   );
 
-  onChange(size);
+  useEffect(() => {
+    onChange(size);
+  }, []);
 
   return (
     <fieldset {...props}>
@@ -52,10 +55,11 @@ export const SizeSelector = ({
             max={max}
             value={sizeAsNumber}
             onInput={(e) => {
-              sizeAsNumberSetter(e.target.valueAsNumber);
+              const newSize = e.target.valueAsNumber;
               if (size !== "auto") {
-                onChange(e.target.valueAsNumber);
+                onChange(newSize);
               }
+              sizeAsNumberSetter(newSize);
             }}
           />
         </label>

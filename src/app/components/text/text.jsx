@@ -79,7 +79,6 @@ const TextComponent = ({
   const index = controller?.index;
   const onParagraphChange = controller?.onParagraphChange;
   const fontReady = useFontsReady(fontFamily);
-  const fontSizeResolvedRef = useRef(fontSize);
   const lineAsDeps = [];
   for (const line of lines) {
     for (const lineChild of line) {
@@ -127,8 +126,10 @@ const TextComponent = ({
     unobserve();
     const svgElement = svgInnerRef.current;
     const textElement = textRef.current;
+    const computedStyle = window.getComputedStyle(svgInnerRef.current, null);
+    const fontSizeReference = parseFloat(computedStyle.fontSize);
     const fontSizeResolved = resolveSize(fontSize, {
-      fontSize: fontSizeResolvedRef.current,
+      fontSize: fontSizeReference,
       autoIsRelativeToFont: true,
     });
     const [paragraphs, setParagraph] = initTextFiller(lines, {
@@ -159,9 +160,6 @@ const TextComponent = ({
   };
 
   useLayoutEffect(() => {
-    let { fontSize } = window.getComputedStyle(svgInnerRef.current, null);
-    fontSize = parseFloat(fontSize);
-    fontSizeResolvedRef.current = fontSize;
     update();
   }, deps);
 
