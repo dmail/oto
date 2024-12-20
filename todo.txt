@@ -1,4 +1,5 @@
-
+- text not fitting when resizing
+- 500 when trying to loadd app/text
 - animation mort du monstre
 - écran de game over (choix retry/revenir a la carte du monde)
 - faire la carte du monde

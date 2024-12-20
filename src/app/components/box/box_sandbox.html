@@ -32,6 +32,8 @@
         // eslint-disable-next-line no-unused-vars
         Box,
       } from "./box.jsx";
+      // eslint-disable-next-line no-unused-vars
+      import { EnumSelector } from "/app/components/form/enum_selector.jsx";
       import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
 
       // eslint-disable-next-line no-unused-vars
@@ -269,39 +271,6 @@
                 />
               </label>
             </label>
-          </fieldset>
-        );
-      };
-
-      // eslint-disable-next-line no-unused-vars
-      const EnumSelector = ({ name, values, onChange, ...props }) => {
-        const [selectedValue, selectedValueSetter] = useLocalStorageState(
-          name,
-          values[0],
-        );
-        onChange(selectedValue);
-
-        return (
-          <fieldset {...props}>
-            <legend>{name}</legend>
-            {values.map((value, index) => {
-              return (
-                <label key={index}>
-                  <input
-                    type="radio"
-                    name={name}
-                    checked={selectedValue === value}
-                    onInput={(e) => {
-                      if (e.target.checked) {
-                        selectedValueSetter(value);
-                        onChange(value);
-                      }
-                    }}
-                  />
-                  {value}
-                </label>
-              );
-            })}
           </fieldset>
         );
       };

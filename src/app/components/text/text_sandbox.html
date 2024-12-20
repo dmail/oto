@@ -15,11 +15,13 @@
     </style>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
-      import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
       import {
         // eslint-disable-next-line no-unused-vars
         Text,
       } from "./text.jsx";
+      // eslint-disable-next-line no-unused-vars
+      import { EnumSelector } from "/app/components/form/enum_selector.jsx";
+      import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
@@ -43,34 +45,43 @@
         );
 
         return (
-          <div style={{ width }}>
-            <Text fontSize={fontSize} color={color}>
-              {text}
-            </Text>
+          <div style="display: flex; flex-direction: column">
+            <div style="border: 1px solid black; width: 500px; height: 150px; ">
+              <div
+                style={{
+                  background: "green",
+                  width,
+                }}
+              >
+                <Text fontSize={fontSize} color={color}>
+                  {text}
+                </Text>
+              </div>
+            </div>
             <fieldset>
               <legend>Text props</legend>
 
               <label>
-                Text:
-                <input
-                  type="text"
-                  value={text}
+                <textarea
+                  style={{
+                    minWidth: "25em",
+                  }}
                   onInput={(event) => textSetter(event.target.value)}
-                />
+                  columns="120"
+                  rows="3"
+                >
+                  {text}
+                </textarea>
               </label>
               <br />
-              <label>
-                Color:
-                <select
-                  defaultValue={color}
-                  onChange={(e) => {
-                    colorSetter(e.target.value);
-                  }}
-                >
-                  <option value="black">black</option>
-                  <option value="red">red</option>
-                </select>
-              </label>
+              <EnumSelector
+                name="color"
+                values={["black", "red", "yellow"]}
+                onChange={(value) => {
+                  colorSetter(value);
+                }}
+              />
+
               <br />
               <label>
                 Font size:
