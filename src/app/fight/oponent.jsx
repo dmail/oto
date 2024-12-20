@@ -103,6 +103,9 @@ export const Opponent = forwardRef(
           x="center"
           innerSpacing="10"
           focused={turnState === "player_is_selecting_target"}
+          focusedOutlineWidth="20%"
+          focusedOutlineRadius={10}
+          focusedOutlineSize={7}
           onClick={
             turnState === "player_is_selecting_target"
               ? () => {

@@ -1,5 +1,6 @@
 import { useState } from "preact/hooks";
 import buttonStylesheet from "./button.css" with { type: "css" };
+import { HOVER_TEXT_COLOR } from "/app/colors.js";
 import { Box } from "/app/components/box/box.jsx";
 import { Message } from "/app/components/message/message.jsx";
 
@@ -26,7 +27,7 @@ export const Button = ({ children, color, ...props }) => {
       onMouseLeave={() => {
         hoveredSetter(false);
       }}
-      color={hovered ? "dodgerblue" : color}
+      color={hovered ? HOVER_TEXT_COLOR : color}
       {...props}
     >
       {children}

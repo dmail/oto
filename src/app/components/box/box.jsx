@@ -5,10 +5,11 @@ import {
   useRef,
   useState,
 } from "preact/hooks";
-import { getAvailableSize } from "../../utils/get_available_size.js";
 import boxStylesheet from "./box.css" with { type: "css" };
 import { getInnerSpacingStyles } from "./inner_spacing_styles.js";
 import { MultiBorder, useMultiBorder } from "./multi_border.jsx";
+import { FOCUSED_OUTLINE_COLOR } from "/app/colors.js";
+import { getAvailableSize } from "/app/utils/get_available_size.js";
 
 document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];
 if (import.meta.hot) {
@@ -93,7 +94,8 @@ const BoxComponent = (
     invisible = false,
     focusable = NodeName === "button",
     focused = false,
-    focusedOutlineColor = "dodgerblue",
+    focusedOutlineWidth = "30%",
+    focusedOutlineColor = FOCUSED_OUTLINE_COLOR,
     focusedOutlineRadius = 0,
     focusedOutlineSize = 2,
     focusedOutlineStrokeSize = 1,
@@ -278,7 +280,7 @@ const BoxComponent = (
   if (focused || innerIsFocused) {
     borders.unshift(
       ...borderOutsidePartial({
-        width: "30%",
+        width: focusedOutlineWidth,
         color: focusedOutlineColor,
         strokeColor: "black",
         size: focusedOutlineSize,
