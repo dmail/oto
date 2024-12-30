@@ -38,11 +38,13 @@ export const erase = (
   let i = 0;
   const eraseStepDuration = duration / iterations;
   while (i < iterations) {
+    let stepIndex = i;
     executors.push(() => {
       return animate({
         onstart: () => {
           for (const nonTransparentPixel of nonTransparentPixelSet) {
-            if (nonTransparentPixel.x % 4 === 0) {
+            const everyNthPixel = iterations - stepIndex;
+            if (nonTransparentPixel.x % everyNthPixel === 0) {
               allColors[nonTransparentPixel.index + 3] = 0;
               nonTransparentPixelSet.delete(nonTransparentPixel);
             }

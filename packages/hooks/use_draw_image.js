@@ -5,11 +5,11 @@ export const useDrawImage = (
   source,
   { x = 0, y = 0, width, height, opacity = 1, onDraw, debug } = {},
 ) => {
-  useLayoutEffect(() => {
+  const draw = () => {
     if (!canvas) return;
     if (typeof source === "function") source = source();
     if (!source) return;
-    const context = canvas.getContext("2d");
+    const context = canvas.getContext("2d", { willReadFrequently: true });
     context.clearRect(0, 0, canvas.width, canvas.height);
     if (width === undefined) {
       width = canvas.width;
@@ -44,5 +44,11 @@ export const useDrawImage = (
     if (onDraw) {
       onDraw();
     }
+  };
+
+  useLayoutEffect(() => {
+    draw();
   }, [canvas, source, x, y, width, height, opacity, onDraw]);
+
+  return draw;
 };
