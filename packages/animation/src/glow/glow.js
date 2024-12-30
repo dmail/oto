@@ -1,7 +1,7 @@
-import { animate } from "./animate.js";
-import { animateSequence } from "./animate_sequence.js";
-import { applyRatioToDiff } from "./apply_ratio_to_diff.js";
-import { EASING } from "./easing.js";
+import { animate } from "../animate.js";
+import { animateSequence } from "../animate_sequence.js";
+import { applyRatioToDiff } from "../apply_ratio_to_diff.js";
+import { EASING } from "../easing.js";
 
 const COLORS = {
   black: [0, 0, 0],
