@@ -3,6 +3,7 @@ export const animate = ({
   fps,
   easing,
   onprogress = () => {},
+  onstart = () => {},
   onfinish = () => {},
   oncancel = () => {},
   loop = false,
@@ -32,6 +33,7 @@ export const animate = ({
         animation.finished = new Promise((resolve) => {
           resolveFinished = resolve;
         });
+        onstart();
       }
       animationFrame = requestAnimationFrame(next);
     },

@@ -2,13 +2,7 @@ import { animate } from "../animate.js";
 import { animateSequence } from "../animate_sequence.js";
 import { applyRatioToDiff } from "../apply_ratio_to_diff.js";
 import { EASING } from "../easing.js";
-
-const COLORS = {
-  black: [0, 0, 0],
-  white: [255, 255, 255],
-  red: [255, 0, 0],
-  green: [0, 255, 0],
-};
+import { WELL_KNOWN_COLORS } from "../well_known_colors.js";
 
 export const glow = (
   canvas,
@@ -25,8 +19,8 @@ export const glow = (
     easing = EASING.EASE_OUT_EXPO,
   } = {},
 ) => {
-  if (typeof fromColor === "string") fromColor = COLORS[fromColor];
-  if (typeof toColor === "string") toColor = COLORS[toColor];
+  if (typeof fromColor === "string") fromColor = WELL_KNOWN_COLORS[fromColor];
+  if (typeof toColor === "string") toColor = WELL_KNOWN_COLORS[toColor];
   const [rFrom, gFrom, bFrom] = fromColor;
   let r = rFrom;
   let g = gFrom;
