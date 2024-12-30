@@ -1,8 +1,10 @@
+/* eslint-env browser */
+
 import { batch, computed, effect, signal } from "@preact/signals";
+import { useDrawImage } from "hooks/use_draw_image.js";
+import { useImage } from "hooks/use_image.js";
 import { render } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { useDrawImage } from "../../app/hooks/use_draw_image.js";
-import { useImage } from "../../app/hooks/use_image.js";
 import { EyeClosedIconSvg } from "./eye_closed_icon.jsx";
 import { EyeIconSvg } from "./eye_icon.jsx";
 import { MagicWandSelectionIconSvg } from "./magic_wand_selection_icon.jsx";

@@ -4,5 +4,5 @@ export default eslintConfigRelax({
   rootDirectoryUrl: new URL("./", import.meta.url),
   browserDirectoryUrl: new URL("./src/", import.meta.url),
   jsxPragmaAuto: true,
-  browserFiles: ["**/packages/animation/**"],
+  browserFiles: ["**/packages/**"],
 });

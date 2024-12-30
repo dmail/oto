@@ -20,7 +20,7 @@
       // eslint-disable-next-line no-unused-vars
       const Rect = ({ width, height, radius, color }) => {
         const rectangleWidth = width;
-        const rectangleHeight = height;
+        // const rectangleHeight = height;
 
         // eslint-disable-next-line no-unused-vars
         const TopRightCorner = ({
@@ -95,7 +95,7 @@
               size={outerSize}
               color={color}
             />
-            {/*<TopRightCorner
+            <TopRightCorner
               x={rectangleWidth - outerSize}
               y={outerSize}
               width={innerWidth}
@@ -112,7 +112,7 @@
               radius={lastRadius}
               size={lastSize}
               color="green"
-            />*/}
+            />
           </>
         );
       };

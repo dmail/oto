@@ -16,13 +16,13 @@
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
       import { useRef, useLayoutEffect } from "preact/hooks";
-      import { useLocalStorageState } from "/app/hooks/use_local_storage_state.js";
-      import {
-        drawArc,
-        drawLine,
-        drawArcTo,
-        drawQuadraticCurveTo,
-      } from "/app/canvas/draw.js";
+      import { useLocalStorageState } from "hooks/use_local_storage_state.js";
+      // import {
+      //   drawArc,
+      //   drawLine,
+      //   drawArcTo,
+      //   drawQuadraticCurveTo,
+      // } from "/canvas/draw.js";
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
@@ -59,15 +59,15 @@
           const context = canvas.getContext("2d");
           context.clearRect(0, 0, canvas.width, canvas.height);
           context.imageSmoothingEnabled = false;
-          const outerColor = "green";
+          // const outerColor = "green";
           const outerOpacity = 0.5;
-          const innerColor = "red";
+          // const innerColor = "red";
           const innerOpacity = 0.5;
 
-          const center = [
-            x + radius + outerSize / 2,
-            y + radius + outerSize / 2,
-          ];
+          // const center = [
+          //   x + radius + outerSize / 2,
+          //   y + radius + outerSize / 2,
+          // ];
 
           context.beginPath();
           roundRect2(
@@ -162,6 +162,7 @@
           // }
         };
 
+        // eslint-disable-next-line no-unused-vars
         function roundRect(ctx, x, y, width, height, radius) {
           /*
            * Draws a rounded rectangle using the current state of the canvas.
@@ -221,6 +222,7 @@
           ctx.roundRect(...args);
         };
 
+        // eslint-disable-next-line no-unused-vars
         const drawTopLeftCorner = (
           context,
           { x, y, width, height, radius, size },

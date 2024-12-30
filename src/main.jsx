@@ -1,10 +1,10 @@
+import { useFontFace } from "hooks/use_font_face.js";
 import { render } from "preact";
 import { useEffect, useErrorBoundary } from "preact/hooks";
-import { App } from "./app/app.jsx";
-import { goblinFontUrl } from "./app/components/text/font_urls.js";
-import { useFontFace } from "./app/hooks/use_font_face.js";
+import { goblinFontUrl } from "./components/text/font_urls.js";
+import { Game } from "./game/game.jsx";
 
-const AppWithErrorBoundary = () => {
+const GameWithErrorBoundary = () => {
   const [error, resetError] = useErrorBoundary();
   const goblinFont = useFontFace("goblin", {
     url: goblinFontUrl,
@@ -23,7 +23,7 @@ const AppWithErrorBoundary = () => {
   if (!goblinFont) {
     return "loading font";
   }
-  return <App />;
+  return <Game />;
 };
 
-render(<AppWithErrorBoundary />, document.querySelector("#root"));
+render(<GameWithErrorBoundary />, document.querySelector("#root"));

@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
-import { getDomElementBox } from "../../app/utils/get_dom_element_box.js";
+import { getDomElementBox } from "/utils/get_dom_element_box.js";
 
 export const SelectionRectangle = ({ drawZoneRef, enabled }) => {
   const selectionRectangleCanvasRef = useRef();
