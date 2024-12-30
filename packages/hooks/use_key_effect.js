@@ -18,12 +18,12 @@ export const useKeyEffect = (keyCallbacks) => {
   }
 
   useEffect(() => {
-    const onKeyDown = (event) => {
-      const eventKey = event.key;
+    const onKeyDown = (keydownEvent) => {
+      const eventKey = keydownEvent.key;
       const keyEffect = effects[eventKey];
       if (keyEffect?.enabled) {
-        event.preventDefault();
-        keyEffect.callback();
+        keydownEvent.preventDefault();
+        keyEffect.callback(keydownEvent);
       }
     };
     document.addEventListener("keydown", onKeyDown);

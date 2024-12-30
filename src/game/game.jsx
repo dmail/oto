@@ -101,15 +101,23 @@ export const Game = () => {
     if (damage < 0) {
       damage = 0;
     }
-    await dialogRef.current.alert("Taurus attaque avec Cornes.");
+    const oponentAlert = dialogRef.current.alert(
+      "Taurus attaque avec Cornes.",
+      {
+        timeout: 500,
+      },
+    );
     await oponentRef.current.glow();
+    await oponentAlert.close();
     await heroRef.current.recoilAfterHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
     await heroRef.current.displayDamage(damage);
     decreaseHeroHp(15);
   };
   const performHeroTurn = async () => {
-    await dialogRef.current.alert("Hero attaque avec Epée -A-.");
+    const heroAlert = dialogRef.current.alert("Hero attaque avec Epée -A-.", {
+      timeout: 500,
+    });
     let damage = heroAttack + weaponAttack - enemyDefense;
     if (damage < 0) {
       damage = 0;
@@ -119,6 +127,7 @@ export const Game = () => {
     swordSound.currentTime = 0.15;
     swordSound.play();
     await oponentRef.current.playWeaponAnimation();
+    await heroAlert.close();
     const moveBackToPositionPromise = heroRef.current.moveBackToPosition();
     await new Promise((resolve) => setTimeout(resolve, 200));
     await Promise.all([

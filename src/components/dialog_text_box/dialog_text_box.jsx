@@ -1,61 +1,94 @@
-/*
-il faut qu'on puisse aficher ce qui rentre dans la boite de dialogue
-et on peut passer a la suite avec enter/clic ou que sais-je
-lorsqu'on arrive a la fin une promise se resolve
-donc on a besoin d'une fonction je dirais
-hummmm
-
-ptet un [dialog, displayDialog] = useDialogText()
-
-aui retourne une fonction qui se resolve dans un cas précis
-
-*/
 import { useKeyEffect } from "hooks/use_key_effect.js";
 import { forwardRef } from "preact/compat";
-import { useImperativeHandle, useRef, useState } from "preact/hooks";
+import { useEffect, useImperativeHandle, useRef, useState } from "preact/hooks";
 import { Message } from "/components/message/message.jsx";
 import { useTextController } from "/components/text/text.jsx";
 
 const DialogTextBoxComponent = (
-  { color = "white", backgroundColor = "blue", children, ...props },
+  {
+    color = "white",
+    backgroundColor = "blue",
+    children,
+    overflow = "hidden",
+    ...props
+  },
   ref,
 ) => {
   const [text, textSetter] = useState(null);
   const textController = useTextController();
   const messageElementRef = useRef();
   const alertPromiseRef = useRef();
+  const timeoutRef = useRef(null);
 
-  const next = () => {
+  const next = (event) => {
     if (textController.hasNext) {
       textController.next();
-    } else if (alertPromiseRef.current) {
-      textSetter(null);
-      alertPromiseRef.current();
-      alertPromiseRef.current = null;
+    } else {
+      close(event);
     }
+  };
+
+  const close = (event) => {
+    const alertPromise = alertPromiseRef.current;
+    if (!alertPromise) {
+      return null;
+    }
+    const eventType = event?.type;
+    if (eventType !== "click" && eventType !== "keydown") {
+      const timeout = timeoutRef.current;
+      if (timeout !== null) {
+        return alertPromise;
+      }
+    }
+    textSetter(null);
+    alertPromise.resolve();
+    alertPromiseRef.current = null;
+    return alertPromise;
   };
 
   useKeyEffect({
     Enter: {
       enabled: textController.hasContent,
-      callback: () => {
-        next();
+      callback: (keyboardEvent) => {
+        next(keyboardEvent);
       },
     },
     Space: {
       enabled: textController.hasContent,
-      callback: () => {
-        next();
+      callback: (keyboardEvent) => {
+        next(keyboardEvent);
       },
     },
   });
 
-  const alert = (text) => {
+  const alert = (text, { timeout } = {}) => {
     textSetter(text);
-    return new Promise((resolve) => {
-      alertPromiseRef.current = resolve;
+    let _resolve;
+    const alertPromise = new Promise((resolve) => {
+      _resolve = resolve;
     });
+    alertPromise.resolve = _resolve;
+    alertPromiseRef.current = alertPromise;
+
+    clearTimeout(timeoutRef.current);
+    if (timeout) {
+      timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = null;
+        close();
+      }, timeout);
+    }
+
+    return {
+      promise: alertPromise,
+      close,
+    };
   };
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(timeoutRef.current);
+    };
+  }, []);
 
   useImperativeHandle(ref, () => {
     return {
@@ -70,14 +103,14 @@ const DialogTextBoxComponent = (
       color={color}
       backgroundColor={backgroundColor}
       invisible={!text}
+      overflow={overflow}
       width="100%"
       height="100%"
       maxWidth="100%"
-      overflow="hidden"
       innerSpacingY="0.8em"
       innerSpacingX="0.5em"
-      onClick={() => {
-        next();
+      onClick={(clickEvent) => {
+        next(clickEvent);
       }}
       {...props}
     >

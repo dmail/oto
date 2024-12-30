@@ -1,13 +1,13 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
+import { Enemy } from "./enemy/enemy.jsx";
+import { SwordA } from "./sword_a.jsx";
 import { useCanvasGlowAnimation } from "/animations/use_canvas_glow_animation.js";
 import { useDigitsDisplayAnimation } from "/animations/use_digits_display_animation.js";
 import { useElementAnimation } from "/animations/use_element_animation.js";
 import { Box } from "/components/box/box.jsx";
 import { Message } from "/components/message/message.jsx";
 import { Digits } from "/components/text/digits.jsx";
-import { Enemy } from "/enemy/enemy.jsx";
-import { SwordA } from "/fight/sword_a.jsx";
 
 export const Opponent = forwardRef(
   (
