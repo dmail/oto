@@ -9,20 +9,20 @@ import {
   useRef,
   useState,
 } from "preact/hooks";
-import { MountainAndSkyBattleBackground } from "../battle_background/battle_backgrounds.jsx";
 import { Box, borderWithStroke } from "../components/box/box.jsx";
 import { DialogTextBox } from "../components/dialog_text_box/dialog_text_box.jsx";
 import { Lifebar } from "../components/lifebar/lifebar.jsx";
-import { taurus } from "../enemy/taurus.js";
 import { Ally } from "../fight/ally.jsx";
+import { MountainAndSkyBattleBackground } from "../fight/battle_background/battle_backgrounds.jsx";
+import { taurus } from "../fight/enemy/taurus.js";
 import { MenuFight } from "../fight/menu_fight.jsx";
 import { Opponent } from "../fight/oponent.jsx";
 import { SwordAIcon } from "../fight/sword_a.jsx";
 import { swordASoundUrl } from "../fight/sword_sound_url.js";
 import { WhiteCurtain } from "../fight/white_curtain.jsx";
-import { PauseDialog } from "../interface/pause_dialog.jsx";
 import { pause, pausedSignal, play } from "../signals.js";
 import gameStyleSheet from "./game.css" with { type: "css" };
+import { PauseDialog } from "./pause_dialog.jsx";
 
 // const enemiesSignal = signal([taurus]);
 const enemySignal = signal(taurus);
