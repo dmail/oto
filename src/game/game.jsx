@@ -25,6 +25,7 @@ import { PauseDialog } from "./pause_dialog.jsx";
 import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
 import { useBackgroundMusic, useSound } from "/audio/use_sound.js";
 
+const fightStartSoundUrl = import.meta.resolve("../fight/fight_start.mp3");
 const battleMusicUrl = import.meta.resolve("../fight/battle_bg_a.mp3");
 const heroHitSoundUrl = import.meta.resolve("../fight/hero_hit_2.mp3");
 
@@ -122,11 +123,18 @@ export const Game = () => {
     volume: 0.5,
     startTime: 0.1,
   });
+  const [playFightStartSound] = useSound({
+    url: fightStartSoundUrl,
+    volume: 0.7,
+  });
   const [playHeroHitSound] = useSound({
     url: heroHitSoundUrl,
     volume: 0.7,
   });
   useBackgroundMusic({ url: battleMusicUrl });
+  useEffect(() => {
+    playFightStartSound();
+  }, []);
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   useEffect(() => {
     const timeout = setTimeout(hideWhiteCurtain, 150);

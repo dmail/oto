@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
+const { userActivation } = window.navigator;
+
 export const useAudio = ({
   url,
   volume = 1,
@@ -33,6 +35,11 @@ export const useAudio = ({
   }, []);
 
   const play = useCallback(() => {
+    const canPlaySound =
+      userActivation.hasBeenActive || userActivation.isActive;
+    if (!canPlaySound) {
+      return;
+    }
     const audio = audioRef.current;
     if (!loop) {
       audio.currentTime = startTime;
