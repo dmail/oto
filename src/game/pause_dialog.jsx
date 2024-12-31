@@ -1,8 +1,8 @@
 import { pausedSignal, play } from "../signals.js";
-import { createBackgroundMusic, useAudio } from "/audio/use_sound.js";
+import { createBackgroundMusic } from "/audio/use_sound.js";
 
 const pauseMusicUrl = import.meta.resolve("./pause.mp3");
-const pauseMusic = createBackgroundMusic(
+createBackgroundMusic(
   {
     url: pauseMusicUrl,
     volume: 0.2,
@@ -14,8 +14,6 @@ const pauseMusic = createBackgroundMusic(
 );
 
 export const PauseDialog = ({ visible }) => {
-  useAudio(pauseMusic);
-
   return (
     <div
       name="pause_dialog"

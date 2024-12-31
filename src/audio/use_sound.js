@@ -1,3 +1,12 @@
+/*
+ * TODO: lorsqu'on met en pause la musique ne fond ne repdrends pas correctement
+ * je comprends pas bien ce qu'il se passe
+ *
+ * a priori je peux m'en sortir avec un truc fait différement
+ *
+ *
+ */
+
 import { effect } from "@preact/signals";
 import { EASING } from "animation";
 import { useEffect } from "preact/hooks";
@@ -47,8 +56,11 @@ const createAudio = ({
       userActivation.hasBeenActive || userActivation.isActive;
     playRequested = true;
     if (!canPlaySound) {
-      return () => {};
+      return null;
     }
+    // if (!audio.paused) {
+    //   return null;
+    // }
     if (restartOnPlay) {
       audio.currentTime = startTime;
     }
@@ -56,18 +68,18 @@ const createAudio = ({
       audio.volume = 0;
       audio.play();
       const volumeFadein = fadeInVolume(audio, volume);
-      return () => {
-        audio.volume = volume;
-        volumeFadein.cancel();
-      };
+      return volumeFadein.finished;
     }
     audio.play();
-    return () => {};
+    return null;
   };
   const pause = () => {
     if (!playRequested) {
-      return () => {};
+      return null;
     }
+    // if (audio.paused) {
+    //   return null;
+    // }
     playRequested = false;
     if (fading) {
       const volumeFadeout = fadeOutVolume(audio, {
@@ -75,14 +87,10 @@ const createAudio = ({
           audio.pause();
         },
       });
-      return () => {
-        audio.volume = volume;
-        audio.pause();
-        volumeFadeout.cancel();
-      };
+      return volumeFadeout.finished;
     }
     audio.pause();
-    return () => {};
+    return null;
   };
 
   const mute = () => {
@@ -151,8 +159,10 @@ export const createSound = (props) => {
   return sound;
 };
 
+let musicPausedByGame = null;
+let musicPausedByAnOther = null;
 let currentMusic = null;
-let previousMusic = null;
+
 const PAUSED_BY_GAME = {};
 const PAUSED_BY_OTHER = {};
 
@@ -163,42 +173,48 @@ export const createBackgroundMusic = (
   const audio = createAudio({ volume, loop, fading, ...props });
 
   let playRequested = false;
-
   const music = {
     ...audio,
     src: audio.media.src,
     play: () => {
       playRequested = true;
-      if (currentMusic) {
+      if (currentMusic && currentMusic !== music) {
         if (debug) {
           console.log(
-            "play",
+            "about to play",
             music.src,
-            `-> pause ${currentMusic.src} and store as music to resume`,
+            `-> stop current music (${currentMusic.src}) and store as music to resume when this one stops`,
           );
         }
-        previousMusic = currentMusic;
+        musicPausedByAnOther = currentMusic;
         currentMusic.pause(PAUSED_BY_OTHER);
       }
       if (debug) {
-        console.log("set current music to", music.src);
+        console.log(`play ${music.src}`);
       }
       currentMusic = music;
+      window.currentMusic = music;
       return audio.play();
     },
-    pause: (reason) => {
+    pause: async (reason) => {
       if (reason !== PAUSED_BY_GAME && reason !== PAUSED_BY_OTHER) {
         playRequested = false;
       }
-      if (music === currentMusic && previousMusic !== currentMusic) {
-        if (debug) {
-          console.log("pausing", music.src, "replay", previousMusic.src);
-        }
-        previousMusic.play();
-        previousMusic = null;
+      if (debug) {
+        console.log("stop", music.src);
       }
-      currentMusic = null;
-      return audio.pause();
+      await audio.pause(reason);
+      if (music === currentMusic && musicPausedByAnOther) {
+        currentMusic = null;
+        const musicToPlay = musicPausedByAnOther;
+        musicPausedByAnOther = null;
+        if (debug) {
+          console.log(`stopped (${music.src}) resume ${musicToPlay.src}`);
+        }
+        musicToPlay.play();
+      } else {
+        currentMusic = null;
+      }
     },
   };
 
@@ -213,8 +229,11 @@ export const createBackgroundMusic = (
     } else {
       // eslint-disable-next-line no-lonely-if
       if (gamePaused) {
-        music.pause(PAUSED_BY_GAME);
-      } else if (playRequested) {
+        if (playRequested) {
+          musicPausedByGame = music;
+          music.pause(PAUSED_BY_GAME);
+        }
+      } else if (musicPausedByGame && music && playRequested) {
         music.play();
       }
     }
