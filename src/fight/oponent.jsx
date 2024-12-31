@@ -2,6 +2,7 @@ import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
 import { Enemy } from "./enemy/enemy.jsx";
 import { SwordA } from "./sword_a.jsx";
+import { useCanvasEraseAnimation } from "/animations/use_canvas_erase_animation.js";
 import { useCanvasGlowAnimation } from "/animations/use_canvas_glow_animation.js";
 import { useDigitsDisplayAnimation } from "/animations/use_digits_display_animation.js";
 import { useElementAnimation } from "/animations/use_element_animation.js";
@@ -30,6 +31,12 @@ export const Opponent = forwardRef(
       elementRef,
       from: "black",
       to: "white",
+      duration: 300,
+    });
+    const [erase] = useCanvasEraseAnimation({
+      id: "enemy_erase",
+      elementRef,
+      iterations: 4,
       duration: 300,
     });
 
@@ -70,6 +77,7 @@ export const Opponent = forwardRef(
     useImperativeHandle(ref, () => {
       return {
         glow,
+        erase,
         playWeaponAnimation: async () => {
           weaponIsVisibleSetter(true);
           await playWeaponAnimation();

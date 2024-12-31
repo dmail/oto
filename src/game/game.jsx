@@ -64,6 +64,11 @@ export const Game = () => {
   const decreaseEnemyHp = useCallback((value) => {
     enemyHpSetter((hp) => hp - value);
   }, []);
+  useEffect(() => {
+    if (enemyHp <= 0) {
+      oponentRef.current.erase();
+    }
+  }, [enemyHp]);
   const heroRef = useRef();
   const heroAttack = heroAttackSignal.value;
   const heroDefense = heroDefenseSignal.value;

@@ -1,25 +1,25 @@
 const enemySpritesheetUrl = new URL("./enemy_sprite.png", import.meta.url);
-const hpAbove =
-  (percentage) =>
-  ({ hp, hpMax }) => {
-    const hpRatio = hp / hpMax;
-    const ratio = percentage / 100;
-    return hpRatio > ratio;
+const hpAbove = (limit) => {
+  return ({ hp, hpMax }) => {
+    const hpLimit =
+      typeof limit === "string" ? (parseFloat(limit) / 100) * hpMax : limit;
+    return hp > hpLimit;
   };
+};
 
 export const taurus = {
   name: "Taurus",
   attributes: {
-    hp: 100,
+    hp: 55,
     attack: 10,
     defense: 0,
-    speed: 0,
+    speed: 2,
   },
   transparentColor: [0, 202, 202],
   states: {
     full_life: {
       conditions: {
-        hp: hpAbove(50),
+        hp: hpAbove("80%"),
       },
       url: enemySpritesheetUrl,
       x: 450,
@@ -27,7 +27,7 @@ export const taurus = {
     },
     mid_life: {
       conditions: {
-        hp: hpAbove(25),
+        hp: hpAbove("25%"),
       },
       url: enemySpritesheetUrl,
       x: 515,
