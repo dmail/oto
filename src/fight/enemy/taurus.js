@@ -11,35 +11,64 @@ export const taurus = {
   name: "Taurus",
   attributes: {
     hp: 55,
-    attack: 10,
+    attack: 1,
     defense: 0,
     speed: 2,
   },
-  transparentColor: [0, 202, 202],
+  abilities: {
+    horns: {
+      name: "Cornes",
+      power: 10,
+    },
+  },
+  image: {
+    url: enemySpritesheetUrl,
+    transparentColor: [0, 202, 202],
+    width: 62,
+    height: 62,
+  },
   states: {
     full_life: {
       conditions: {
         hp: hpAbove("80%"),
       },
-      url: enemySpritesheetUrl,
-      x: 450,
-      y: 100,
+      image: {
+        x: 450,
+        y: 100,
+      },
     },
     mid_life: {
       conditions: {
         hp: hpAbove("25%"),
       },
-      url: enemySpritesheetUrl,
-      x: 515,
-      y: 100,
+      image: {
+        x: 515,
+        y: 100,
+      },
+      abilities: {
+        horns: null,
+        bite: {
+          name: "Morsure",
+          power: 2,
+        },
+      },
     },
     low_life: {
       conditions: {
         hp: () => true,
       },
-      url: enemySpritesheetUrl,
-      x: 580,
-      y: 100,
+      image: {
+        x: 580,
+        y: 100,
+      },
+      abilities: {
+        horns: null,
+        bite: null,
+        charge: {
+          name: "Charge",
+          power: 5,
+        },
+      },
     },
   },
 };

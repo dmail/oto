@@ -26,21 +26,19 @@ import { PauseDialog } from "./pause_dialog.jsx";
 
 // const enemiesSignal = signal([taurus]);
 const enemySignal = signal(taurus);
-const enemyImageUrlSignal = computed(() => enemySignal.value.url);
-const enemyImageTransparentColorSignal = computed(
-  () => enemySignal.value.transparentColor,
-);
+const enemyImageSignal = computed(() => enemySignal.value.image);
 const enemyNameSignal = computed(() => enemySignal.value.name);
 const enemyHpMaxSignal = computed(() => enemySignal.value.attributes.hp);
 const enemyAttackSignal = computed(() => enemySignal.value.attributes.attack);
 const enemyDefenseSignal = computed(() => enemySignal.value.attributes.defense);
 const enemySpeedSignal = computed(() => enemySignal.value.attributes.speed);
 const enmyStatesSignal = computed(() => enemySignal.value.states);
+const enemyAbilitiesSignal = computed(() => enemySignal.value.abilities);
 
 const heroSpeedSignal = signal(1);
 const heroAttackSignal = signal(1);
 const heroDefenseSignal = signal(1);
-const weaponAttackSignal = signal(20);
+const weaponPowerSignal = signal(20);
 
 export const Game = () => {
   useLayoutEffect(() => {
@@ -54,12 +52,11 @@ export const Game = () => {
       );
     };
   }, []);
+  const enemyName = enemyNameSignal.value;
   const enemyAttack = enemyAttackSignal.value;
   const enemyDefense = enemyDefenseSignal.value;
   const enemySpeed = enemySpeedSignal.value;
   const enemyHpMax = enemyHpMaxSignal.value;
-  const enemyStates = enmyStatesSignal.value;
-  const oponentRef = useRef();
   const [enemyHp, enemyHpSetter] = useState(enemyHpMax);
   const decreaseEnemyHp = useCallback((value) => {
     enemyHpSetter((hp) => hp - value);
@@ -69,11 +66,39 @@ export const Game = () => {
       oponentRef.current.erase();
     }
   }, [enemyHp]);
+  const enemyAbilitiesBase = enemyAbilitiesSignal.value;
+  const enemyStates = enmyStatesSignal.value;
+  const enemyStateKey = enemyStates
+    ? Object.keys(enemyStates).find((key) => {
+        const { conditions } = enemyStates[key];
+        if (
+          conditions.hp &&
+          conditions.hp({ hp: enemyHp, hpMax: enemyHpMax })
+        ) {
+          return true;
+        }
+        return false;
+      })
+    : null;
+  const enemyPropsFromState = enemyStateKey ? enemyStates[enemyStateKey] : {};
+  const enemyAbilities = Object.assign(
+    enemyAbilitiesBase,
+    enemyPropsFromState.abilities,
+  );
+  let enemyImage = enemyImageSignal.value;
+  if (enemyPropsFromState.image) {
+    enemyImage = {
+      ...enemyImage,
+      ...enemyPropsFromState.image,
+    };
+  }
+  const oponentRef = useRef();
+
   const heroRef = useRef();
   const heroAttack = heroAttackSignal.value;
   const heroDefense = heroDefenseSignal.value;
   const heroSpeed = heroSpeedSignal.value;
-  const weaponAttack = weaponAttackSignal.value;
+  const weaponPower = weaponPowerSignal.value;
 
   const [heroHp, heroHpSetter] = useState(40);
   const decreaseHeroHp = useCallback((value) => {
@@ -102,12 +127,21 @@ export const Game = () => {
   const dialogRef = useRef();
 
   const performEnemyTurn = async () => {
-    let damage = enemyAttack - heroDefense;
+    let abilityChoosen = null;
+    for (const abilityKey of Object.keys(enemyAbilities)) {
+      const ability = enemyAbilities[abilityKey];
+      if (!ability) {
+        continue;
+      }
+      abilityChoosen = ability;
+      break;
+    }
+    let damage = enemyAttack + abilityChoosen.power - heroDefense;
     if (damage < 0) {
       damage = 0;
     }
     const oponentAlert = dialogRef.current.alert(
-      "Taurus attaque avec Cornes.",
+      `${enemyName} attaque avec ${abilityChoosen.name}.`,
       {
         timeout: 500,
       },
@@ -117,13 +151,13 @@ export const Game = () => {
     await heroRef.current.recoilAfterHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
     await heroRef.current.displayDamage(damage);
-    decreaseHeroHp(15);
+    decreaseHeroHp(damage);
   };
   const performHeroTurn = async () => {
     const heroAlert = dialogRef.current.alert("Hero attaque avec Epée -A-.", {
       timeout: 500,
     });
-    let damage = heroAttack + weaponAttack - enemyDefense;
+    let damage = heroAttack + weaponPower - enemyDefense;
     if (damage < 0) {
       damage = 0;
     }
@@ -166,14 +200,13 @@ export const Game = () => {
             <Opponent
               ref={oponentRef}
               turnState={turnState}
-              enemyName={enemyNameSignal.value}
-              enemyHp={enemyHp}
-              enemyHpMax={enemyHpMax}
-              enemyStates={enemyStates}
-              enemyImageUrl={enemyImageUrlSignal.value}
-              enemyImageTransparentColor={
-                enemyImageTransparentColorSignal.value
-              }
+              name={enemyName}
+              imageUrl={enemyImage.url}
+              imageTransparentColor={enemyImage.transparentColor}
+              imageX={enemyImage.x}
+              imageY={enemyImage.y}
+              imageWidth={enemyImage.width}
+              imageHeight={enemyImage.height}
               onSelect={() => {
                 startTurn();
               }}

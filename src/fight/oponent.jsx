@@ -13,14 +13,14 @@ import { Digits } from "/components/text/digits.jsx";
 export const Opponent = forwardRef(
   (
     {
-      // name,
       turnState,
-      enemyName,
-      enemyHp,
-      enemyHpMax,
-      enemyStates,
-      enemyImageUrl,
-      enemyImageTransparentColor,
+      name,
+      imageUrl,
+      imageX,
+      imageY,
+      imageWidth,
+      imageHeight,
+      imageTransparentColor,
       onSelect,
     },
     ref,
@@ -59,19 +59,6 @@ export const Opponent = forwardRef(
     });
     const [weaponIsVisible, weaponIsVisibleSetter] = useState(false);
 
-    const enemyStateKey = enemyStates
-      ? Object.keys(enemyStates).find((key) => {
-          const { conditions } = enemyStates[key];
-          if (
-            conditions.hp &&
-            conditions.hp({ hp: enemyHp, hpMax: enemyHpMax })
-          ) {
-            return true;
-          }
-          return false;
-        })
-      : null;
-    const enemyPropsFromState = enemyStateKey ? enemyStates[enemyStateKey] : {};
     const [enemyDamage, enemyDamageSetter] = useState(null);
 
     useImperativeHandle(ref, () => {
@@ -105,7 +92,7 @@ export const Opponent = forwardRef(
             invisible={turnState !== ""}
             innerSpacing="0.7em"
           >
-            {enemyName}
+            {name}
           </Message>
         </Box>
         <Box
@@ -128,10 +115,12 @@ export const Opponent = forwardRef(
         >
           <Enemy
             elementRef={elementRef}
-            url={enemyPropsFromState.url || enemyImageUrl}
-            transparentColor={enemyImageTransparentColor}
-            x={enemyPropsFromState.x}
-            y={enemyPropsFromState.y}
+            url={imageUrl}
+            transparentColor={imageTransparentColor}
+            x={imageX}
+            y={imageY}
+            width={imageWidth}
+            height={imageHeight}
           />
           <Box
             name="weapon_box"

@@ -8,10 +8,9 @@ export const Enemy = ({
   url,
   x,
   y,
-  width = 62,
-  height = 62,
+  width,
+  height,
   transparentColor,
-
   ...props
 }) => {
   const sprite = useSprite({
