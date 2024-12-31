@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="./preact_logo.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animate number test</title>
+  </head>
+  <body>
+    <div id="root" style="position: relative">
+      <fieldset>
+        <legend>Controls</legend>
+        From: <input name="from" type="number" /> To:
+        <input name="to" type="number" />
+        <br />
+        <button name="play">Play</button>
+        <button name="pause">Pause</button>
+      </fieldset>
+      <div>
+        Number:
+        <span id="output"></span>
+      </div>
+    </div>
+    <script type="module">
+      import { animateNumber } from "animation";
+
+      let from = 10;
+      const fromInput = document.querySelector('[name="from"]');
+      fromInput.value = from;
+      fromInput.oninput = () => {
+        from = parseInt(fromInput.value);
+        update();
+      };
+      let to = 0;
+      const toInput = document.querySelector('[name="to"]');
+      toInput.value = to;
+      toInput.oninput = () => {
+        to = parseInt(toInput.value);
+        update();
+      };
+
+      let animation;
+      const playButton = document.querySelector('[name="play"]');
+      playButton.onclick = () => {
+        if (!animation) {
+          animation = animateNumber({
+            from,
+            to,
+            duration: 1000,
+            fps: 10,
+            onprogress: () => {
+              document.querySelector("#output").innerHTML +=
+                `${Math.round(animation.value)}<br />`;
+            },
+          });
+          animation.onfinish = () => {
+            update();
+          };
+        } else {
+          animation.play();
+        }
+        update();
+      };
+      const pauseButton = document.querySelector('[name="pause"]');
+      pauseButton.onclick = () => {
+        animation.pause();
+        update();
+      };
+
+      const update = () => {
+        if (!animation) {
+          playButton.disabled = false;
+          pauseButton.disabled = true;
+          return;
+        }
+        if (animation.playState === "running") {
+          playButton.disabled = true;
+          pauseButton.disabled = false;
+          return;
+        }
+        if (animation.playState === "paused") {
+          playButton.disabled = false;
+          pauseButton.disabled = true;
+          return;
+        }
+        if (animation.playState === "finished") {
+          playButton.disabled = false;
+          pauseButton.disabled = true;
+          return;
+        }
+      };
+    </script>
+  </body>
+</html>

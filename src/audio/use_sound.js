@@ -87,7 +87,7 @@ const fadeOutVolume = (audio, props) => {
     duration: 500,
     easing: EASING.EASE_OUT_EXPO,
     onprogress: (volume) => {
-      console.log("fadeout volume to ", volume);
+      // console.log("fadeout volume to ", volume);
       audio.volume = volume;
     },
     ...props,
@@ -101,7 +101,7 @@ const fadeInVolume = (audio, volume, props) => {
     duration: 500,
     easing: EASING.EASE_OUT_EXPO,
     onprogress: (volume) => {
-      console.log("fadein volume to ", volume);
+      // console.log("fadein volume to ", volume);
       audio.volume = volume;
     },
     ...props,

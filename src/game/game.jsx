@@ -25,9 +25,11 @@ import { PauseDialog } from "./pause_dialog.jsx";
 import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
 import { useBackgroundMusic, useSound } from "/audio/use_sound.js";
 
-const fightStartSoundUrl = import.meta.resolve("../fight/fight_start.mp3");
+const fightStartSoundUrl = import.meta.resolve("../fight/fight_start.ogg");
 const battleMusicUrl = import.meta.resolve("../fight/battle_bg_a.mp3");
 const heroHitSoundUrl = import.meta.resolve("../fight/hero_hit_2.mp3");
+const oponentDieSoundUrl = import.meta.resolve("../fight/opponent_die.mp3");
+const victoryMusicUrl = import.meta.resolve("../fight/victory.mp3");
 
 const opponentSignal = signal(taurus);
 const opponentImageSignal = computed(() => opponentSignal.value.image);
@@ -48,7 +50,7 @@ const opponentAbilitiesSignal = computed(() => opponentSignal.value.abilities);
 const heroSpeedSignal = signal(1);
 const heroAttackSignal = signal(1);
 const heroDefenseSignal = signal(1);
-const weaponPowerSignal = signal(20);
+const weaponPowerSignal = signal(200);
 
 export const Game = () => {
   useLayoutEffect(() => {
@@ -62,6 +64,9 @@ export const Game = () => {
       );
     };
   }, []);
+
+  const [, pauseBattleMusic] = useBackgroundMusic({ url: battleMusicUrl });
+  const [playVictoryMusic] = useSound({ url: victoryMusicUrl, volume: 0.5 });
   const opponentName = opponentNameSignal.value;
   const opponentAttack = opponentAttackSignal.value;
   const opponentDefense = opponentDefenseSignal.value;
@@ -73,7 +78,13 @@ export const Game = () => {
   }, []);
   useEffect(() => {
     if (opponentHp <= 0) {
-      oponentRef.current.erase();
+      playOpponentDieSound();
+      (async () => {
+        await oponentRef.current.erase();
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        pauseBattleMusic();
+        playVictoryMusic();
+      })();
     }
   }, [opponentHp]);
   const opponentAbilitiesBase = opponentAbilitiesSignal.value;
@@ -131,7 +142,10 @@ export const Game = () => {
     url: heroHitSoundUrl,
     volume: 0.7,
   });
-  useBackgroundMusic({ url: battleMusicUrl });
+  const [playOpponentDieSound] = useSound({
+    url: oponentDieSoundUrl,
+    volume: 0.7,
+  });
   useEffect(() => {
     playFightStartSound();
   }, []);
