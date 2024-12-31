@@ -1,7 +1,7 @@
 import { useSignalEffect } from "@preact/signals";
 import { EASING } from "animation";
 import { useAudio } from "hooks/use_audio.js";
-import { useEffect } from "preact/hooks";
+import { useCallback, useEffect } from "preact/hooks";
 import { animateNumber } from "../../packages/animation/src/animate_number.js";
 import { mutedSignal } from "./sound_signals.js";
 import { pausedSignal } from "/signals.js";
@@ -36,39 +36,48 @@ export const useBackgroundMusic = (
     ...props,
   });
 
+  const fadeIn = useCallback(() => {
+    audio.volume = volume;
+    play();
+    const volumeFadein = fadeInVolume(audio, volume);
+    return () => {
+      volumeFadein.cancel();
+    };
+  }, [volume, audio]);
+
+  const fadeOut = useCallback(() => {
+    const volumeFadeout = fadeOutVolume(audio, {
+      onfinish: () => {
+        pause();
+      },
+    });
+    return () => {
+      volumeFadeout.cancel();
+    };
+  }, [audio]);
+
   const gamePaused = pausedSignal.value;
   useEffect(() => {
     if (canPlayWhilePaused) {
       return null;
     }
     if (gamePaused) {
-      const volumeFadeout = fadeOutVolume(audio, {
-        onfinish: () => {
-          pause();
-        },
-      });
-      return () => {
-        volumeFadeout.cancel();
-      };
+      return fadeOut();
     }
-    play();
-    const volumeFadein = fadeInVolume(audio, volume);
-    return () => {
-      volumeFadein.cancel();
-    };
+    return fadeIn();
   }, [canPlayWhilePaused, gamePaused, audio]);
 
   useSignalEffect(() => {
     const muted = mutedSignal.value;
     if (muted) {
       mute();
-    } else {
-      unmute();
-      play();
+      return null;
     }
+    unmute();
+    return fadeIn();
   });
 
-  return [play, pause];
+  return [fadeIn, fadeOut];
 };
 
 const fadeOutVolume = (audio, props) => {
