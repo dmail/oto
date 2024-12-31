@@ -1,7 +1,7 @@
 import { useSignalEffect } from "@preact/signals";
 import { EASING } from "animation";
 import { useAudio } from "hooks/use_audio.js";
-import { useCallback, useEffect } from "preact/hooks";
+import { useCallback, useEffect, useState } from "preact/hooks";
 import { animateNumber } from "../../packages/animation/src/animate_number.js";
 import { mutedSignal } from "./sound_signals.js";
 import { pausedSignal } from "/signals.js";
@@ -24,37 +24,53 @@ export const useSound = (props) => {
   return [play, pause];
 };
 
+const REQUESTED_FROM_PAUSE = {};
+
 export const useBackgroundMusic = (
-  { volume = 1, ...props },
+  { url, volume = 1, autoplay = false, ...props },
   { canPlayWhilePaused } = {},
 ) => {
   const { play, pause, mute, unmute, audio } = useAudio({
+    url,
     loop: true,
-    autoplay: true,
+    // autoplay,
     muted: mutedSignal.value,
     volume,
     ...props,
   });
+  const [shouldPlay, shouldPlaySetter] = useState(autoplay);
 
-  const fadeIn = useCallback(() => {
-    audio.volume = volume;
-    play();
-    const volumeFadein = fadeInVolume(audio, volume);
-    return () => {
-      volumeFadein.cancel();
-    };
-  }, [volume, audio]);
+  const fadeIn = useCallback(
+    (reason) => {
+      if (reason !== REQUESTED_FROM_PAUSE) {
+        shouldPlaySetter(true);
+      }
+      audio.volume = volume;
+      play();
+      const volumeFadein = fadeInVolume(audio, volume);
+      return () => {
+        volumeFadein.cancel();
+      };
+    },
+    [volume, audio],
+  );
 
-  const fadeOut = useCallback(() => {
-    const volumeFadeout = fadeOutVolume(audio, {
-      onfinish: () => {
-        pause();
-      },
-    });
-    return () => {
-      volumeFadeout.cancel();
-    };
-  }, [audio]);
+  const fadeOut = useCallback(
+    (reason) => {
+      if (reason !== REQUESTED_FROM_PAUSE) {
+        shouldPlaySetter(false);
+      }
+      const volumeFadeout = fadeOutVolume(audio, {
+        onfinish: () => {
+          pause();
+        },
+      });
+      return () => {
+        volumeFadeout.cancel();
+      };
+    },
+    [audio],
+  );
 
   const gamePaused = pausedSignal.value;
   useEffect(() => {
@@ -62,10 +78,13 @@ export const useBackgroundMusic = (
       return null;
     }
     if (gamePaused) {
-      return fadeOut();
+      return fadeOut(REQUESTED_FROM_PAUSE);
     }
-    return fadeIn();
-  }, [canPlayWhilePaused, gamePaused, audio]);
+    if (shouldPlay) {
+      return fadeIn(REQUESTED_FROM_PAUSE);
+    }
+    return null;
+  }, [canPlayWhilePaused, gamePaused, shouldPlay]);
 
   useSignalEffect(() => {
     const muted = mutedSignal.value;
@@ -74,7 +93,10 @@ export const useBackgroundMusic = (
       return null;
     }
     unmute();
-    return fadeIn();
+    if (shouldPlay) {
+      return fadeIn();
+    }
+    return null;
   });
 
   return [fadeIn, fadeOut];

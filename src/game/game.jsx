@@ -65,8 +65,14 @@ export const Game = () => {
     };
   }, []);
 
-  const [, pauseBattleMusic] = useBackgroundMusic({ url: battleMusicUrl });
-  const [playVictoryMusic] = useSound({ url: victoryMusicUrl, volume: 0.5 });
+  const [playBattleMusic, pauseBattleMusic] = useBackgroundMusic({
+    url: battleMusicUrl,
+  });
+  const [playVictoryMusic] = useBackgroundMusic({
+    name: "victory",
+    url: victoryMusicUrl,
+    volume: 0.5,
+  });
   const opponentName = opponentNameSignal.value;
   const opponentAttack = opponentAttackSignal.value;
   const opponentDefense = opponentDefenseSignal.value;
@@ -147,6 +153,7 @@ export const Game = () => {
     volume: 0.7,
   });
   useEffect(() => {
+    playBattleMusic();
     playFightStartSound();
   }, []);
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
