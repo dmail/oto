@@ -3,21 +3,27 @@ import { useAudio } from "hooks/use_audio.js";
 import { mutedSignal } from "./sound_signals.js";
 
 export const useSound = (props) => {
-  const [playSound, pauseSound] = useAudio(props);
-  return [playSound, pauseSound];
+  const { play, pause } = useAudio(props);
+  return [play, pause];
 };
 
 export const useBackgroundMusic = (props) => {
-  const [playMusic, pauseMusic] = useAudio(props);
+  const { play, pause, mute, unmute } = useAudio({
+    loop: true,
+    autoplay: true,
+    muted: true,
+    ...props,
+  });
 
   useSignalEffect(() => {
     const muted = mutedSignal.value;
     if (muted) {
-      pauseMusic();
+      mute();
     } else {
-      playMusic();
+      unmute();
+      play();
     }
   });
 
-  return [playMusic, pauseMusic];
+  return [play, pause];
 };
