@@ -14,26 +14,31 @@ import { DialogTextBox } from "../components/dialog_text_box/dialog_text_box.jsx
 import { Lifebar } from "../components/lifebar/lifebar.jsx";
 import { Ally } from "../fight/ally.jsx";
 import { MountainAndSkyBattleBackground } from "../fight/battle_background/battle_backgrounds.jsx";
-import { taurus } from "../fight/enemy/taurus.js";
 import { MenuFight } from "../fight/menu_fight.jsx";
 import { Opponent } from "../fight/oponent.jsx";
 import { SwordAIcon } from "../fight/sword_a.jsx";
 import { swordASoundUrl } from "../fight/sword_sound_url.js";
+import { taurus } from "../fight/taurus.js";
 import { WhiteCurtain } from "../fight/white_curtain.jsx";
 import { pause, pausedSignal, play } from "../signals.js";
 import gameStyleSheet from "./game.css" with { type: "css" };
 import { PauseDialog } from "./pause_dialog.jsx";
 
-// const enemiesSignal = signal([taurus]);
-const enemySignal = signal(taurus);
-const enemyImageSignal = computed(() => enemySignal.value.image);
-const enemyNameSignal = computed(() => enemySignal.value.name);
-const enemyHpMaxSignal = computed(() => enemySignal.value.attributes.hp);
-const enemyAttackSignal = computed(() => enemySignal.value.attributes.attack);
-const enemyDefenseSignal = computed(() => enemySignal.value.attributes.defense);
-const enemySpeedSignal = computed(() => enemySignal.value.attributes.speed);
-const enmyStatesSignal = computed(() => enemySignal.value.states);
-const enemyAbilitiesSignal = computed(() => enemySignal.value.abilities);
+const opponentSignal = signal(taurus);
+const opponentImageSignal = computed(() => opponentSignal.value.image);
+const opponentNameSignal = computed(() => opponentSignal.value.name);
+const opponentHpMaxSignal = computed(() => opponentSignal.value.attributes.hp);
+const opponentAttackSignal = computed(
+  () => opponentSignal.value.attributes.attack,
+);
+const opponentDefenseSignal = computed(
+  () => opponentSignal.value.attributes.defense,
+);
+const opponentSpeedSignal = computed(
+  () => opponentSignal.value.attributes.speed,
+);
+const opponentStatesSignal = computed(() => opponentSignal.value.states);
+const opponentAbilitiesSignal = computed(() => opponentSignal.value.abilities);
 
 const heroSpeedSignal = signal(1);
 const heroAttackSignal = signal(1);
@@ -52,44 +57,46 @@ export const Game = () => {
       );
     };
   }, []);
-  const enemyName = enemyNameSignal.value;
-  const enemyAttack = enemyAttackSignal.value;
-  const enemyDefense = enemyDefenseSignal.value;
-  const enemySpeed = enemySpeedSignal.value;
-  const enemyHpMax = enemyHpMaxSignal.value;
-  const [enemyHp, enemyHpSetter] = useState(enemyHpMax);
-  const decreaseEnemyHp = useCallback((value) => {
-    enemyHpSetter((hp) => hp - value);
+  const opponentName = opponentNameSignal.value;
+  const opponentAttack = opponentAttackSignal.value;
+  const opponentDefense = opponentDefenseSignal.value;
+  const opponentSpeed = opponentSpeedSignal.value;
+  const opponentHpMax = opponentHpMaxSignal.value;
+  const [opponentHp, opponentHpSetter] = useState(opponentHpMax);
+  const decreaseOpponentHp = useCallback((value) => {
+    opponentHpSetter((hp) => hp - value);
   }, []);
   useEffect(() => {
-    if (enemyHp <= 0) {
+    if (opponentHp <= 0) {
       oponentRef.current.erase();
     }
-  }, [enemyHp]);
-  const enemyAbilitiesBase = enemyAbilitiesSignal.value;
-  const enemyStates = enmyStatesSignal.value;
-  const enemyStateKey = enemyStates
-    ? Object.keys(enemyStates).find((key) => {
-        const { conditions } = enemyStates[key];
+  }, [opponentHp]);
+  const opponentAbilitiesBase = opponentAbilitiesSignal.value;
+  const opponentStates = opponentStatesSignal.value;
+  const opponentStateKey = opponentStates
+    ? Object.keys(opponentStates).find((key) => {
+        const { conditions } = opponentStates[key];
         if (
           conditions.hp &&
-          conditions.hp({ hp: enemyHp, hpMax: enemyHpMax })
+          conditions.hp({ hp: opponentHp, hpMax: opponentHpMax })
         ) {
           return true;
         }
         return false;
       })
     : null;
-  const enemyPropsFromState = enemyStateKey ? enemyStates[enemyStateKey] : {};
-  const enemyAbilities = Object.assign(
-    enemyAbilitiesBase,
-    enemyPropsFromState.abilities,
+  const opponentPropsFromState = opponentStateKey
+    ? opponentStates[opponentStateKey]
+    : {};
+  const opponentAbilities = Object.assign(
+    opponentAbilitiesBase,
+    opponentPropsFromState.abilities,
   );
-  let enemyImage = enemyImageSignal.value;
-  if (enemyPropsFromState.image) {
-    enemyImage = {
-      ...enemyImage,
-      ...enemyPropsFromState.image,
+  let opponentImage = opponentImageSignal.value;
+  if (opponentPropsFromState.image) {
+    opponentImage = {
+      ...opponentImage,
+      ...opponentPropsFromState.image,
     };
   }
   const oponentRef = useRef();
@@ -126,22 +133,22 @@ export const Game = () => {
 
   const dialogRef = useRef();
 
-  const performEnemyTurn = async () => {
+  const performOpponentTurn = async () => {
     let abilityChoosen = null;
-    for (const abilityKey of Object.keys(enemyAbilities)) {
-      const ability = enemyAbilities[abilityKey];
+    for (const abilityKey of Object.keys(opponentAbilities)) {
+      const ability = opponentAbilities[abilityKey];
       if (!ability) {
         continue;
       }
       abilityChoosen = ability;
       break;
     }
-    let damage = enemyAttack + abilityChoosen.power - heroDefense;
+    let damage = opponentAttack + abilityChoosen.power - heroDefense;
     if (damage < 0) {
       damage = 0;
     }
     const oponentAlert = dialogRef.current.alert(
-      `${enemyName} attaque avec ${abilityChoosen.name}.`,
+      `${opponentName} attaque avec ${abilityChoosen.name}.`,
       {
         timeout: 500,
       },
@@ -157,7 +164,7 @@ export const Game = () => {
     const heroAlert = dialogRef.current.alert("Hero attaque avec Epée -A-.", {
       timeout: 500,
     });
-    let damage = heroAttack + weaponPower - enemyDefense;
+    let damage = heroAttack + weaponPower - opponentDefense;
     if (damage < 0) {
       damage = 0;
     }
@@ -173,18 +180,18 @@ export const Game = () => {
       oponentRef.current.displayDamage(damage),
       moveBackToPositionPromise,
     ]);
-    decreaseEnemyHp(damage);
+    decreaseOpponentHp(damage);
   };
   const startTurn = async () => {
     turnStateSetter("running");
-    if (enemySpeed > heroSpeed) {
-      await performEnemyTurn();
+    if (opponentSpeed > heroSpeed) {
+      await performOpponentTurn();
       await performHeroTurn();
       turnStateSetter("");
       return;
     }
     await performHeroTurn();
-    await performEnemyTurn();
+    await performOpponentTurn();
     turnStateSetter("");
   };
 
@@ -196,17 +203,17 @@ export const Game = () => {
             <MountainAndSkyBattleBackground />
             <WhiteCurtain visible={whiteCurtain} />
           </Box>
-          <Box name="enemies_box" width="100%" height="55%">
+          <Box name="opponents_box" width="100%" height="55%">
             <Opponent
               ref={oponentRef}
               turnState={turnState}
-              name={enemyName}
-              imageUrl={enemyImage.url}
-              imageTransparentColor={enemyImage.transparentColor}
-              imageX={enemyImage.x}
-              imageY={enemyImage.y}
-              imageWidth={enemyImage.width}
-              imageHeight={enemyImage.height}
+              name={opponentName}
+              imageUrl={opponentImage.url}
+              imageTransparentColor={opponentImage.transparentColor}
+              imageX={opponentImage.x}
+              imageY={opponentImage.y}
+              imageWidth={opponentImage.width}
+              imageHeight={opponentImage.height}
               onSelect={() => {
                 startTurn();
               }}

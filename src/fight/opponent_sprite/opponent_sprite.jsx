@@ -2,7 +2,7 @@ import { useDrawImage } from "hooks/use_draw_image.js";
 import { useSprite } from "hooks/use_sprite.js";
 import { useRef } from "preact/hooks";
 
-export const Enemy = ({
+export const OpponentSprite = ({
   name,
   elementRef = useRef(),
   url,

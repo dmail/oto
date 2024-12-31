@@ -1,6 +1,6 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
-import { Enemy } from "./enemy/enemy.jsx";
+import { OpponentSprite } from "./opponent_sprite/opponent_sprite.jsx";
 import { SwordA } from "./sword_a.jsx";
 import { useCanvasEraseAnimation } from "/animations/use_canvas_erase_animation.js";
 import { useCanvasGlowAnimation } from "/animations/use_canvas_glow_animation.js";
@@ -40,9 +40,9 @@ export const Opponent = forwardRef(
       duration: 300,
     });
 
-    const enemyDigitsElementRef = useRef();
+    const digitsElementRef = useRef();
     const [displayDamage] = useDigitsDisplayAnimation({
-      elementRef: enemyDigitsElementRef,
+      elementRef: digitsElementRef,
       duration: 300,
     });
     const weaponElementRef = useRef();
@@ -81,14 +81,14 @@ export const Opponent = forwardRef(
     return (
       <Box
         vertical
-        name="enemy_container_box"
+        name="opponent_container_box"
         width="100%"
         height="100%"
         x="center"
       >
         <Box name="top_ui" width="100%" innerSpacing="0.5em">
           <Message
-            name="enemy_name"
+            name="opponent_name"
             invisible={turnState !== ""}
             innerSpacing="0.7em"
           >
@@ -96,7 +96,7 @@ export const Opponent = forwardRef(
           </Message>
         </Box>
         <Box
-          name="enemy_box"
+          name="opponent_box"
           ratio="1/1"
           height="..."
           x="center"
@@ -113,7 +113,7 @@ export const Opponent = forwardRef(
               : undefined
           }
         >
-          <Enemy
+          <OpponentSprite
             elementRef={elementRef}
             url={imageUrl}
             transparentColor={imageTransparentColor}
@@ -134,15 +134,15 @@ export const Opponent = forwardRef(
             <SwordA elementRef={weaponElementRef} />
           </Box>
           <Box
-            ref={enemyDigitsElementRef}
-            name="enemy_digits_box"
+            ref={digitsElementRef}
+            name="opponent_digits_box"
             absolute
             hidden={enemyDamage === null}
             width="100%"
             height="100%"
           >
             <Box x="center" y="center">
-              <Digits name="enemy_digits">{enemyDamage}</Digits>
+              <Digits name="opponent_digits">{enemyDamage}</Digits>
             </Box>
           </Box>
         </Box>

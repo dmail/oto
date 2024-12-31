@@ -1,4 +1,7 @@
-const enemySpritesheetUrl = new URL("./enemy_sprite.png", import.meta.url);
+const opponentSpritesheetUrl = new URL(
+  "./opponent_sprite/opponent_sprite.png",
+  import.meta.url,
+);
 const hpAbove = (limit) => {
   return ({ hp, hpMax }) => {
     const hpLimit =
@@ -22,7 +25,7 @@ export const taurus = {
     },
   },
   image: {
-    url: enemySpritesheetUrl,
+    url: opponentSpritesheetUrl,
     transparentColor: [0, 202, 202],
     width: 62,
     height: 62,
