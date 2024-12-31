@@ -11,9 +11,10 @@ export const animateNumber = ({
   const numberAnimation = animate({
     ...props,
     onprogress: () => {
-      numberAnimation.value = applyRatioToDiff(from, to, numberAnimation.ratio);
+      const value = applyRatioToDiff(from, to, numberAnimation.ratio);
+      numberAnimation.value = value;
       if (onprogress) {
-        onprogress();
+        onprogress(value);
       }
     },
   });

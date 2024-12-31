@@ -61,5 +61,12 @@ export const useAudio = ({
     audio.muted = false;
   }, []);
 
-  return { play, pause, playing, mute, unmute };
+  return {
+    play,
+    pause,
+    playing,
+    mute,
+    unmute,
+    audio: audioRef.current,
+  };
 };
