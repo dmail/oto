@@ -1,27 +1,60 @@
-import { effect, signal } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
 
-// pas d'interaction avec la page? le jeu est en muted
-// et le joueur doit explicitement activer le son en cliquant dessus
-// see navigator.userActivation.hasBeenActive
 // https://developer.mozilla.org/en-US/docs/Web/API/UserActivation
-
 const { userActivation } = window.navigator;
+const getUserActivationState = () => {
+  if (userActivation.isActive) {
+    return "active";
+  }
+  if (userActivation.hasBeenActive) {
+    return "hasBeenActive";
+  }
+  return "inactive";
+};
+const userActivationSignal = signal(getUserActivationState());
+if (userActivationSignal.value === "inactive") {
+  const onmousedown = (mousedownEvent) => {
+    if (!mousedownEvent.isTrusted) {
+      return;
+    }
+    userActivationSignal.value = getUserActivationState();
+    document.removeEventListener("mousedown", onmousedown, { capture: true });
+    document.removeEventListener("keydown", onkeydown, { capture: true });
+  };
+  const onkeydown = (keydownEvent) => {
+    if (!keydownEvent.isTrusted) {
+      return;
+    }
+    userActivationSignal.value = getUserActivationState();
+    document.removeEventListener("mousedown", onmousedown, { capture: true });
+    document.removeEventListener("keydown", onkeydown, { capture: true });
+  };
+  document.addEventListener("mousedown", onmousedown, { capture: true });
+  document.addEventListener("keydown", onkeydown, { capture: true });
+}
 
 const localStorageItem = localStorage.getItem("muted");
-const mutedInLocalStorage =
+const mutedFromLocalStorage =
   localStorageItem === undefined ? false : JSON.parse(localStorageItem);
-const gotUserActivation =
-  userActivation.isActive && !userActivation.hasBeenActive;
+const innerMutedSignal = signal(mutedFromLocalStorage || false);
 
-export const mutedSignal = signal(mutedInLocalStorage || !gotUserActivation);
+export const mutedSignal = computed(() => {
+  const userActivation = userActivationSignal.value;
+  const innerMuted = innerMutedSignal.value;
+  if (userActivation === "inactive") {
+    return true;
+  }
+  return innerMuted;
+});
+
 export const mute = () => {
-  mutedSignal.value = true;
+  innerMutedSignal.value = true;
 };
 export const unmute = () => {
-  mutedSignal.value = false;
+  innerMutedSignal.value = false;
 };
 
 effect(() => {
-  const muted = mutedSignal.value;
-  localStorage.setItem("muted", JSON.stringify(muted));
+  const innerMuted = innerMutedSignal.value;
+  localStorage.setItem("muted", JSON.stringify(innerMuted));
 });

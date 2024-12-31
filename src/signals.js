@@ -1,6 +1,6 @@
 import { signal } from "@preact/signals";
 
-export const pausedSignal = signal(false);
+export const pausedSignal = signal(true);
 export const pause = () => {
   pausedSignal.value = true;
 };
