@@ -26,6 +26,7 @@ import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
 import { useBackgroundMusic, useSound } from "/audio/use_sound.js";
 
 const battleMusicUrl = import.meta.resolve("../fight/battle_bg_a.mp3");
+const heroHitSoundUrl = import.meta.resolve("../fight/hero_hit_2.mp3");
 
 const opponentSignal = signal(taurus);
 const opponentImageSignal = computed(() => opponentSignal.value.image);
@@ -116,7 +117,15 @@ export const Game = () => {
   }, []);
   const [heroMaxHp] = useState(40);
 
-  const [playSwordSound] = useSound({ url: swordASoundUrl, volume: 0.25 });
+  const [playSwordSound] = useSound({
+    url: swordASoundUrl,
+    volume: 0.5,
+    startTime: 0.1,
+  });
+  const [playHeroHitSound] = useSound({
+    url: heroHitSoundUrl,
+    volume: 0.7,
+  });
   useBackgroundMusic({ url: battleMusicUrl });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   useEffect(() => {
@@ -159,6 +168,7 @@ export const Game = () => {
     );
     await oponentRef.current.glow();
     await oponentAlert.close();
+    playHeroHitSound();
     await heroRef.current.recoilAfterHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
     await heroRef.current.displayDamage(damage);

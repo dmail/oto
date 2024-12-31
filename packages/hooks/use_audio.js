@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
-export const useAudio = ({ url, volume = 1, autoplay, loop }) => {
+export const useAudio = ({
+  url,
+  volume = 1,
+  autoplay,
+  loop,
+  startTime = 0,
+}) => {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
 
@@ -9,6 +15,9 @@ export const useAudio = ({ url, volume = 1, autoplay, loop }) => {
     audio.volume = volume;
     audio.loop = loop;
     audio.autoplay = autoplay;
+    if (startTime) {
+      audio.currentTime = startTime;
+    }
     audioRef.current = audio;
   }
 
@@ -26,10 +35,10 @@ export const useAudio = ({ url, volume = 1, autoplay, loop }) => {
   const play = useCallback(() => {
     const audio = audioRef.current;
     if (!loop) {
-      audio.currentTime = 0;
+      audio.currentTime = startTime;
     }
     audio.play();
-  }, [loop]);
+  }, [loop, startTime]);
   const pause = useCallback(() => {
     const audio = audioRef.current;
     audio.pause();
