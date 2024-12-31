@@ -1,7 +1,6 @@
 import { computed, signal } from "@preact/signals";
 import { useBooleanState } from "hooks/use_boolean_state.js";
 import { useKeyEffect } from "hooks/use_key_effect.js";
-import { useSound } from "hooks/use_sound.js";
 import {
   useCallback,
   useEffect,
@@ -23,6 +22,10 @@ import { WhiteCurtain } from "../fight/white_curtain.jsx";
 import { pause, pausedSignal, play } from "../signals.js";
 import gameStyleSheet from "./game.css" with { type: "css" };
 import { PauseDialog } from "./pause_dialog.jsx";
+import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
+import { useBackgroundMusic, useSound } from "/audio/use_sound.js";
+
+const battleMusicUrl = import.meta.resolve("../fight/battle_bg_a.mp3");
 
 const opponentSignal = signal(taurus);
 const opponentImageSignal = computed(() => opponentSignal.value.image);
@@ -113,7 +116,8 @@ export const Game = () => {
   }, []);
   const [heroMaxHp] = useState(40);
 
-  const swordSound = useSound({ url: swordASoundUrl, volume: 0.25 });
+  const [playSwordSound] = useSound({ url: swordASoundUrl, volume: 0.25 });
+  useBackgroundMusic({ url: battleMusicUrl });
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   useEffect(() => {
     const timeout = setTimeout(hideWhiteCurtain, 150);
@@ -170,8 +174,7 @@ export const Game = () => {
     }
     await heroRef.current.moveToAct();
     showWhiteCurtain();
-    swordSound.currentTime = 0.15;
-    swordSound.play();
+    playSwordSound();
     await oponentRef.current.playWeaponAnimation();
     await heroAlert.close();
     const moveBackToPositionPromise = heroRef.current.moveBackToPosition();
@@ -198,6 +201,19 @@ export const Game = () => {
   return (
     <div style="font-size: 16px;">
       <Box vertical name="screen" width="400" height="400">
+        <Box
+          name="top_hud"
+          width="100%"
+          height="10%"
+          backgroundColor="red"
+          border={borderWithStroke({
+            color: "white",
+            size: 2,
+            strokeColor: "black",
+          })}
+        >
+          <ButtonMuteUnmute />
+        </Box>
         <Box vertical name="game" width="100%" height="...">
           <Box name="background" absolute width="100%" height="100%">
             <MountainAndSkyBattleBackground />

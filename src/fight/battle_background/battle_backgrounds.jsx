@@ -11,11 +11,12 @@ export const MountainAndSkyBattleBackground = ({
   elementRef = useRef(),
   ...props
 }) => {
+  const width = 254;
   const sprite = useSprite({
     url: battleBackgroundsSpritesheetUrl,
     x: 260 * 1 + 5,
-    y: 100 * 0 + 0,
-    width: 255,
+    y: 100 * 0 + 1,
+    width,
     height: 200,
   });
   useDrawImage(elementRef.current, sprite);
@@ -25,7 +26,7 @@ export const MountainAndSkyBattleBackground = ({
       {...props}
       name="mountain_and_sky"
       ref={elementRef}
-      width={255}
+      width={width}
       height={200}
       style={{
         width: "100%",

@@ -1,11 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-import { useStructuredMemo } from "./use_structured_memo.js";
 
-export const useSound = (props) => {
-  return useAudio(props);
-};
-
-const useAudio = ({ url, volume = 1 }) => {
+export const useAudio = ({ url, volume = 1 }) => {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
 
@@ -21,6 +16,8 @@ const useAudio = ({ url, volume = 1 }) => {
     audio.addEventListener("abort", () => {});
     return () => {
       audio.removeEventListener("ended", () => setPlaying(false));
+      audio.pause();
+      audioRef.current = null;
     };
   }, []);
 
@@ -34,9 +31,5 @@ const useAudio = ({ url, volume = 1 }) => {
     audio.pause();
   }, []);
 
-  return useStructuredMemo({
-    playing,
-    play,
-    pause,
-  });
+  return [play, pause, playing];
 };
