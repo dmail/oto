@@ -23,9 +23,13 @@ import { pause, pausedSignal, play } from "../signals.js";
 import gameStyleSheet from "./game.css" with { type: "css" };
 import { PauseDialog } from "./pause_dialog.jsx";
 import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
-import { useBackgroundMusic, useSound } from "/audio/use_sound.js";
+import {
+  createBackgroundMusic,
+  createSound,
+  useAudio,
+} from "/audio/use_sound.js";
 
-const fightStartSoundUrl = import.meta.resolve("../fight/fight_start.ogg");
+// const fightStartSoundUrl = import.meta.resolve("../fight/fight_start.ogg");
 const battleMusicUrl = import.meta.resolve("../fight/battle_bg_a.mp3");
 const heroHitSoundUrl = import.meta.resolve("../fight/hero_hit_2.mp3");
 const oponentDieSoundUrl = import.meta.resolve("../fight/opponent_die.mp3");
@@ -52,7 +56,40 @@ const heroAttackSignal = signal(1);
 const heroDefenseSignal = signal(1);
 const weaponPowerSignal = signal(200);
 
+const swordSound = createSound({
+  url: swordASoundUrl,
+  volume: 0.5,
+  startTime: 0.1,
+});
+// const fightStartSound = createSound({
+//   url: fightStartSoundUrl,
+//   volume: 0.7,
+// });
+const heroHitSound = createSound({
+  url: heroHitSoundUrl,
+  volume: 0.7,
+});
+const opponentDieSound = createSound({
+  url: oponentDieSoundUrl,
+  volume: 0.7,
+});
+const battleMusic = createBackgroundMusic({
+  url: battleMusicUrl,
+});
+const victoryMusic = createBackgroundMusic({
+  name: "victory",
+  url: victoryMusicUrl,
+  volume: 0.5,
+});
+
 export const Game = () => {
+  useAudio(swordSound);
+  // useAudio(fightStartSound);
+  useAudio(heroHitSound);
+  useAudio(opponentDieSound);
+  useAudio(battleMusic);
+  useAudio(victoryMusic);
+
   useLayoutEffect(() => {
     document.adoptedStyleSheets = [
       ...document.adoptedStyleSheets,
@@ -65,14 +102,6 @@ export const Game = () => {
     };
   }, []);
 
-  const [playBattleMusic, pauseBattleMusic] = useBackgroundMusic({
-    url: battleMusicUrl,
-  });
-  const [playVictoryMusic] = useBackgroundMusic({
-    name: "victory",
-    url: victoryMusicUrl,
-    volume: 0.5,
-  });
   const opponentName = opponentNameSignal.value;
   const opponentAttack = opponentAttackSignal.value;
   const opponentDefense = opponentDefenseSignal.value;
@@ -84,12 +113,11 @@ export const Game = () => {
   }, []);
   useEffect(() => {
     if (opponentHp <= 0) {
-      playOpponentDieSound();
+      opponentDieSound.play();
       (async () => {
         await oponentRef.current.erase();
         await new Promise((resolve) => setTimeout(resolve, 400));
-        pauseBattleMusic();
-        playVictoryMusic();
+        victoryMusic.play();
       })();
     }
   }, [opponentHp]);
@@ -135,26 +163,9 @@ export const Game = () => {
   }, []);
   const [heroMaxHp] = useState(40);
 
-  const [playSwordSound] = useSound({
-    url: swordASoundUrl,
-    volume: 0.5,
-    startTime: 0.1,
-  });
-  const [playFightStartSound] = useSound({
-    url: fightStartSoundUrl,
-    volume: 0.7,
-  });
-  const [playHeroHitSound] = useSound({
-    url: heroHitSoundUrl,
-    volume: 0.7,
-  });
-  const [playOpponentDieSound] = useSound({
-    url: oponentDieSoundUrl,
-    volume: 0.7,
-  });
   useEffect(() => {
-    playBattleMusic();
-    playFightStartSound();
+    battleMusic.play();
+    // fightStartSound.play();
   }, []);
   const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
   useEffect(() => {
@@ -197,7 +208,7 @@ export const Game = () => {
     );
     await oponentRef.current.glow();
     await oponentAlert.close();
-    playHeroHitSound();
+    heroHitSound.play();
     await heroRef.current.recoilAfterHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
     await heroRef.current.displayDamage(damage);
@@ -213,7 +224,7 @@ export const Game = () => {
     }
     await heroRef.current.moveToAct();
     showWhiteCurtain();
-    playSwordSound();
+    swordSound.play();
     await oponentRef.current.playWeaponAnimation();
     await heroAlert.close();
     const moveBackToPositionPromise = heroRef.current.moveBackToPosition();

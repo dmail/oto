@@ -1,23 +1,20 @@
-import { useSignalEffect } from "@preact/signals";
 import { pausedSignal, play } from "../signals.js";
-import { useBackgroundMusic } from "/audio/use_sound.js";
+import { createBackgroundMusic, useAudio } from "/audio/use_sound.js";
 
 const pauseMusicUrl = import.meta.resolve("./pause.mp3");
+const pauseMusic = createBackgroundMusic(
+  {
+    url: pauseMusicUrl,
+    volume: 0.2,
+    restartOnPlay: true,
+  },
+  {
+    playWhilePaused: true,
+  },
+);
 
 export const PauseDialog = ({ visible }) => {
-  const [playMusic, pauseMusic] = useBackgroundMusic(
-    { url: pauseMusicUrl, volume: 0.2, restartOnPlay: true },
-    { canPlayWhilePaused: true },
-  );
-
-  useSignalEffect(() => {
-    const paused = pausedSignal.value;
-    if (paused) {
-      playMusic();
-    } else {
-      pauseMusic();
-    }
-  });
+  useAudio(pauseMusic);
 
   return (
     <div
