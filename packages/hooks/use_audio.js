@@ -8,6 +8,7 @@ export const useAudio = ({
   autoplay,
   loop,
   startTime = 0,
+  restartOnPlay = !loop,
 }) => {
   const audioRef = useRef(null);
   const [playing, setPlaying] = useState(false);
@@ -41,11 +42,11 @@ export const useAudio = ({
       return;
     }
     const audio = audioRef.current;
-    if (!loop) {
+    if (restartOnPlay) {
       audio.currentTime = startTime;
     }
     audio.play();
-  }, [loop, startTime]);
+  }, [restartOnPlay, startTime]);
   const pause = useCallback(() => {
     const audio = audioRef.current;
     audio.pause();
