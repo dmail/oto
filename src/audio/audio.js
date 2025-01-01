@@ -8,9 +8,7 @@
  */
 
 import { effect } from "@preact/signals";
-import { EASING } from "animation";
-import { useEffect } from "preact/hooks";
-import { animateNumber } from "../../packages/animation/src/animate_number.js";
+import { animateNumber, EASING } from "animation";
 import { mutedSignal } from "./sound_signals.js";
 import { pausedSignal } from "/signals.js";
 
@@ -113,7 +111,7 @@ const createAudio = ({
   });
 
   return {
-    media: audio,
+    audio,
     getPlayRequested: () => playRequested,
     play,
     pause,
@@ -173,14 +171,14 @@ export const music = (
   { volume = 1, loop = true, fading = true, ...props },
   { playWhilePaused } = {},
 ) => {
-  const audio = createAudio({ volume, loop, fading, ...props });
+  const media = createAudio({ volume, loop, fading, ...props });
 
   let playRequested = false;
   const music = {
-    ...audio,
-    src: audio.media.src,
+    ...media,
+    src: media.audio.src,
     play: async () => {
-      if (!audio.media.paused) {
+      if (!media.audio.paused) {
         return;
       }
       playRequested = true;
@@ -200,10 +198,10 @@ export const music = (
       }
       currentMusic = music;
       window.currentMusic = music;
-      await audio.play();
+      await media.play();
     },
     pause: async (reason) => {
-      if (audio.media.paused) {
+      if (media.audio.paused) {
         return;
       }
       if (reason !== PAUSED_BY_GAME && reason !== PAUSED_BY_OTHER) {
@@ -212,7 +210,7 @@ export const music = (
       if (debug) {
         console.log("stop", music.src);
       }
-      await audio.pause(reason);
+      await media.pause(reason);
       if (reason === PAUSED_BY_GAME) {
         musicPausedByGame = music;
         if (debug) {
@@ -268,15 +266,3 @@ music(
     playWhilePaused: true,
   },
 );
-
-export const useAudio = (audio) => {
-  const { play, pause } = audio;
-
-  useEffect(() => {
-    return () => {
-      audio.pause();
-    };
-  }, []);
-
-  return [play, pause];
-};
