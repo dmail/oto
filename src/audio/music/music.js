@@ -78,18 +78,23 @@ export const music = ({
     if (musicObject.onReasonToBeMutedChange) {
       musicObject.onReasonToBeMutedChange();
     }
-    if (reasonToBeMutedSet.size > 1) {
-      audio.muted = true;
+    if (audio.muted) {
+      return;
     }
+    audio.muted = true;
   };
   const removeReasonToBeMuted = (reason) => {
     reasonToBeMutedSet.delete(reason);
     if (musicObject.onReasonToBeMutedChange) {
       musicObject.onReasonToBeMutedChange();
     }
-    if (reasonToBeMutedSet.size === 0) {
-      audio.muted = false;
+    if (reasonToBeMutedSet.size > 0) {
+      return;
     }
+    if (!audio.muted) {
+      return;
+    }
+    audio.muted = false;
   };
   const mute = () => {
     addReasonToBeMuted(REASON_METHOD_CALL);
@@ -98,6 +103,9 @@ export const music = ({
   const unmute = () => {
     removeReasonToBeMuted(REASON_METHOD_CALL);
   };
+  if (reasonToBeMutedSet.size > 0) {
+    audio.muted = true;
+  }
   if (muted) {
     mute();
   }
@@ -191,7 +199,9 @@ export const music = ({
     removeReasonToBePaused(REASON_METHOD_CALL);
   };
   if (autoplay) {
-    play();
+    if (reasonToBePausedSet.size === 0) {
+      play();
+    }
   } else {
     pause();
   }
