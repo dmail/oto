@@ -290,14 +290,19 @@ export const music = ({
   return music;
 };
 
-// const pauseMusicUrl = import.meta.resolve("./pause.mp3");
-// music(
-//   {
-//     url: pauseMusicUrl,
-//     volume: 0.2,
-//     restartOnPlay: true,
-//   },
-//   {
-//     playWhilePaused: true,
-//   },
-// );
+const pauseMusicUrl = import.meta.resolve("./pause.mp3");
+const pauseMusic = music({
+  name: "pause",
+  url: pauseMusicUrl,
+  volume: 0.2,
+  restartOnPlay: true,
+  canPlayWhilePaused: true,
+});
+pauseMusic.play();
+effect(() => {
+  if (audioPausedSignal.value) {
+    pauseMusic.play();
+  } else {
+    pauseMusic.pause();
+  }
+});
