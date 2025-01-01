@@ -1,8 +1,7 @@
 import { animateNumber, EASING } from "animation";
 import { userActivationFacade } from "../user_activation.js";
 
-// let debug = true;
-let debugFade = false;
+let debug = true;
 
 const musicSet = new Set();
 const globalReasonToBeMutedSet = new Set();
@@ -11,6 +10,8 @@ const REASON_USER_INACTIVE = "user_inactive";
 const REASON_METHOD_CALL = "method_call";
 const REASON_GLOBAL_CALL = "global_call";
 const REASON_OTHER_MUSIC_PLAYING = "other_music_playing";
+let musicGlobalVolume = 1;
+const musicGlobalVolumeChangeCallbackSet = new Set();
 
 export const addGlobalReasonToBeMuted = (reason) => {
   globalReasonToBeMutedSet.add(reason);
@@ -22,6 +23,18 @@ export const removeGlobalReasonToBeMuted = (reason) => {
   globalReasonToBeMutedSet.delete(reason);
   for (const music of musicSet) {
     music.removeReasonToBeMuted(reason);
+  }
+};
+export const setMusicGlobalVolume = (value) => {
+  if (value === musicGlobalVolume) {
+    return;
+  }
+  if (debug) {
+    console.log("set global volume to", value);
+  }
+  musicGlobalVolume = value;
+  for (const musicGlobalVolumeChangeCallback of musicGlobalVolumeChangeCallbackSet) {
+    musicGlobalVolumeChangeCallback();
   }
 };
 
@@ -66,7 +79,6 @@ export const music = ({
   const musicObject = {};
 
   const audio = new Audio(url);
-  audio.volume = volume;
   audio.loop = loop;
   if (startTime) {
     audio.currentTime = startTime;
@@ -110,6 +122,25 @@ export const music = ({
     mute();
   }
 
+  let animatedVolume;
+  const updateVolume = () => {
+    const currentVolume =
+      animatedVolume === undefined ? volume : animatedVolume;
+    audio.volume = currentVolume * musicGlobalVolume;
+  };
+  const setAnimatedVolume = (value) => {
+    animatedVolume = value;
+    updateVolume();
+  };
+  const setVolume = (value) => {
+    volume = value;
+    updateVolume();
+  };
+  updateVolume();
+  musicGlobalVolumeChangeCallbackSet.add(() => {
+    updateVolume();
+  });
+
   const reasonToBePausedSet = new Set(globalReasonToBePausedSet);
   let cancelFadeIn = () => {};
   let cancelFadeOut = () => {};
@@ -139,16 +170,18 @@ export const music = ({
     }
     cancelFadeIn();
     cancelFadeOut();
-    const volumeFadeout = fadeOutVolume(audio, {
+    const volumeFadeout = fadeOutVolume(setAnimatedVolume, volume, {
       onfinish: () => {
         audio.pause();
       },
       duration: fadeOutDuration,
     });
     cancelFadeOut = () => {
+      animatedVolume = undefined;
       volumeFadeout.cancel();
     };
     volumeFadeout.finished.then(() => {
+      animatedVolume = undefined;
       cancelFadeOut = () => {};
     });
   };
@@ -180,15 +213,17 @@ export const music = ({
     }
     cancelFadeIn();
     cancelFadeOut();
-    audio.volume = 0;
+    setAnimatedVolume(0);
     audio.play();
-    const volumeFadein = fadeInVolume(audio, volume, {
+    const volumeFadein = fadeInVolume(setAnimatedVolume, volume, {
       duration: fadeInDuration,
     });
     cancelFadeIn = () => {
+      animatedVolume = undefined;
       volumeFadein.cancel();
     };
     volumeFadein.finished.then(() => {
+      animatedVolume = undefined;
       cancelFadeIn = () => {};
     });
   };
@@ -212,6 +247,7 @@ export const music = ({
     name,
     url,
 
+    setVolume,
     volumeAtStart: volume,
     mute,
     unmute,
@@ -230,32 +266,26 @@ export const music = ({
   return musicObject;
 };
 
-const fadeInVolume = (audio, volume, props) => {
+const fadeInVolume = (setVolume, toVolume, props) => {
   return animateNumber({
     from: 0,
-    to: volume,
+    to: toVolume,
     duration: 500,
     easing: EASING.EASE_IN_EXPO,
     effect: (volume) => {
-      if (debugFade) {
-        console.log(`fadein ${audio.src} volume to ${volume}`);
-      }
-      audio.volume = volume;
+      setVolume(volume);
     },
     ...props,
   });
 };
-const fadeOutVolume = (audio, props) => {
+const fadeOutVolume = (setVolume, fromVolume, props) => {
   return animateNumber({
-    from: audio.volume,
+    from: fromVolume,
     to: 0,
     duration: 500,
     easing: EASING.EASE_OUT_EXPO,
     effect: (volume) => {
-      if (debugFade) {
-        console.log(`fadeout ${audio.src} volume to ${volume}`);
-      }
-      audio.volume = volume;
+      setVolume(volume);
     },
     ...props,
   });
@@ -278,16 +308,6 @@ export const pauseMusic = () => {
 export const playMusic = () => {
   for (const music of musicSet) {
     music.removeReasonToBePaused(REASON_GLOBAL_CALL);
-  }
-};
-export const decreaseVolume = () => {
-  for (const music of musicSet) {
-    music.audio.volume = music.audio.volume * 0.2;
-  }
-};
-export const restoreVolume = () => {
-  for (const music of musicSet) {
-    music.audio.volume = music.volumeAtStart;
   }
 };
 
