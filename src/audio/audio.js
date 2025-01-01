@@ -30,9 +30,12 @@ const createAudio = ({
   loop,
   autoplay,
   restartOnPlay,
+  canPlayWhilePaused,
   muted,
-  fading,
-  fadingDuration = 500,
+  fadeIn,
+  fadeOut,
+  fadeInDuration = 600,
+  fadeOutDuration = 800,
   onPlay = () => {},
   onPause = () => {},
 }) => {
@@ -61,6 +64,9 @@ const createAudio = ({
     mute();
   }
 
+  let cancelFadeIn = () => {};
+  let cancelFadeOut = () => {};
+
   const pausedReasonSet = new Set();
   const play = async (reason = REASON_EXPLICITELY_REQUESTED_BY_METHOD_CALL) => {
     pausedReasonSet.delete(reason);
@@ -84,16 +90,22 @@ const createAudio = ({
       audio.currentTime = startTime;
     }
     onPlay();
-    if (!fading) {
+    if (!fadeIn) {
       audio.play();
       return;
     }
+    cancelFadeIn();
+    cancelFadeOut();
     audio.volume = 0;
     audio.play();
     const volumeFadein = fadeInVolume(audio, volume, {
-      duration: fadingDuration,
+      duration: fadeInDuration,
     });
+    cancelFadeIn = () => {
+      volumeFadein.cancel();
+    };
     await volumeFadein.finished;
+    cancelFadeIn = () => {};
   };
   const pause = async (
     reason = REASON_EXPLICITELY_REQUESTED_BY_METHOD_CALL,
@@ -106,17 +118,23 @@ const createAudio = ({
       return;
     }
     onPause();
-    if (!fading) {
+    if (!fadeOut) {
       audio.pause();
       return;
     }
+    cancelFadeIn();
+    cancelFadeOut();
     const volumeFadeout = fadeOutVolume(audio, {
       onfinish: () => {
         audio.pause();
       },
-      duration: fadingDuration,
+      duration: fadeOutDuration,
     });
+    cancelFadeOut = () => {
+      volumeFadeout.cancel();
+    };
     await volumeFadeout.finished;
+    cancelFadeOut = () => {};
   };
   if (autoplay) {
     audio.autoplay = true;
@@ -133,14 +151,16 @@ const createAudio = ({
     }
   });
 
-  effect(() => {
-    const paused = audioPausedSignal.value;
-    if (paused) {
-      pause(REASON_GLOBALLY_REQUESTED);
-    } else {
-      play(REASON_GLOBALLY_REQUESTED);
-    }
-  });
+  if (!canPlayWhilePaused) {
+    effect(() => {
+      const paused = audioPausedSignal.value;
+      if (paused) {
+        pause(REASON_GLOBALLY_REQUESTED);
+      } else {
+        play(REASON_GLOBALLY_REQUESTED);
+      }
+    });
+  }
 
   Object.assign(media, {
     name,
@@ -189,6 +209,7 @@ const fadeOutVolume = (audio, props) => {
 export const sound = (props) => {
   const sound = createAudio({
     restartOnPlay: true,
+    canPlayWhilePaused: true,
     ...props,
   });
   return sound;
@@ -202,7 +223,13 @@ const REASON_OTHER_MUSIC_PLAYING = {
 };
 let currentMusic = null;
 let musicPausedByOther = null;
-export const music = ({ volume = 1, loop = true, fading = true, ...props }) => {
+export const music = ({
+  volume = 1,
+  loop = true,
+  fadeIn = true,
+  fadeOut = true,
+  ...props
+}) => {
   const replaceCurrentMusic = () => {
     if (debug) {
       console.log(
@@ -219,7 +246,8 @@ export const music = ({ volume = 1, loop = true, fading = true, ...props }) => {
   const music = createAudio({
     volume,
     loop,
-    fading,
+    fadeIn,
+    fadeOut,
     onPlay: () => {
       if (currentMusic && currentMusic !== music) {
         replaceCurrentMusic();
@@ -228,6 +256,7 @@ export const music = ({ volume = 1, loop = true, fading = true, ...props }) => {
         console.log(`play ${music.name}`);
       }
       currentMusic = music;
+      window.currentMusic = music;
     },
     onPause: () => {
       if (debug) {
@@ -238,7 +267,10 @@ export const music = ({ volume = 1, loop = true, fading = true, ...props }) => {
           musicPausedByOther: musicPausedByOther?.name,
         });
       }
-      if (music === currentMusic && musicPausedByOther) {
+      const pausedOnlyByGlobal =
+        music.pausedReasonSet.size === 1 &&
+        music.pausedReasonSet.has(REASON_GLOBALLY_REQUESTED);
+      if (music === currentMusic && musicPausedByOther && !pausedOnlyByGlobal) {
         currentMusic = null;
         if (debug) {
           console.log(

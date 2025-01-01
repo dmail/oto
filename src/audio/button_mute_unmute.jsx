@@ -1,6 +1,6 @@
 import { AudioDisabledIcon } from "./audio_disabled_icon.jsx";
 import { AudioEnabledIcon } from "./audio_enabled_icon.jsx";
-import { mute, mutedSignal, unmute } from "./sound_signals.js";
+import { mute, mutedSignal, unmute } from "./audio_signals.js";
 import { Box } from "/components/box/box.jsx";
 
 export const ButtonMuteUnmute = () => {

@@ -23,7 +23,6 @@ import { pause, pausedSignal, play } from "../signals.js";
 import gameStyleSheet from "./game.css" with { type: "css" };
 import { PauseDialog } from "./pause_dialog.jsx";
 import { music, sound } from "/audio/audio.js";
-import { useAudio } from "/audio/audio_hooks.js";
 import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
 
 // const fightStartSoundUrl = import.meta.resolve("../fight/fight_start.ogg");
@@ -71,6 +70,7 @@ const opponentDieSound = sound({
   volume: 0.7,
 });
 const battleMusic = music({
+  name: "battle",
   url: battleMusicUrl,
 });
 const victoryMusic = music({
@@ -80,13 +80,6 @@ const victoryMusic = music({
 });
 
 export const Game = () => {
-  useAudio(swordSound);
-  // useAudio(fightStartSound);
-  useAudio(heroHitSound);
-  useAudio(opponentDieSound);
-  useAudio(battleMusic);
-  useAudio(victoryMusic);
-
   useLayoutEffect(() => {
     document.adoptedStyleSheets = [
       ...document.adoptedStyleSheets,
