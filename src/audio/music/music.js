@@ -1,5 +1,5 @@
 import { animateNumber, EASING } from "animation";
-import { userActivationFacade } from "./user_activation.js";
+import { userActivationFacade } from "../user_activation.js";
 
 // let debug = true;
 let debugFade = false;
@@ -10,6 +10,7 @@ const globalReasonToBePausedSet = new Set();
 const REASON_USER_INACTIVE = "user_inactive";
 const REASON_METHOD_CALL = "method_call";
 const REASON_GLOBAL_CALL = "global_call";
+const REASON_OTHER_MUSIC_PLAYING = "other_music_playing";
 
 export const addGlobalReasonToBeMuted = (reason) => {
   globalReasonToBeMutedSet.add(reason);
@@ -45,6 +46,8 @@ if (!userActivationFacade.ok) {
   });
 }
 
+let currentMusic = null;
+let musicPausedByOther = null;
 export const music = ({
   name,
   url,
@@ -110,6 +113,18 @@ export const music = ({
     if (audio.paused) {
       return;
     }
+    if (
+      currentMusic === musicObject &&
+      musicPausedByOther &&
+      reason === REASON_METHOD_CALL
+    ) {
+      currentMusic = null;
+      const toPlay = musicPausedByOther;
+      musicPausedByOther = null;
+      toPlay.removeReasonToBePaused(REASON_OTHER_MUSIC_PLAYING);
+    } else {
+      currentMusic = null;
+    }
     if (!fadeOut) {
       audio.pause();
       return;
@@ -131,6 +146,9 @@ export const music = ({
   };
   const removeReasonToBePaused = (reason) => {
     reasonToBePausedSet.delete(reason);
+    if (reason === REASON_METHOD_CALL) {
+      reasonToBePausedSet.delete(REASON_OTHER_MUSIC_PLAYING);
+    }
     if (musicObject.onReasonToBePausedChange) {
       musicObject.onReasonToBePausedChange();
     }
@@ -140,6 +158,14 @@ export const music = ({
     if (restartOnPlay) {
       audio.currentTime = startTime;
     }
+    if (reason === REASON_METHOD_CALL) {
+      if (currentMusic) {
+        const musicStopped = currentMusic;
+        currentMusic.addReasonToBePaused(REASON_OTHER_MUSIC_PLAYING);
+        musicPausedByOther = musicStopped;
+      }
+    }
+    currentMusic = musicObject;
     if (!fadeIn) {
       audio.play();
       return;
@@ -226,14 +252,10 @@ const fadeOutVolume = (audio, props) => {
 };
 
 export const muteMusic = () => {
-  for (const music of musicSet) {
-    music.addReasonToBeMuted(REASON_GLOBAL_CALL);
-  }
+  addGlobalReasonToBeMuted(REASON_GLOBAL_CALL);
 };
 export const unmuteMusic = () => {
-  for (const music of musicSet) {
-    music.removeReasonToBeMuted(REASON_GLOBAL_CALL);
-  }
+  removeGlobalReasonToBeMuted(REASON_GLOBAL_CALL);
 };
 export const pauseMusic = () => {
   for (const music of musicSet) {
@@ -258,3 +280,20 @@ export const restoreVolume = () => {
     music.audio.volume = music.volumeAtStart;
   }
 };
+
+// const pauseMusicUrl = import.meta.resolve("./pause.mp3");
+// const pauseMusic = music({
+//   name: "pause",
+//   url: pauseMusicUrl,
+//   volume: 0.2,
+//   restartOnPlay: true,
+//   canPlayWhilePaused: true,
+// });
+// pauseMusic.play();
+// effect(() => {
+//   if (audioPausedSignal.value) {
+//     pauseMusic.play();
+//   } else {
+//     pauseMusic.pause();
+//   }
+// });

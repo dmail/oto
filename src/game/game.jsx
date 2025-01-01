@@ -22,8 +22,9 @@ import { WhiteCurtain } from "../fight/white_curtain.jsx";
 import { pause, pausedSignal, play } from "../signals.js";
 import gameStyleSheet from "./game.css" with { type: "css" };
 import { PauseDialog } from "./pause_dialog.jsx";
-import { music, sound } from "/audio/audio.js";
 import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
+import { music } from "/audio/music/music.js";
+import { sound } from "/audio/sound/sound.js";
 
 // const fightStartSoundUrl = import.meta.resolve("../fight/fight_start.ogg");
 const battleMusicUrl = import.meta.resolve("../fight/battle_bg_a.mp3");
