@@ -10,21 +10,20 @@
     <div id="root" style="position: relative"></div>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
-      import { music } from "../audio.js";
+      import { useState } from "preact/hooks";
+      import {
+        music,
+        addGlobalReasonToBeMuted,
+        removeGlobalReasonToBeMuted,
+        addGlobalReasonToBePaused,
+        removeGlobalReasonToBePaused,
+      } from "../music.js";
       import {
         useVolume,
         useMuted,
         usePlaybackState,
-        usePausedReasons,
+        useReasonsToBePaused,
       } from "../audio_hooks.js";
-      import {
-        mute,
-        unmute,
-        mutedSignal,
-        audioPausedSignal,
-        play,
-        pause,
-      } from "../audio_signals.js";
 
       const musicA = music({
         name: "a",
@@ -40,7 +39,7 @@
         const volume = useVolume(music);
         const muted = useMuted(music);
         const playbackState = usePlaybackState(music);
-        const pausedReasons = usePausedReasons(music);
+        const reasonsToBePaused = useReasonsToBePaused(music);
 
         return (
           <fieldset>
@@ -88,9 +87,53 @@
               >
                 pause
               </button>
-              <div>Paused reasons: {pausedReasons}</div>
+              <div>Paused reasons: {reasonsToBePaused.join(", ")}</div>
             </div>
           </fieldset>
+        );
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const MuteUnMuteAllButton = () => {
+        const REASON_MUTED_GLOBALLY = "global_mute";
+        const [muted, mutedSetter] = useState(false);
+
+        return (
+          <button
+            onClick={() => {
+              if (muted) {
+                removeGlobalReasonToBeMuted(REASON_MUTED_GLOBALLY);
+                mutedSetter(false);
+              } else {
+                addGlobalReasonToBeMuted(REASON_MUTED_GLOBALLY);
+                mutedSetter(true);
+              }
+            }}
+          >
+            {muted ? "unmute all" : "mute all"}
+          </button>
+        );
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const PlayPauseAllButton = () => {
+        const REASON_PAUSED_GLOBALLY = "global_pause";
+        const [paused, pausedSetter] = useState(false);
+
+        return (
+          <button
+            onClick={() => {
+              if (paused) {
+                removeGlobalReasonToBePaused(REASON_PAUSED_GLOBALLY);
+                pausedSetter(false);
+              } else {
+                addGlobalReasonToBePaused(REASON_PAUSED_GLOBALLY);
+                pausedSetter(true);
+              }
+            }}
+          >
+            {paused ? "play all" : "pause all"}
+          </button>
         );
       };
 
@@ -103,28 +146,8 @@
             <div style="display:flex; flex-direction: column; margin: 10px;">
               <h3>Global controls</h3>
               <div>
-                <button
-                  onClick={() => {
-                    if (mutedSignal.value) {
-                      unmute();
-                    } else {
-                      mute();
-                    }
-                  }}
-                >
-                  {mutedSignal.value ? "unmute all" : "mute all"}
-                </button>
-                <button
-                  onClick={() => {
-                    if (audioPausedSignal.value) {
-                      play();
-                    } else {
-                      pause();
-                    }
-                  }}
-                >
-                  {audioPausedSignal.value ? "play all" : "pause all"}
-                </button>
+                <MuteUnMuteAllButton />
+                <PlayPauseAllButton />
               </div>
             </div>
 

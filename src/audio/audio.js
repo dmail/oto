@@ -1,15 +1,41 @@
 /*
- * TODO: lorsqu'on met en pause la musique ne fond ne repdrends pas correctement
- * je comprends pas bien ce qu'il se passe
+ * NICE TO HAVE
  *
- * a priori je peux m'en sortir avec un truc fait différement
- *
- *
+ * - decrease/increase volume of all sounds / musics
+ * (we would do it relatively to the current sound of the sound/music)
  */
 
-import { effect } from "@preact/signals";
 import { animateNumber, EASING } from "animation";
-import { audioPausedSignal, mutedSignal } from "./audio_signals.js";
+import { userActivationFacade } from "./user_activation.js";
+
+const globalReasonToBePausedSet = new Set();
+const addGlobalReasonToBePaused = (reason) => {
+  globalReasonToBePausedSet.add(reason);
+  for (const music of musicSet) {
+    music.addReasonToBePaused(reason);
+  }
+};
+const removeGlobalReasonToBePaused = (reason) => {
+  globalReasonToBePausedSet.delete(reason);
+  for (const music of musicSet) {
+    music.removeReasonToBePaused(reason);
+  }
+};
+
+const REASON_USER_INACTIVE = "user_inactive";
+if (!userActivationFacade.ok) {
+  addGlobalReasonToBePaused(REASON_USER_INACTIVE);
+  userActivationFacade.addChangeCallback(() => {
+    removeGlobalReasonToBePaused(REASON_USER_INACTIVE);
+  });
+}
+
+export const applyGamePausedEffectOnAudio = () => {
+  decreaseVolume();
+};
+export const applyGamePlayingEffectOnAudio = () => {
+  restoreVolume();
+};
 
 let debug = true;
 let debugFade = false;
@@ -67,7 +93,14 @@ const createAudio = ({
   let cancelFadeIn = () => {};
   let cancelFadeOut = () => {};
 
-  const pausedReasonSet = new Set();
+  const reasonToBePausedSet = new Set();
+  const addReasonToBePaused = (reason) => {
+    reasonToBePausedSet.add(reason);
+    if (reasonToBePausedSet.size === 1) {
+      pause(reason);
+    }
+  };
+
   const play = async (reason = REASON_EXPLICITELY_REQUESTED_BY_METHOD_CALL) => {
     pausedReasonSet.delete(reason);
     for (const reason of pausedReasonSet) {
@@ -142,27 +175,9 @@ const createAudio = ({
     pause();
   }
 
-  effect(() => {
-    const muted = mutedSignal.value;
-    if (muted) {
-      mute(REASON_GLOBALLY_REQUESTED);
-    } else {
-      unmute(REASON_GLOBALLY_REQUESTED);
-    }
-  });
-
-  if (!canPlayWhilePaused) {
-    effect(() => {
-      const paused = audioPausedSignal.value;
-      if (paused) {
-        pause(REASON_GLOBALLY_REQUESTED);
-      } else {
-        play(REASON_GLOBALLY_REQUESTED);
-      }
-    });
-  }
-
   Object.assign(media, {
+    volumeAtStart: volume,
+    canPlayWhilePaused,
     name,
     url,
     audio,
@@ -215,6 +230,7 @@ export const sound = (props) => {
   return sound;
 };
 
+const musicSet = new Set();
 const REASON_OTHER_MUSIC_PLAYING = {
   id: "other_music_playing",
   // if there only reason not to play is REASON_OTHER_MUSIC_PLAYING
@@ -287,22 +303,58 @@ export const music = ({
     ...props,
   });
 
+  musicSet.add(music);
+
   return music;
 };
 
-const pauseMusicUrl = import.meta.resolve("./pause.mp3");
-const pauseMusic = music({
-  name: "pause",
-  url: pauseMusicUrl,
-  volume: 0.2,
-  restartOnPlay: true,
-  canPlayWhilePaused: true,
-});
-pauseMusic.play();
-effect(() => {
-  if (audioPausedSignal.value) {
-    pauseMusic.play();
-  } else {
-    pauseMusic.pause();
+export const muteMusic = () => {
+  for (const music of musicSet) {
+    music.mute(REASON_GLOBALLY_REQUESTED);
   }
-});
+};
+export const unmuteMusic = () => {
+  for (const music of musicSet) {
+    music.unmute(REASON_GLOBALLY_REQUESTED);
+  }
+};
+export const pauseMusic = () => {
+  for (const music of musicSet) {
+    if (music.canPlayWhilePaused) {
+      continue;
+    }
+    music.pause(REASON_GLOBALLY_REQUESTED);
+  }
+};
+export const playMusic = () => {
+  for (const music of musicSet) {
+    music.play(REASON_GLOBALLY_REQUESTED);
+  }
+};
+export const decreaseVolume = () => {
+  for (const music of musicSet) {
+    music.audio.volume = music.audio.volume * 0.2;
+  }
+};
+export const restoreVolume = () => {
+  for (const music of musicSet) {
+    music.audio.volume = music.volumeAtStart;
+  }
+};
+
+// const pauseMusicUrl = import.meta.resolve("./pause.mp3");
+// const pauseMusic = music({
+//   name: "pause",
+//   url: pauseMusicUrl,
+//   volume: 0.2,
+//   restartOnPlay: true,
+//   canPlayWhilePaused: true,
+// });
+// pauseMusic.play();
+// effect(() => {
+//   if (audioPausedSignal.value) {
+//     pauseMusic.play();
+//   } else {
+//     pauseMusic.pause();
+//   }
+// });

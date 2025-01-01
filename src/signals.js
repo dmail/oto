@@ -1,5 +1,8 @@
 import { effect, signal } from "@preact/signals";
-import { audioPausedSignal } from "/audio/audio_signals.js";
+import {
+  applyGamePausedEffectOnAudio,
+  applyGamePlayingEffectOnAudio,
+} from "/audio/audio.js";
 
 export const pausedSignal = signal(true);
 export const pause = () => {
@@ -12,8 +15,8 @@ export const play = () => {
 effect(() => {
   const gamePaused = pausedSignal.value;
   if (gamePaused) {
-    audioPausedSignal.value = true;
+    applyGamePausedEffectOnAudio();
   } else {
-    audioPausedSignal.value = false;
+    applyGamePlayingEffectOnAudio();
   }
 });
