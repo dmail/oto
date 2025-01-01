@@ -15,114 +15,145 @@ let debug = true;
 let debugFade = false;
 const { userActivation } = window.navigator;
 
+const REASON_GLOBALLY_REQUESTED = {
+  id: "globally_requested",
+};
+const REASON_EXPLICITELY_REQUESTED_BY_METHOD_CALL = {
+  id: "explicitely_requested_by_method_call",
+};
+
 const createAudio = ({
+  name,
   url,
   startTime = 0,
   volume = 1,
   loop,
   autoplay,
   restartOnPlay,
-  muted = mutedSignal.value,
+  muted,
   fading,
   fadingDuration = 500,
+  onPlay = () => {},
+  onPause = () => {},
 }) => {
+  const media = {};
+
   const audio = new Audio(url);
   audio.volume = volume;
   audio.loop = loop;
-  audio.autoplay = autoplay;
-  audio.muted = muted;
   if (startTime) {
     audio.currentTime = startTime;
   }
 
-  let playing = false;
-  audio.addEventListener("ended", () => {
-    playing = false;
-  });
-  audio.addEventListener("abort", () => {});
-
-  const destroy = () => {
-    audio.removeEventListener("ended", () => {
-      playing = false;
-    });
-    audio.pause();
+  const mutedReasonSet = new Set();
+  const mute = (reason = REASON_EXPLICITELY_REQUESTED_BY_METHOD_CALL) => {
+    mutedReasonSet.add(reason);
+    audio.muted = true;
   };
+  const unmute = (reason = REASON_EXPLICITELY_REQUESTED_BY_METHOD_CALL) => {
+    mutedReasonSet.delete(reason);
+    if (mutedReasonSet.size > 0) {
+      return;
+    }
+    audio.muted = false;
+  };
+  if (muted) {
+    mute();
+  }
 
-  let playRequested = false;
-  const play = () => {
+  const pausedReasonSet = new Set();
+  const play = async (reason = REASON_EXPLICITELY_REQUESTED_BY_METHOD_CALL) => {
+    pausedReasonSet.delete(reason);
+    for (const reason of pausedReasonSet) {
+      if (reason.isWeak) {
+        pausedReasonSet.delete(reason);
+      }
+    }
+    if (media.onPausedReasonSetChange) {
+      media.onPausedReasonSetChange();
+    }
+    if (pausedReasonSet.size > 0) {
+      return;
+    }
     const canPlaySound =
       userActivation.hasBeenActive || userActivation.isActive;
-    playRequested = true;
     if (!canPlaySound) {
-      return null;
-    }
-    if (!audio.paused) {
-      return null;
+      return;
     }
     if (restartOnPlay) {
       audio.currentTime = startTime;
     }
-    if (fading) {
-      audio.volume = 0;
+    onPlay();
+    if (!fading) {
       audio.play();
-      const volumeFadein = fadeInVolume(audio, volume, {
-        duration: fadingDuration,
-      });
-      return volumeFadein.finished;
+      return;
     }
+    audio.volume = 0;
     audio.play();
-    return null;
+    const volumeFadein = fadeInVolume(audio, volume, {
+      duration: fadingDuration,
+    });
+    await volumeFadein.finished;
   };
-  const pause = () => {
-    if (!playRequested) {
-      return null;
+  const pause = async (
+    reason = REASON_EXPLICITELY_REQUESTED_BY_METHOD_CALL,
+  ) => {
+    pausedReasonSet.add(reason);
+    if (media.onPausedReasonSetChange) {
+      media.onPausedReasonSetChange();
     }
-    playRequested = false;
     if (audio.paused) {
-      return null;
+      return;
     }
-    if (fading) {
-      const volumeFadeout = fadeOutVolume(audio, {
-        onfinish: () => {
-          audio.pause();
-        },
-        duration: fadingDuration,
-      });
-      return volumeFadeout.finished;
+    onPause();
+    if (!fading) {
+      audio.pause();
+      return;
     }
-    audio.pause();
-    return null;
+    const volumeFadeout = fadeOutVolume(audio, {
+      onfinish: () => {
+        audio.pause();
+      },
+      duration: fadingDuration,
+    });
+    await volumeFadeout.finished;
   };
-
-  const mute = () => {
-    audio.muted = true;
-  };
-  const unmute = () => {
-    audio.muted = false;
-  };
+  if (autoplay) {
+    audio.autoplay = true;
+  } else {
+    pause();
+  }
 
   effect(() => {
     const muted = mutedSignal.value;
     if (muted) {
-      mute();
+      mute(REASON_GLOBALLY_REQUESTED);
     } else {
-      unmute();
-      if (playRequested) {
-        play();
-      }
+      unmute(REASON_GLOBALLY_REQUESTED);
     }
   });
 
-  return {
+  effect(() => {
+    const paused = audioPausedSignal.value;
+    if (paused) {
+      pause(REASON_GLOBALLY_REQUESTED);
+    } else {
+      play(REASON_GLOBALLY_REQUESTED);
+    }
+  });
+
+  Object.assign(media, {
+    name,
+    url,
     audio,
-    getPlayRequested: () => playRequested,
     play,
     pause,
-    playing,
     mute,
     unmute,
-    destroy,
-  };
+    mutedReasonSet,
+    pausedReasonSet,
+  });
+  return media;
 };
 const fadeInVolume = (audio, volume, props) => {
   return animateNumber({
@@ -163,96 +194,65 @@ export const sound = (props) => {
   return sound;
 };
 
-let musicPausedByGame = null;
-let musicPausedByAnOther = null;
+const REASON_OTHER_MUSIC_PLAYING = {
+  id: "other_music_playing",
+  // if there only reason not to play is REASON_OTHER_MUSIC_PLAYING
+  // then we'll again stop the other to favor this one
+  isWeak: true,
+};
 let currentMusic = null;
-
-const PAUSED_BY_GAME = {};
-const PAUSED_BY_OTHER = {};
-
-export const music = (
-  { volume = 1, loop = true, fading = true, ...props },
-  { playWhilePaused } = {},
-) => {
-  const media = createAudio({ volume, loop, fading, ...props });
-
-  let playRequested = false;
-  const music = {
-    ...media,
-    src: media.audio.src,
-    play: async () => {
-      if (!media.audio.paused) {
-        return;
-      }
-      playRequested = true;
-      if (currentMusic && currentMusic !== music) {
-        if (debug) {
-          console.log(
-            "about to play",
-            music.src,
-            `-> stop current music (${currentMusic.src}) and store as music stopped by an other`,
-          );
-        }
-        musicPausedByAnOther = currentMusic;
-        currentMusic.pause(PAUSED_BY_OTHER);
-      }
-      if (debug) {
-        console.log(`play ${music.src}`);
-      }
-      currentMusic = music;
-      window.currentMusic = music;
-      await media.play();
-    },
-    pause: async (reason) => {
-      if (media.audio.paused) {
-        return;
-      }
-      if (reason !== PAUSED_BY_GAME && reason !== PAUSED_BY_OTHER) {
-        playRequested = false;
-      }
-      if (debug) {
-        console.log("stop", music.src);
-      }
-      await media.pause(reason);
-      if (reason === PAUSED_BY_GAME) {
-        musicPausedByGame = music;
-        if (debug) {
-          console.log(`store ${music.src} at stopped by game`);
-        }
-      }
-      if (music === currentMusic && musicPausedByAnOther) {
-        currentMusic = null;
-        const musicToPlay = musicPausedByAnOther;
-        musicPausedByAnOther = null;
-        if (debug) {
-          console.log(
-            `(${music.src}) has stopped -> resume ${musicToPlay.src}`,
-          );
-        }
-        musicToPlay.play();
-      } else {
-        currentMusic = null;
-      }
-    },
+let musicPausedByOther = null;
+export const music = ({ volume = 1, loop = true, fading = true, ...props }) => {
+  const replaceCurrentMusic = () => {
+    if (debug) {
+      console.log(
+        "about to play",
+        music.name,
+        `-> stop current music (${currentMusic.name})`,
+      );
+    }
+    const musicStopped = currentMusic;
+    currentMusic.pause(REASON_OTHER_MUSIC_PLAYING);
+    musicPausedByOther = musicStopped;
   };
 
-  effect(() => {
-    const audioPaused = audioPausedSignal.value;
-    if (playWhilePaused) {
-      if (audioPaused) {
-        music.play();
+  const music = createAudio({
+    volume,
+    loop,
+    fading,
+    onPlay: () => {
+      if (currentMusic && currentMusic !== music) {
+        replaceCurrentMusic();
+      }
+      if (debug) {
+        console.log(`play ${music.name}`);
+      }
+      currentMusic = music;
+    },
+    onPause: () => {
+      if (debug) {
+        console.log(`pause ${music.name}`);
+        console.log({
+          music: music.name,
+          currentMusic: currentMusic?.name,
+          musicPausedByOther: musicPausedByOther?.name,
+        });
+      }
+      if (music === currentMusic && musicPausedByOther) {
+        currentMusic = null;
+        if (debug) {
+          console.log(
+            `(${music.url}) has stopped -> resume ${musicPausedByOther.name}`,
+          );
+        }
+        const toPlay = musicPausedByOther;
+        musicPausedByOther = null;
+        toPlay.play(REASON_OTHER_MUSIC_PLAYING);
       } else {
-        music.pause();
+        currentMusic = null;
       }
-    } else {
-      // eslint-disable-next-line no-lonely-if
-      if (audioPaused) {
-        console.log("pausing", music.src);
-        music.pause(PAUSED_BY_GAME);
-      } else if (musicPausedByGame && music && playRequested) {
-        music.play();
-      }
-    }
+    },
+    ...props,
   });
 
   return music;

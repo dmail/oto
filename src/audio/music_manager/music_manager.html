@@ -11,7 +11,12 @@
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
       import { music } from "../audio.js";
-      import { useVolume, useMuted, usePlaybackState } from "../audio_hooks.js";
+      import {
+        useVolume,
+        useMuted,
+        usePlaybackState,
+        usePausedReasons,
+      } from "../audio_hooks.js";
       import {
         mute,
         unmute,
@@ -22,22 +27,25 @@
       } from "../audio_signals.js";
 
       const musicA = music({
+        name: "a",
         url: import.meta.resolve("./sky.mp3"),
       });
       const musicB = music({
+        name: "b",
         url: import.meta.resolve("./sky.mp3"),
       });
 
       // eslint-disable-next-line no-unused-vars
-      const Music = ({ name, music }) => {
+      const Music = ({ music }) => {
         const volume = useVolume(music);
         const muted = useMuted(music);
         const playbackState = usePlaybackState(music);
+        const pausedReasons = usePausedReasons(music);
 
         return (
           <fieldset>
             <legend>
-              <h2 style="margin:0">{name}</h2>
+              <h2 style="margin:0">{music.name}</h2>
             </legend>
             <div>
               volume:
@@ -80,6 +88,7 @@
               >
                 pause
               </button>
+              <div>Paused reasons: {pausedReasons}</div>
             </div>
           </fieldset>
         );
@@ -114,14 +123,14 @@
                     }
                   }}
                 >
-                  {audioPausedSignal.value ? "pause all" : "play all"}
+                  {audioPausedSignal.value ? "play all" : "pause all"}
                 </button>
               </div>
             </div>
 
             <div style="display: flex; gap: 10px">
-              <Music name="a" music={musicA} />
-              <Music name="b" music={musicB} />
+              <Music music={musicA} />
+              <Music music={musicB} />
             </div>
           </div>
         );

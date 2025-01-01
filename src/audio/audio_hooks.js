@@ -97,3 +97,26 @@ const getPlaybackState = (audio) => {
   }
   return "playing";
 };
+
+export const usePausedReasons = (media) => {
+  const [pausedReasonSet, pausedReasonSetSetter] = useState(
+    convertReasonSetToArray(media.pausedReasonSet),
+  );
+  media.onPausedReasonSetChange = () => {
+    pausedReasonSetSetter(convertReasonSetToArray(media.pausedReasonSet));
+  };
+  useEffect(() => {
+    return () => {
+      delete media.onPausedReasonSetChange;
+    };
+  }, []);
+
+  return pausedReasonSet;
+};
+const convertReasonSetToArray = (reasonSet) => {
+  const reasonIds = [];
+  for (const reason of reasonSet) {
+    reasonIds.push(reason.id);
+  }
+  return reasonIds;
+};
