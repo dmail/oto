@@ -23,11 +23,7 @@ import { pause, pausedSignal, play } from "../signals.js";
 import gameStyleSheet from "./game.css" with { type: "css" };
 import { PauseDialog } from "./pause_dialog.jsx";
 import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
-import {
-  createBackgroundMusic,
-  createSound,
-  useAudio,
-} from "/audio/use_sound.js";
+import { music, sound, useAudio } from "/audio/use_sound.js";
 
 // const fightStartSoundUrl = import.meta.resolve("../fight/fight_start.ogg");
 const battleMusicUrl = import.meta.resolve("../fight/battle_bg_a.mp3");
@@ -56,7 +52,7 @@ const heroAttackSignal = signal(1);
 const heroDefenseSignal = signal(1);
 const weaponPowerSignal = signal(200);
 
-const swordSound = createSound({
+const swordSound = sound({
   url: swordASoundUrl,
   volume: 0.5,
   startTime: 0.1,
@@ -65,18 +61,18 @@ const swordSound = createSound({
 //   url: fightStartSoundUrl,
 //   volume: 0.7,
 // });
-const heroHitSound = createSound({
+const heroHitSound = sound({
   url: heroHitSoundUrl,
   volume: 0.7,
 });
-const opponentDieSound = createSound({
+const opponentDieSound = sound({
   url: oponentDieSoundUrl,
   volume: 0.7,
 });
-const battleMusic = createBackgroundMusic({
+const battleMusic = music({
   url: battleMusicUrl,
 });
-const victoryMusic = createBackgroundMusic({
+const victoryMusic = music({
   name: "victory",
   url: victoryMusicUrl,
   volume: 0.5,

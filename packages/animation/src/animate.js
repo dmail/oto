@@ -2,6 +2,7 @@ export const animate = ({
   duration = 300,
   fps,
   easing,
+  effect = () => {},
   onprogress = () => {},
   onstart = () => {},
   onfinish = () => {},
@@ -16,6 +17,7 @@ export const animate = ({
     playState: "idle",
     progressRatio: 0,
     ratio: 0,
+    effect,
     onprogress,
     onfinish,
     oncancel,
@@ -28,11 +30,13 @@ export const animate = ({
       } else {
         animation.playState = "running";
         previousStepMs = Date.now();
-        animation.progressRatio = 0;
         msRemaining = duration;
         animation.finished = new Promise((resolve) => {
           resolveFinished = resolve;
         });
+        animation.progressRatio = 0;
+        animation.ratio = 0;
+        animation.effect(animation.ratio);
         onstart();
       }
       animationFrame = requestAnimationFrame(next);
@@ -53,12 +57,15 @@ export const animate = ({
     cancel: () => {
       cancelAnimationFrame(animationFrame);
       previousStepMs = null;
+      animation.progressRatio = animation.ratio = 0;
+      animation.effect(animation.ratio);
       animation.oncancel();
     },
   };
   const setProgress = (progressRatio) => {
     animation.progressRatio = progressRatio;
     animation.ratio = easing ? easing(progressRatio) : progressRatio;
+    animation.effect(animation.ratio);
     animation.onprogress();
   };
   const stepMinDuration = fps ? 1000 / fps : 0;

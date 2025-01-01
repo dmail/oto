@@ -24,7 +24,7 @@ const createAudio = ({
   volume = 1,
   loop,
   autoplay,
-  restartOnPlay = !loop,
+  restartOnPlay,
   muted = mutedSignal.value,
   fading,
 }) => {
@@ -128,8 +128,8 @@ const fadeInVolume = (audio, volume, props) => {
     from: 0,
     to: volume,
     duration: 500,
-    easing: EASING.EASE_OUT_EXPO,
-    onprogress: (volume) => {
+    easing: EASING.EASE_IN_EXPO,
+    effect: (volume) => {
       if (debugFade) {
         console.log(`fadein ${audio.src} volume to ${volume}`);
       }
@@ -144,7 +144,7 @@ const fadeOutVolume = (audio, props) => {
     to: 0,
     duration: 500,
     easing: EASING.EASE_OUT_EXPO,
-    onprogress: (volume) => {
+    effect: (volume) => {
       if (debugFade) {
         console.log(`fadeout ${audio.src} volume to ${volume}`);
       }
@@ -154,8 +154,11 @@ const fadeOutVolume = (audio, props) => {
   });
 };
 
-export const createSound = (props) => {
-  const sound = createAudio(props);
+export const sound = (props) => {
+  const sound = createAudio({
+    restartOnPlay: true,
+    ...props,
+  });
   return sound;
 };
 
@@ -166,7 +169,7 @@ let currentMusic = null;
 const PAUSED_BY_GAME = {};
 const PAUSED_BY_OTHER = {};
 
-export const createBackgroundMusic = (
+export const music = (
   { volume = 1, loop = true, fading = true, ...props },
   { playWhilePaused } = {},
 ) => {
@@ -176,14 +179,17 @@ export const createBackgroundMusic = (
   const music = {
     ...audio,
     src: audio.media.src,
-    play: () => {
+    play: async () => {
+      if (!audio.media.paused) {
+        return;
+      }
       playRequested = true;
       if (currentMusic && currentMusic !== music) {
         if (debug) {
           console.log(
             "about to play",
             music.src,
-            `-> stop current music (${currentMusic.src}) and store as music to resume when this one stops`,
+            `-> stop current music (${currentMusic.src}) and store as music stopped by an other`,
           );
         }
         musicPausedByAnOther = currentMusic;
@@ -194,9 +200,12 @@ export const createBackgroundMusic = (
       }
       currentMusic = music;
       window.currentMusic = music;
-      return audio.play();
+      await audio.play();
     },
     pause: async (reason) => {
+      if (audio.media.paused) {
+        return;
+      }
       if (reason !== PAUSED_BY_GAME && reason !== PAUSED_BY_OTHER) {
         playRequested = false;
       }
@@ -204,12 +213,20 @@ export const createBackgroundMusic = (
         console.log("stop", music.src);
       }
       await audio.pause(reason);
+      if (reason === PAUSED_BY_GAME) {
+        musicPausedByGame = music;
+        if (debug) {
+          console.log(`store ${music.src} at stopped by game`);
+        }
+      }
       if (music === currentMusic && musicPausedByAnOther) {
         currentMusic = null;
         const musicToPlay = musicPausedByAnOther;
         musicPausedByAnOther = null;
         if (debug) {
-          console.log(`stopped (${music.src}) resume ${musicToPlay.src}`);
+          console.log(
+            `(${music.src}) has stopped -> resume ${musicToPlay.src}`,
+          );
         }
         musicToPlay.play();
       } else {
@@ -229,10 +246,8 @@ export const createBackgroundMusic = (
     } else {
       // eslint-disable-next-line no-lonely-if
       if (gamePaused) {
-        if (playRequested) {
-          musicPausedByGame = music;
-          music.pause(PAUSED_BY_GAME);
-        }
+        console.log("pausing", music.src);
+        music.pause(PAUSED_BY_GAME);
       } else if (musicPausedByGame && music && playRequested) {
         music.play();
       }
@@ -241,6 +256,18 @@ export const createBackgroundMusic = (
 
   return music;
 };
+
+const pauseMusicUrl = import.meta.resolve("./pause.mp3");
+music(
+  {
+    url: pauseMusicUrl,
+    volume: 0.2,
+    restartOnPlay: true,
+  },
+  {
+    playWhilePaused: true,
+  },
+);
 
 export const useAudio = (audio) => {
   const { play, pause } = audio;

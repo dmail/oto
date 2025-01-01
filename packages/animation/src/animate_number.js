@@ -5,19 +5,18 @@ export const animateNumber = ({
   from,
   to,
   // step = 0.0000001,// TODO
-  onprogress,
+  effect,
   ...props
 }) => {
   const numberAnimation = animate({
     ...props,
-    onprogress: () => {
-      const value = applyRatioToDiff(from, to, numberAnimation.ratio);
+    effect: (ratio) => {
+      const value = applyRatioToDiff(from, to, ratio);
       numberAnimation.value = value;
-      if (onprogress) {
-        onprogress(value);
+      if (effect) {
+        effect(value);
       }
     },
   });
-  numberAnimation.value = from;
   return numberAnimation;
 };
