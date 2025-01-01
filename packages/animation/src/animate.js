@@ -36,7 +36,7 @@ export const animate = ({
         });
         animation.progressRatio = 0;
         animation.ratio = 0;
-        animation.effect(animation.ratio);
+        animation.effect(animation.ratio, animation);
         onstart();
       }
       animationFrame = requestAnimationFrame(next);
@@ -58,14 +58,14 @@ export const animate = ({
       cancelAnimationFrame(animationFrame);
       previousStepMs = null;
       animation.progressRatio = animation.ratio = 0;
-      animation.effect(animation.ratio);
+      animation.effect(animation.ratio, animation);
       animation.oncancel();
     },
   };
   const setProgress = (progressRatio) => {
     animation.progressRatio = progressRatio;
     animation.ratio = easing ? easing(progressRatio) : progressRatio;
-    animation.effect(animation.ratio);
+    animation.effect(animation.ratio, animation);
     animation.onprogress();
   };
   const stepMinDuration = fps ? 1000 / fps : 0;

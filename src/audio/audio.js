@@ -9,8 +9,7 @@
 
 import { effect } from "@preact/signals";
 import { animateNumber, EASING } from "animation";
-import { mutedSignal } from "./sound_signals.js";
-import { pausedSignal } from "/signals.js";
+import { audioPausedSignal, mutedSignal } from "./audio_signals.js";
 
 let debug = true;
 let debugFade = false;
@@ -25,6 +24,7 @@ const createAudio = ({
   restartOnPlay,
   muted = mutedSignal.value,
   fading,
+  fadingDuration = 500,
 }) => {
   const audio = new Audio(url);
   audio.volume = volume;
@@ -56,16 +56,18 @@ const createAudio = ({
     if (!canPlaySound) {
       return null;
     }
-    // if (!audio.paused) {
-    //   return null;
-    // }
+    if (!audio.paused) {
+      return null;
+    }
     if (restartOnPlay) {
       audio.currentTime = startTime;
     }
     if (fading) {
       audio.volume = 0;
       audio.play();
-      const volumeFadein = fadeInVolume(audio, volume);
+      const volumeFadein = fadeInVolume(audio, volume, {
+        duration: fadingDuration,
+      });
       return volumeFadein.finished;
     }
     audio.play();
@@ -75,15 +77,16 @@ const createAudio = ({
     if (!playRequested) {
       return null;
     }
-    // if (audio.paused) {
-    //   return null;
-    // }
     playRequested = false;
+    if (audio.paused) {
+      return null;
+    }
     if (fading) {
       const volumeFadeout = fadeOutVolume(audio, {
         onfinish: () => {
           audio.pause();
         },
+        duration: fadingDuration,
       });
       return volumeFadeout.finished;
     }
@@ -234,16 +237,16 @@ export const music = (
   };
 
   effect(() => {
-    const gamePaused = pausedSignal.value;
+    const audioPaused = audioPausedSignal.value;
     if (playWhilePaused) {
-      if (gamePaused) {
+      if (audioPaused) {
         music.play();
       } else {
         music.pause();
       }
     } else {
       // eslint-disable-next-line no-lonely-if
-      if (gamePaused) {
+      if (audioPaused) {
         console.log("pausing", music.src);
         music.pause(PAUSED_BY_GAME);
       } else if (musicPausedByGame && music && playRequested) {
@@ -255,14 +258,14 @@ export const music = (
   return music;
 };
 
-const pauseMusicUrl = import.meta.resolve("./pause.mp3");
-music(
-  {
-    url: pauseMusicUrl,
-    volume: 0.2,
-    restartOnPlay: true,
-  },
-  {
-    playWhilePaused: true,
-  },
-);
+// const pauseMusicUrl = import.meta.resolve("./pause.mp3");
+// music(
+//   {
+//     url: pauseMusicUrl,
+//     volume: 0.2,
+//     restartOnPlay: true,
+//   },
+//   {
+//     playWhilePaused: true,
+//   },
+// );

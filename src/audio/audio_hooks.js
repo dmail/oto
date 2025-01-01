@@ -12,25 +12,88 @@ export const useAudio = (media) => {
   return [play, pause];
 };
 
-export const useVolume = (media) => {
+export const useMuted = (media) => {
   const { audio } = media;
-  const volumechangeRef = useRef(true);
-  const [volume, setVolume] = useState(audio.volume);
+  const cleanupRef = useRef(null);
+  const [muted, setMuted] = useState(audio.muted);
 
-  if (volumechangeRef.current === null) {
+  if (cleanupRef.current === null) {
     const volumechange = () => {
-      setVolume(audio.volume);
+      setMuted(audio.muted);
     };
     audio.addEventListener("volumechange", volumechange);
-    volumechangeRef.current = volumechange;
+    cleanupRef.current = () => {
+      audio.removeEventListener("volumechange", volumechange);
+    };
   }
 
   useEffect(() => {
     return () => {
-      audio.removeEventListener("volumechange", volumechangeRef.current);
-      volumechangeRef.current = null;
+      cleanupRef.current();
+      cleanupRef.current = null;
+    };
+  }, []);
+
+  return muted;
+};
+
+export const useVolume = (media) => {
+  const { audio } = media;
+  const cleanupRef = useRef(null);
+  const [volume, setVolume] = useState(audio.volume);
+
+  if (cleanupRef.current === null) {
+    const volumechange = () => {
+      setVolume(audio.volume);
+    };
+    audio.addEventListener("volumechange", volumechange);
+    cleanupRef.current = () => {
+      audio.removeEventListener("volumechange", volumechange);
+    };
+  }
+
+  useEffect(() => {
+    return () => {
+      cleanupRef.current();
+      cleanupRef.current = null;
     };
   }, []);
 
   return volume;
+};
+
+export const usePlaybackState = (media) => {
+  const { audio } = media;
+  const [playbackState, setPlaybackState] = useState(getPlaybackState(audio));
+  const cleanupRef = useRef(null);
+
+  if (cleanupRef.current === null) {
+    const onplay = () => {
+      setPlaybackState("playing");
+    };
+    const onpause = () => {
+      setPlaybackState("paused");
+    };
+    audio.addEventListener("play", onplay);
+    audio.addEventListener("pause", onpause);
+    cleanupRef.current = () => {
+      audio.removeEventListener("play", onplay);
+      audio.removeEventListener("pause", onpause);
+    };
+  }
+
+  useEffect(() => {
+    return () => {
+      cleanupRef.current();
+      cleanupRef.current = null;
+    };
+  }, []);
+
+  return playbackState;
+};
+const getPlaybackState = (audio) => {
+  if (audio.paused) {
+    return "paused";
+  }
+  return "playing";
 };

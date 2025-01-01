@@ -58,3 +58,11 @@ effect(() => {
   const innerMuted = innerMutedSignal.value;
   localStorage.setItem("muted", JSON.stringify(innerMuted));
 });
+
+export const audioPausedSignal = signal(false);
+export const pause = () => {
+  audioPausedSignal.value = true;
+};
+export const play = () => {
+  audioPausedSignal.value = false;
+};
