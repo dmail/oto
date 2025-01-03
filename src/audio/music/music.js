@@ -141,7 +141,7 @@ export const music = ({
     if (persistent) {
       volume = value;
     }
-    if (!volumeAnimation) {
+    if (!volumeAnimation || document.hidden) {
       volumeAbsolute = toVolume;
       updateVolume();
       return;
@@ -210,7 +210,7 @@ export const music = ({
     } else {
       currentMusic = null;
     }
-    if (!fadeOut) {
+    if (!fadeOut || document.hidden) {
       audio.pause();
       return;
     }
@@ -246,7 +246,7 @@ export const music = ({
       }
     }
     currentMusic = musicObject;
-    if (!fadeIn) {
+    if (!fadeIn || document.hidden) {
       audio.play();
       return;
     }
