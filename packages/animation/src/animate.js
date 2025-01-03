@@ -8,8 +8,23 @@ export const animate = ({
   onfinish = () => {},
   oncancel = () => {},
   loop = false,
+  canPlayWhenDocumentIsHidden,
 }) => {
-  let animationFrame;
+  const requestNextFrame = canPlayWhenDocumentIsHidden
+    ? (callback) => {
+        const timeout = setTimeout(callback, 1000 / 60);
+        return () => {
+          clearTimeout(timeout);
+        };
+      }
+    : (callback) => {
+        requestAnimationFrame(callback);
+        return () => {
+          cancelAnimationFrame(callback);
+        };
+      };
+
+  let cancelNextFrame;
   let resolveFinished;
   let previousStepMs;
   let msRemaining;
@@ -39,23 +54,23 @@ export const animate = ({
         animation.effect(animation.ratio, animation);
         onstart();
       }
-      animationFrame = requestAnimationFrame(next);
+      cancelNextFrame = requestNextFrame(next);
     },
     pause: () => {
       if (animation.playState === "paused") return;
-      cancelAnimationFrame(animationFrame);
+      cancelNextFrame();
       animation.playState = "paused";
     },
     finish: () => {
       if (animation.playState === "finished") return;
-      cancelAnimationFrame(animationFrame);
+      cancelNextFrame();
       setProgress(1);
       animation.playState = "finished";
       resolveFinished();
       animation.onfinish();
     },
     cancel: () => {
-      cancelAnimationFrame(animationFrame);
+      cancelNextFrame();
       previousStepMs = null;
       animation.progressRatio = animation.ratio = 0;
       animation.effect(animation.ratio, animation);
@@ -89,7 +104,7 @@ export const animate = ({
       return;
     }
     if (msEllapsedSincePreviousStep < stepMinDuration) {
-      animationFrame = requestAnimationFrame(next);
+      cancelNextFrame = requestNextFrame(next);
       return;
     }
     previousStepMs = stepMs;
@@ -97,7 +112,7 @@ export const animate = ({
     setProgress(
       animation.progressRatio + msEllapsedSincePreviousStep / duration,
     );
-    animationFrame = requestAnimationFrame(next);
+    cancelNextFrame = requestNextFrame(next);
   };
   animation.play();
   return animation;

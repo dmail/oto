@@ -141,7 +141,7 @@ export const music = ({
     if (persistent) {
       volume = value;
     }
-    if (!volumeAnimation || document.hidden) {
+    if (!volumeAnimation) {
       volumeAbsolute = toVolume;
       updateVolume();
       return;
@@ -165,6 +165,9 @@ export const music = ({
   }) => {
     cancelVolumeAnimation();
     const volumeAnimation = animateNumber({
+      // when doc is hidden the browser won't let the animation run
+      // and onfinish() won't be called -> audio won't pause
+      canPlayWhenDocumentIsHidden: true,
       from,
       to,
       duration,
@@ -210,7 +213,7 @@ export const music = ({
     } else {
       currentMusic = null;
     }
-    if (!fadeOut || document.hidden) {
+    if (!fadeOut) {
       audio.pause();
       return;
     }
@@ -246,7 +249,7 @@ export const music = ({
       }
     }
     currentMusic = musicObject;
-    if (!fadeIn || document.hidden) {
+    if (!fadeIn) {
       audio.play();
       return;
     }
