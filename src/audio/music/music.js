@@ -71,6 +71,7 @@ export const music = ({
   restartOnPlay,
   canPlayWhilePaused,
   muted,
+  volumeAnimation = true,
   fadeIn = true,
   fadeOut = true,
   fadeInDuration = 600,
@@ -123,18 +124,72 @@ export const music = ({
   }
 
   let animatedVolume;
+  let volumeRelative;
+  let volumeAbsolute;
   const updateVolume = () => {
-    const currentVolume =
-      animatedVolume === undefined ? volume : animatedVolume;
-    audio.volume = currentVolume * musicGlobalVolume;
+    volumeRelative = animatedVolume === undefined ? volume : animatedVolume;
+    volumeAbsolute = volumeRelative * musicGlobalVolume;
+    audio.volume = volumeAbsolute;
   };
   const setAnimatedVolume = (value) => {
     animatedVolume = value;
     updateVolume();
   };
   const setVolume = (value) => {
-    volume = value;
-    updateVolume();
+    if (!volumeAnimation) {
+      volume = value;
+      updateVolume();
+      return;
+    }
+    const fromVolume = volumeRelative;
+    const toVolume = value;
+    animateVolume({
+      persisent: true,
+      from: fromVolume,
+      to: toVolume,
+      easing:
+        toVolume > fromVolume ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
+      duration: 500,
+    });
+  };
+  let cancelVolumeAnimation = () => {};
+  const animateVolume = ({
+    persistent, // equivalent of fill: "fowards" for js animations
+    from,
+    to,
+    easing = EASING.EASE_IN_EXPO,
+    duration = 500,
+    ...props
+  }) => {
+    cancelVolumeAnimation();
+    if (persistent) {
+      volume = to;
+    }
+    const volumeAnimation = animateNumber({
+      from,
+      to,
+      duration,
+      easing,
+      effect: (volumeValue) => {
+        setAnimatedVolume(volumeValue);
+      },
+      ...props,
+    });
+    cancelVolumeAnimation = () => {
+      animatedVolume = undefined;
+      if (persistent) {
+        volume = to;
+      }
+      volumeAnimation.cancel();
+    };
+    volumeAnimation.finished.then(() => {
+      animatedVolume = undefined;
+      if (persistent) {
+        volume = to;
+      }
+      cancelVolumeAnimation = () => {};
+    });
+    return volumeAnimation;
   };
   updateVolume();
   musicGlobalVolumeChangeCallbackSet.add(() => {
@@ -142,8 +197,6 @@ export const music = ({
   });
 
   const reasonToBePausedSet = new Set(globalReasonToBePausedSet);
-  let cancelFadeIn = () => {};
-  let cancelFadeOut = () => {};
   const addReasonToBePaused = (reason) => {
     reasonToBePausedSet.add(reason);
     if (musicObject.onReasonToBePausedChange) {
@@ -168,21 +221,14 @@ export const music = ({
       audio.pause();
       return;
     }
-    cancelFadeIn();
-    cancelFadeOut();
-    const volumeFadeout = fadeOutVolume(setAnimatedVolume, volume, {
+    animateVolume({
+      from: volume,
+      to: 0,
+      duration: fadeOutDuration,
+      easing: EASING.EASE_IN_EXPO,
       onfinish: () => {
         audio.pause();
       },
-      duration: fadeOutDuration,
-    });
-    cancelFadeOut = () => {
-      animatedVolume = undefined;
-      volumeFadeout.cancel();
-    };
-    volumeFadeout.finished.then(() => {
-      animatedVolume = undefined;
-      cancelFadeOut = () => {};
     });
   };
   const removeReasonToBePaused = (reason) => {
@@ -211,20 +257,13 @@ export const music = ({
       audio.play();
       return;
     }
-    cancelFadeIn();
-    cancelFadeOut();
     setAnimatedVolume(0);
     audio.play();
-    const volumeFadein = fadeInVolume(setAnimatedVolume, volume, {
+    animateVolume({
+      from: 0,
+      to: volume,
       duration: fadeInDuration,
-    });
-    cancelFadeIn = () => {
-      animatedVolume = undefined;
-      volumeFadein.cancel();
-    };
-    volumeFadein.finished.then(() => {
-      animatedVolume = undefined;
-      cancelFadeIn = () => {};
+      easing: EASING.EASE_OUT_EXPO,
     });
   };
   const pause = () => {
@@ -264,31 +303,6 @@ export const music = ({
   });
   musicSet.add(musicObject);
   return musicObject;
-};
-
-const fadeInVolume = (setVolume, toVolume, props) => {
-  return animateNumber({
-    from: 0,
-    to: toVolume,
-    duration: 500,
-    easing: EASING.EASE_IN_EXPO,
-    effect: (volume) => {
-      setVolume(volume);
-    },
-    ...props,
-  });
-};
-const fadeOutVolume = (setVolume, fromVolume, props) => {
-  return animateNumber({
-    from: fromVolume,
-    to: 0,
-    duration: 500,
-    easing: EASING.EASE_OUT_EXPO,
-    effect: (volume) => {
-      setVolume(volume);
-    },
-    ...props,
-  });
 };
 
 export const muteMusic = () => {
