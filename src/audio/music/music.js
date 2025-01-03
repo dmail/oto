@@ -123,28 +123,31 @@ export const music = ({
     mute();
   }
 
-  let animatedVolume;
-  let volumeRelative;
-  let volumeAbsolute;
+  let volumeAnimated;
+  let volumeAbsolute = volume * musicGlobalVolume;
   const updateVolume = () => {
-    volumeRelative = animatedVolume === undefined ? volume : animatedVolume;
-    volumeAbsolute = volumeRelative * musicGlobalVolume;
+    volumeAbsolute =
+      volumeAnimated === undefined ? volumeAbsolute : volumeAnimated;
     audio.volume = volumeAbsolute;
   };
   const setAnimatedVolume = (value) => {
-    animatedVolume = value;
+    volumeAnimated = value;
     updateVolume();
   };
-  const setVolume = (value) => {
-    if (!volumeAnimation) {
+  const setVolume = (value, { persistent = true } = {}) => {
+    const fromVolume = volumeAbsolute;
+    const toVolume = value * musicGlobalVolume;
+
+    if (persistent) {
       volume = value;
+    }
+    if (!volumeAnimation) {
+      volumeAbsolute = toVolume;
       updateVolume();
       return;
     }
-    const fromVolume = volumeRelative;
-    const toVolume = value;
     animateVolume({
-      persisent: true,
+      persistent,
       from: fromVolume,
       to: toVolume,
       easing:
@@ -154,7 +157,6 @@ export const music = ({
   };
   let cancelVolumeAnimation = () => {};
   const animateVolume = ({
-    persistent, // equivalent of fill: "fowards" for js animations
     from,
     to,
     easing = EASING.EASE_IN_EXPO,
@@ -162,9 +164,6 @@ export const music = ({
     ...props
   }) => {
     cancelVolumeAnimation();
-    if (persistent) {
-      volume = to;
-    }
     const volumeAnimation = animateNumber({
       from,
       to,
@@ -176,24 +175,18 @@ export const music = ({
       ...props,
     });
     cancelVolumeAnimation = () => {
-      animatedVolume = undefined;
-      if (persistent) {
-        volume = to;
-      }
+      volumeAnimated = undefined;
       volumeAnimation.cancel();
     };
     volumeAnimation.finished.then(() => {
-      animatedVolume = undefined;
-      if (persistent) {
-        volume = to;
-      }
+      volumeAnimated = undefined;
       cancelVolumeAnimation = () => {};
     });
     return volumeAnimation;
   };
   updateVolume();
   musicGlobalVolumeChangeCallbackSet.add(() => {
-    updateVolume();
+    setVolume(volume, { persistent: false });
   });
 
   const reasonToBePausedSet = new Set(globalReasonToBePausedSet);
@@ -222,7 +215,7 @@ export const music = ({
       return;
     }
     animateVolume({
-      from: volume,
+      from: volume * musicGlobalVolume,
       to: 0,
       duration: fadeOutDuration,
       easing: EASING.EASE_IN_EXPO,
@@ -261,7 +254,7 @@ export const music = ({
     audio.play();
     animateVolume({
       from: 0,
-      to: volume,
+      to: volume * musicGlobalVolume,
       duration: fadeInDuration,
       easing: EASING.EASE_OUT_EXPO,
     });
