@@ -4,14 +4,18 @@ import {
   applyGamePlayingEffectOnAudio,
 } from "/audio/audio.js";
 
+const reasonsToBePausedSet = new Set();
+const REASON_DOCUMENT_HIDDEN = "document_hidden";
+const REASON_EXPLICIT = "explicitely_requested";
+
 export const pausedSignal = signal(true);
 export const pause = () => {
-  pausedSignal.value = true;
+  addReasonToBePaused(REASON_EXPLICIT);
 };
 export const play = () => {
-  pausedSignal.value = false;
+  removeReasonToBePaused(REASON_EXPLICIT);
+  removeReasonToBePaused(REASON_DOCUMENT_HIDDEN);
 };
-
 effect(() => {
   const gamePaused = pausedSignal.value;
   if (gamePaused) {
@@ -19,4 +23,24 @@ effect(() => {
   } else {
     applyGamePlayingEffectOnAudio();
   }
+});
+
+const addReasonToBePaused = (reason) => {
+  reasonsToBePausedSet.add(reason);
+  pausedSignal.value = true;
+};
+const removeReasonToBePaused = (reason) => {
+  reasonsToBePausedSet.delete(reason);
+  if (reasonsToBePausedSet.size === 0) {
+    pausedSignal.value = false;
+  }
+};
+const pauseWhenDocumentIsHidden = () => {
+  if (document.hidden) {
+    addReasonToBePaused(REASON_DOCUMENT_HIDDEN);
+  }
+};
+pauseWhenDocumentIsHidden();
+document.addEventListener("visibilitychange", () => {
+  pauseWhenDocumentIsHidden();
 });
