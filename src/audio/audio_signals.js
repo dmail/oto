@@ -1,5 +1,5 @@
 import { effect, signal } from "@preact/signals";
-import { muteMusic, unmuteMusic } from "./music/music.js";
+import { muteAllMusics, unmuteAllMusics } from "./music/music.js";
 import { muteSounds, unmuteSounds } from "./sound/sound.js";
 
 const localStorageItem = localStorage.getItem("muted");
@@ -18,10 +18,10 @@ export const unmute = () => {
 effect(() => {
   const muted = mutedSignal.value;
   if (muted) {
-    muteMusic();
+    muteAllMusics();
     muteSounds();
   } else {
-    unmuteMusic();
+    unmuteAllMusics();
     unmuteSounds();
   }
   localStorage.setItem("muted", JSON.stringify(muted));

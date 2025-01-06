@@ -1,15 +1,17 @@
-import { useState } from "preact/hooks";
-import { pauseMusic, playMusic } from "./music/music.js";
+import {
+  pauseAllMusics,
+  playAllMusics,
+  useMusicsAllPaused,
+} from "./music/music.js";
 import { Box } from "/components/box/box.jsx";
 
 export const ButtonPlayPause = () => {
-  const [paused, pausedSetter] = useState(false);
-  if (paused) {
+  const musicsAllPaused = useMusicsAllPaused();
+  if (musicsAllPaused) {
     return (
       <Box.button
         onClick={() => {
-          playMusic();
-          pausedSetter(false);
+          playAllMusics();
         }}
         width="32"
       >
@@ -20,8 +22,7 @@ export const ButtonPlayPause = () => {
   return (
     <Box.button
       onClick={() => {
-        pauseMusic();
-        pausedSetter(true);
+        pauseAllMusics();
       }}
       width="32"
     >
