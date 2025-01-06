@@ -84,16 +84,8 @@ export const Fight = () => {
   const decreaseOpponentHp = useCallback((value) => {
     opponentHpSetter((hp) => hp - value);
   }, []);
-  useEffect(() => {
-    if (opponentHp <= 0) {
-      opponentDieSound.play();
-      (async () => {
-        await oponentRef.current.erase();
-        await new Promise((resolve) => setTimeout(resolve, 400));
-        victoryMusic.play();
-      })();
-    }
-  }, [opponentHp]);
+  const opponentIsDead = opponentHp <= 0;
+  const fightIsOver = opponentIsDead;
   const opponentAbilitiesBase = opponentAbilitiesSignal.value;
   const opponentStates = opponentStatesSignal.value;
   const opponentStateKey = opponentStates
@@ -204,20 +196,44 @@ export const Fight = () => {
       oponentRef.current.displayDamage(damage),
       moveBackToPositionPromise,
     ]);
-    decreaseOpponentHp(damage);
+    return {
+      damage,
+    };
   };
-  const startTurn = async () => {
+  const performTurn = async ({ skipHero } = {}) => {
     turnStateSetter("running");
-    if (opponentSpeed > heroSpeed) {
-      await performOpponentTurn();
-      await performHeroTurn();
-      turnStateSetter("");
-      return;
+    if (!skipHero) {
+      const { damage } = await performHeroTurn();
+      const opponentHpNext = opponentHp - damage;
+      if (opponentHpNext <= 0) {
+        opponentDieSound.play();
+        await oponentRef.current.erase();
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        victoryMusic.play();
+        decreaseOpponentHp(damage);
+        turnStateSetter("");
+        return;
+      }
+      decreaseOpponentHp(damage);
     }
-    await performHeroTurn();
     await performOpponentTurn();
     turnStateSetter("");
   };
+
+  const firstTurnRef = useRef(false);
+  useEffect(() => {
+    if (gamePaused) {
+      return;
+    }
+    if (firstTurnRef.current) {
+      return;
+    }
+    firstTurnRef.current = true;
+    if (opponentSpeed <= heroSpeed) {
+      return;
+    }
+    performTurn({ skipHero: true });
+  }, [gamePaused, opponentSpeed, heroSpeed]);
 
   return (
     <>
@@ -230,6 +246,7 @@ export const Fight = () => {
           <Opponent
             ref={oponentRef}
             turnState={turnState}
+            isDead={opponentIsDead}
             name={opponentName}
             imageUrl={opponentImage.url}
             imageTransparentColor={opponentImage.transparentColor}
@@ -238,7 +255,7 @@ export const Fight = () => {
             imageWidth={opponentImage.width}
             imageHeight={opponentImage.height}
             onSelect={() => {
-              startTurn();
+              performTurn();
             }}
           />
         </Box>
@@ -253,7 +270,7 @@ export const Fight = () => {
             height="95%"
             contentX="center"
             contentY="end"
-            hidden={turnState !== ""}
+            hidden={turnState !== "" || fightIsOver}
           >
             <MenuFight
               onAttack={() => {

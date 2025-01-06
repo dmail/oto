@@ -13,6 +13,7 @@ import { Digits } from "/components/text/digits.jsx";
 export const Opponent = forwardRef(
   (
     {
+      isDead,
       turnState,
       name,
       imageUrl,
@@ -89,7 +90,7 @@ export const Opponent = forwardRef(
         <Box name="top_ui" width="100%" innerSpacing="0.5em">
           <Message
             name="opponent_name"
-            invisible={turnState !== ""}
+            hidden={turnState !== "" || isDead}
             innerSpacing="0.7em"
           >
             {name}
@@ -121,6 +122,7 @@ export const Opponent = forwardRef(
             y={imageY}
             width={imageWidth}
             height={imageHeight}
+            hidden={isDead}
           />
           <Box
             name="weapon_box"

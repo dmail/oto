@@ -307,7 +307,7 @@ export const music = ({
         },
       });
     };
-    const handleShouldBePlaying = () => {
+    const handleShouldBePlaying = async () => {
       if (volumeFadeoutThenPauseAnimation) {
         volumeFadeoutThenPauseAnimation.cancel();
       }
@@ -318,7 +318,9 @@ export const music = ({
         audio.currentTime = startTime;
       }
       if (!fadeIn) {
-        audio.play();
+        try {
+          await audio.play();
+        } catch {}
         return;
       }
       musicObject.animateVolume({
@@ -326,9 +328,10 @@ export const music = ({
         ...fadeIn,
         from: 0,
         to: undefined,
-        onstart: () => {
-          console.log("play on start");
-          audio.play();
+        onstart: async () => {
+          try {
+            await audio.play();
+          } catch {}
         },
       });
     };
