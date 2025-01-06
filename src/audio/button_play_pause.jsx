@@ -13,7 +13,7 @@ export const ButtonPlayPause = () => {
         }}
         width="32"
       >
-        <PauseIconSvg />
+        <PlayIconSvg />
       </Box.button>
     );
   }
@@ -25,7 +25,7 @@ export const ButtonPlayPause = () => {
       }}
       width="32"
     >
-      <PlayIconSvg />
+      <PauseIconSvg />
     </Box.button>
   );
 };
