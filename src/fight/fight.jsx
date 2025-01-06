@@ -65,11 +65,11 @@ const battleMusic = music({
   name: "battle",
   url: battleMusicUrl,
 });
-const victoryMusic = music({
-  name: "victory",
-  url: victoryMusicUrl,
-  volume: 0.5,
-});
+// const victoryMusic = music({
+//   name: "victory",
+//   url: victoryMusicUrl,
+//   volume: 0.5,
+// });
 
 export const Fight = () => {
   const dialogRef = useRef();

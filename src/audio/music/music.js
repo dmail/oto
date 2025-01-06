@@ -1,7 +1,7 @@
 import { animateNumber, EASING } from "animation";
-import { userActivationFacade } from "../user_activation.js";
+import { userActivationFacade } from "/utils/user_activation.js";
 
-let debug = true;
+let debug = false;
 
 const musicSet = new Set();
 const globalReasonToBeMutedSet = new Set();
@@ -224,7 +224,7 @@ export const music = ({
       from: volume * musicGlobalVolume,
       to: 0,
       duration: fadeOutDuration,
-      easing: EASING.EASE_IN_EXPO,
+      easing: EASING.EASE_OUT_EXPO,
       onfinish: () => {
         audio.pause();
       },
@@ -265,7 +265,7 @@ export const music = ({
       from: 0,
       to: volume * musicGlobalVolume,
       duration: fadeInDuration,
-      easing: EASING.EASE_OUT_EXPO,
+      easing: EASING.EASE_IN_EXPO,
     });
   };
   const pause = () => {
