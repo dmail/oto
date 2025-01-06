@@ -3,6 +3,7 @@ import { animateNumber, EASING } from "animation";
 import { addToSetSignal, deleteFromSetSignal } from "/utils/signal_and_set.js";
 import { userActivationFacade } from "/utils/user_activation.js";
 
+const NO_OP = () => {};
 const musicSet = new Set();
 
 // global volume
@@ -38,7 +39,7 @@ export const setMusicGlobalVolume = (value, { animate = true } = {}) => {
     },
   });
 };
-let cancelGlobalVolumeAnimation = () => {};
+let cancelGlobalVolumeAnimation = NO_OP;
 const animateMusicGlobalVolume = (props) => {
   cancelGlobalVolumeAnimation();
   const globalVolumeAnimation = animateNumber({
@@ -49,17 +50,19 @@ const animateMusicGlobalVolume = (props) => {
     effect: (volumeValue) => {
       musicGlobalVolumeAnimatedSignal.value = volumeValue;
     },
-    onfinish: () => {
-      musicGlobalVolumeAnimatedSignal.value = undefined;
-      cancelGlobalVolumeAnimation = () => {};
-    },
     oncancel: () => {
       musicGlobalVolumeAnimatedSignal.value = undefined;
+      cancelGlobalVolumeAnimation = NO_OP;
+    },
+    onfinish: () => {
+      musicGlobalVolumeAnimatedSignal.value = undefined;
+      cancelGlobalVolumeAnimation = NO_OP;
+      props.onfinish?.();
     },
   });
   cancelGlobalVolumeAnimation = () => {
     globalVolumeAnimation.cancel();
-    cancelGlobalVolumeAnimation = () => {};
+    cancelGlobalVolumeAnimation = NO_OP;
   };
   return globalVolumeAnimation;
 };
@@ -117,8 +120,9 @@ export const playAllMusics = () => {
 };
 
 const REASON_OTHER_MUSIC_PLAYING = "other_music_playing";
-let currentMusic = null;
-let musicPausedByOther = null;
+let activeMusic = null;
+let previousActiveMusic = null;
+let playOneAtATime = true;
 const fadeInDefaults = {
   duration: 600,
   easing: EASING.EASE_IN_EXPO,
@@ -190,7 +194,7 @@ export const music = ({
       },
     });
   };
-  let cancelVolumeAnimation = () => {};
+  let cancelVolumeAnimation = NO_OP;
   const animateVolume = (props) => {
     cancelVolumeAnimation();
     const volumeAnimation = animateNumber({
@@ -204,11 +208,13 @@ export const music = ({
       oncancel: () => {
         volumeAnimatedSignal.value = undefined;
         volumeAnimation.cancel();
-        cancelVolumeAnimation = () => {};
+        cancelVolumeAnimation = NO_OP;
+        props.oncancel?.();
       },
       onfinish: () => {
         volumeAnimatedSignal.value = undefined;
-        cancelVolumeAnimation = () => {};
+        cancelVolumeAnimation = NO_OP;
+        props.onfinish?.();
       },
     });
     return volumeAnimation;
@@ -242,58 +248,6 @@ export const music = ({
   }
 
   const reasonToBePausedSetSignal = signal(new Set());
-  const doPause = (reasonSet) => {
-    if (
-      currentMusic === musicObject &&
-      musicPausedByOther &&
-      reasonSet.size === 1 &&
-      reasonSet.has(REASON_PAUSED_VIA_METHOD)
-    ) {
-      currentMusic = null;
-      const toPlay = musicPausedByOther;
-      musicPausedByOther = null;
-      toPlay.removeReasonToBePaused(REASON_OTHER_MUSIC_PLAYING);
-    } else {
-      currentMusic = null;
-    }
-    if (!fadeOut) {
-      audio.pause();
-      return;
-    }
-    animateVolume({
-      ...fadeOutDefaults,
-      ...fadeOut,
-      from: volume,
-      to: 0,
-      onfinish: () => {
-        audio.pause();
-      },
-    });
-  };
-  const doPlay = () => {
-    if (restartOnPlay) {
-      audio.currentTime = startTime;
-    }
-    if (currentMusic) {
-      const musicStopped = currentMusic;
-      currentMusic.addReasonToBePaused(REASON_OTHER_MUSIC_PLAYING);
-      musicPausedByOther = musicStopped;
-    }
-    currentMusic = musicObject;
-    if (!fadeIn) {
-      audio.play();
-      return;
-    }
-    animateVolume({
-      ...fadeInDefaults,
-      ...fadeIn,
-      from: 0,
-      to: volume * musicGlobalVolumeSignal.value,
-      onstart: () => {
-        audio.play();
-      },
-    });
-  };
   effect(() => {
     const globalReasonToBePausedSet = globalReasonToBePausedSetSignal.value;
     const reasonToBePausedSet = reasonToBePausedSetSignal.value;
@@ -301,17 +255,43 @@ export const music = ({
       if (audio.paused) {
         return;
       }
-      const reasonUnionSet = new Set([
-        ...globalReasonToBePausedSet,
-        ...reasonToBePausedSet,
-      ]);
-      doPause(reasonUnionSet);
+      if (!fadeOut) {
+        audio.pause();
+        return;
+      }
+      animateVolume({
+        ...fadeOutDefaults,
+        ...fadeOut,
+        from: volumeCurrentSignal.peek(),
+        to: 0,
+        onfinish: () => {
+          console.log("paused after fadeout");
+          audio.pause();
+        },
+      });
       return;
     }
     if (!audio.paused) {
       return;
     }
-    doPlay();
+    if (restartOnPlay) {
+      audio.currentTime = startTime;
+    }
+    if (!fadeIn) {
+      console.log("play nofadein");
+      audio.play();
+      return;
+    }
+    animateVolume({
+      ...fadeInDefaults,
+      ...fadeIn,
+      from: 0,
+      to: volumeSignal.peek(),
+      onstart: () => {
+        console.log("fadein cause audio.play");
+        audio.play();
+      },
+    });
   });
   const addReasonToBePaused = (reason) => {
     addToSetSignal(reasonToBePausedSetSignal, reason);
@@ -322,13 +302,34 @@ export const music = ({
   const REASON_PAUSED_VIA_METHOD = "paused_via_method";
   const pause = () => {
     addReasonToBePaused(REASON_PAUSED_VIA_METHOD);
+    if (playOneAtATime) {
+      if (musicObject === activeMusic) {
+        activeMusic = null;
+        if (previousActiveMusic) {
+          const musicToReplay = previousActiveMusic;
+          previousActiveMusic = null;
+          musicToReplay.play();
+        }
+      } else if (musicObject === previousActiveMusic) {
+        previousActiveMusic = null;
+      }
+    }
   };
   const play = () => {
-    removeReasonToBePaused(REASON_PAUSED_VIA_METHOD);
+    if (playOneAtATime) {
+      if (activeMusic && activeMusic !== musicObject) {
+        const musicToReplace = activeMusic;
+        musicToReplace.addReasonToBePaused(REASON_OTHER_MUSIC_PLAYING);
+        previousActiveMusic = musicToReplace;
+      }
+      activeMusic = musicObject;
+    }
     removeReasonToBePaused(REASON_OTHER_MUSIC_PLAYING);
+    removeReasonToBePaused(REASON_PAUSED_VIA_METHOD);
   };
   pause();
   if (autoplay) {
+    console.log("play by autoplay");
     play();
   }
 
