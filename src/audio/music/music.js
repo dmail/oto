@@ -32,9 +32,10 @@ export const setMusicGlobalVolume = (value) => {
   if (debug) {
     console.log("set global volume to", value);
   }
+  let previousValue = musicGlobalVolume;
   musicGlobalVolume = value;
   for (const musicGlobalVolumeChangeCallback of musicGlobalVolumeChangeCallbackSet) {
-    musicGlobalVolumeChangeCallback();
+    musicGlobalVolumeChangeCallback(previousValue);
   }
 };
 
@@ -226,9 +227,6 @@ export const music = ({
       duration: fadeOutDuration,
       easing: EASING.EASE_OUT_EXPO,
       onfinish: () => {
-        audio.pause();
-      },
-      oncancel: () => {
         audio.pause();
       },
     });
