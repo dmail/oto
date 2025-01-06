@@ -3,6 +3,16 @@ import { animateNumber, EASING } from "animation";
 import { addToSetSignal, deleteFromSetSignal } from "/utils/signal_and_set.js";
 import { userActivationFacade } from "/utils/user_activation.js";
 
+let playOneAtATime = true;
+const fadeInDefaults = {
+  duration: 600,
+  easing: EASING.EASE_IN_EXPO,
+};
+const fadeOutDefaults = {
+  duration: 1500,
+  easing: EASING.EASE_OUT_EXPO,
+};
+
 const NO_OP = () => {};
 const musicSet = new Set();
 
@@ -121,15 +131,6 @@ export const playAllMusics = () => {
 const REASON_OTHER_MUSIC_PLAYING = "other_music_playing";
 let activeMusic = null;
 let previousActiveMusic = null;
-let playOneAtATime = false;
-const fadeInDefaults = {
-  duration: 600,
-  easing: EASING.EASE_IN_EXPO,
-};
-const fadeOutDefaults = {
-  duration: 800,
-  easing: EASING.EASE_OUT_EXPO,
-};
 export const music = ({
   name,
   url,
@@ -308,7 +309,7 @@ export const music = ({
     };
     const handleShouldBePlaying = () => {
       if (volumeFadeoutThenPauseAnimation) {
-        audio.pause();
+        volumeFadeoutThenPauseAnimation.cancel();
       }
       if (!audio.paused) {
         return;
