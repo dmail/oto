@@ -31,7 +31,7 @@ const getMusicGlobalVolume = () => {
   }
   return musicVolumeBase;
 };
-
+updateMusicGlobalVolume();
 export const applyGamePausedEffectOnAudio = () => {
   gameIsPaused = true;
   updateMusicGlobalVolume();
@@ -41,8 +41,6 @@ export const applyGamePlayingEffectOnAudio = () => {
   gameIsPaused = false;
   updateMusicGlobalVolume();
 };
-
-updateMusicGlobalVolume();
 
 const updateMusicWhenDocumentIsHidden = () => {
   if (document.hidden) {

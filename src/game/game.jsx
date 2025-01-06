@@ -1,6 +1,8 @@
 import { useLayoutEffect } from "preact/hooks";
 import gameStyleSheet from "./game.css" with { type: "css" };
-import { Box } from "/components/box/box.jsx";
+import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
+import { ButtonPlayPause } from "/audio/button_play_pause.jsx";
+import { Box, borderWithStroke } from "/components/box/box.jsx";
 import { Fight } from "/fight/fight.jsx";
 import { pause, play, useGamePaused } from "/game_pause/game_pause.js";
 import { PauseDialog } from "/game_pause/pause_dialog.jsx";
@@ -23,6 +25,20 @@ export const Game = () => {
   return (
     <div style="font-size: 16px;">
       <Box vertical name="screen" width="400" height="400">
+        <Box
+          name="top_hud"
+          width="100%"
+          height="10%"
+          backgroundColor="red"
+          border={borderWithStroke({
+            color: "white",
+            size: 2,
+            strokeColor: "black",
+          })}
+        >
+          <ButtonMuteUnmute />
+          <ButtonPlayPause />
+        </Box>
         <Fight />
         <PauseDialog visible={gamePaused} />
       </Box>

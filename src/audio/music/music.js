@@ -41,6 +41,9 @@ export const setMusicGlobalVolume = (value) => {
 export const addGlobalReasonToBePaused = (reason) => {
   globalReasonToBePausedSet.add(reason);
   for (const music of musicSet) {
+    if (music.canPlayWhilePaused) {
+      continue;
+    }
     music.addReasonToBePaused(reason);
   }
 };
@@ -225,6 +228,9 @@ export const music = ({
       onfinish: () => {
         audio.pause();
       },
+      oncancel: () => {
+        audio.pause();
+      },
     });
   };
   const removeReasonToBePaused = (reason) => {
@@ -308,17 +314,10 @@ export const unmuteMusic = () => {
   removeGlobalReasonToBeMuted(REASON_GLOBAL_CALL);
 };
 export const pauseMusic = () => {
-  for (const music of musicSet) {
-    if (music.canPlayWhilePaused) {
-      continue;
-    }
-    music.addReasonToBePaused(REASON_GLOBAL_CALL);
-  }
+  addGlobalReasonToBePaused(REASON_GLOBAL_CALL);
 };
 export const playMusic = () => {
-  for (const music of musicSet) {
-    music.removeReasonToBePaused(REASON_GLOBAL_CALL);
-  }
+  removeGlobalReasonToBePaused(REASON_GLOBAL_CALL);
 };
 
 // const pauseMusicUrl = import.meta.resolve("./pause.mp3");

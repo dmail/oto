@@ -9,7 +9,6 @@ import { Opponent } from "./oponent.jsx";
 import { SwordAIcon } from "./sword_a.jsx";
 import { taurus } from "./taurus.js";
 import { WhiteCurtain } from "./white_curtain.jsx";
-import { ButtonMuteUnmute } from "/audio/button_mute_unmute.jsx";
 import { music } from "/audio/music/music.js";
 import { sound } from "/audio/sound/sound.js";
 import { Box, borderWithStroke } from "/components/box/box.jsx";
@@ -222,19 +221,6 @@ export const Fight = () => {
 
   return (
     <>
-      <Box
-        name="top_hud"
-        width="100%"
-        height="10%"
-        backgroundColor="red"
-        border={borderWithStroke({
-          color: "white",
-          size: 2,
-          strokeColor: "black",
-        })}
-      >
-        <ButtonMuteUnmute />
-      </Box>
       <Box vertical name="game" width="100%" height="...">
         <Box name="background" absolute width="100%" height="100%">
           <MountainAndSkyBattleBackground />
