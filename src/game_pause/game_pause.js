@@ -9,6 +9,7 @@ const REASON_DOCUMENT_HIDDEN = "document_hidden";
 const REASON_EXPLICIT = "explicitely_requested";
 
 export const pausedSignal = signal(true);
+export const useGamePaused = () => pausedSignal.value;
 export const pause = () => {
   addReasonToBePaused(REASON_EXPLICIT);
 };

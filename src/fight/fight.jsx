@@ -2,7 +2,6 @@ import { computed, signal } from "@preact/signals";
 import { useBooleanState } from "hooks/use_boolean_state.js";
 import { useKeyEffect } from "hooks/use_key_effect.js";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-import { pausedSignal } from "../signals.js";
 import { Ally } from "./ally.jsx";
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { MenuFight } from "./menu_fight.jsx";
@@ -16,6 +15,7 @@ import { sound } from "/audio/sound/sound.js";
 import { Box, borderWithStroke } from "/components/box/box.jsx";
 import { DialogTextBox } from "/components/dialog_text_box/dialog_text_box.jsx";
 import { Lifebar } from "/components/lifebar/lifebar.jsx";
+import { useGamePaused } from "/game_pause/game_pause.js";
 
 // const fightStartSoundUrl = import.meta.resolve("../fight/fight_start.ogg");
 const battleMusicUrl = import.meta.resolve("../fight/battle_bg_a.mp3");
@@ -74,6 +74,7 @@ const victoryMusic = music({
 
 export const Fight = () => {
   const dialogRef = useRef();
+  const gamePaused = useGamePaused();
 
   const opponentName = opponentNameSignal.value;
   const opponentAttack = opponentAttackSignal.value;
@@ -270,7 +271,7 @@ export const Fight = () => {
           >
             <MenuFight
               onAttack={() => {
-                if (turnState === "" && !pausedSignal.value) {
+                if (turnState === "" && !gamePaused) {
                   turnStateSetter("player_is_selecting_target");
                 }
               }}

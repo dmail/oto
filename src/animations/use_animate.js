@@ -1,6 +1,5 @@
-import { useSignalEffect } from "@preact/signals";
 import { useCallback, useEffect, useRef } from "preact/hooks";
-import { pausedSignal } from "../signals.js";
+import { useGamePaused } from "/game_pause/game_pause.js";
 
 const noop = () => {};
 
@@ -11,6 +10,7 @@ export const useAnimate = ({
   onFinish = noop,
 }) => {
   const animationRef = useRef();
+  const gamePaused = useGamePaused();
 
   const play = useCallback(() => {
     if (animationRef.current) {
@@ -54,17 +54,16 @@ export const useAnimate = ({
     };
   }, [cancel]);
 
-  useSignalEffect(() => {
-    const paused = pausedSignal.value;
+  useEffect(() => {
     if (!animationRef.current) {
       return;
     }
-    if (paused) {
+    if (gamePaused) {
       pause();
     } else {
       play();
     }
-  });
+  }, [gamePaused]);
 
   return [play, pause, cancel];
 };

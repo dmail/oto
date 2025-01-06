@@ -1,11 +1,11 @@
-import { useSignalEffect } from "@preact/signals";
-import { useCallback, useRef, useState } from "preact/hooks";
-import { pausedSignal } from "../signals.js";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useGamePaused } from "/game_pause/game_pause.js";
 
 export const useFrame = (frames, { msBetweenFrames = 350, loop } = {}) => {
   const intervalRef = useRef();
   const frameIndexRef = useRef(0);
   const playStateRef = useRef("idle");
+  const gamePaused = useGamePaused();
   const [frame, frameSetter] = useState(frames[0]);
   const play = useCallback(() => {
     if (playStateRef.current === "running") {
@@ -38,14 +38,13 @@ export const useFrame = (frames, { msBetweenFrames = 350, loop } = {}) => {
     clearInterval(intervalRef.current);
   }, []);
 
-  useSignalEffect(() => {
-    const paused = pausedSignal.value;
-    if (paused) {
+  useEffect(() => {
+    if (gamePaused) {
       pause();
     } else {
       play();
     }
-  });
+  }, [gamePaused]);
 
   return [frame, play, pause];
 };

@@ -1,4 +1,4 @@
-import { pausedSignal, play } from "../signals.js";
+import { play } from "./game_pause.js";
 
 export const PauseDialog = ({ visible }) => {
   return (
@@ -19,7 +19,7 @@ export const PauseDialog = ({ visible }) => {
         play();
       }}
     >
-      <button disabled={!pausedSignal.value}>Play</button>
+      <button disabled={!visible}>Play</button>
     </div>
   );
 };
