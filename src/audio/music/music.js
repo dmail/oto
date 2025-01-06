@@ -282,35 +282,31 @@ export const music = ({
 
   init_paused: {
     let volumeFadeoutThenPauseAnimation = null;
-
-    const reasonToBePausedSetSignal = signal(new Set());
-    effect(() => {
-      const globalReasonToBePausedSet = globalReasonToBePausedSetSignal.value;
-      const reasonToBePausedSet = reasonToBePausedSetSignal.value;
-      if (globalReasonToBePausedSet.size > 0 || reasonToBePausedSet.size > 0) {
-        if (audio.paused) {
-          return;
-        }
-        if (!fadeOut) {
-          musicObject.cancelVolumeAnimation();
-          audio.pause();
-          return;
-        }
-        volumeFadeoutThenPauseAnimation = musicObject.animateVolume({
-          ...fadeOutDefaults,
-          ...fadeOut,
-          from: undefined,
-          to: 0,
-          oncancel: () => {
-            volumeFadeoutThenPauseAnimation = null;
-            audio.pause();
-          },
-          onfinish: () => {
-            volumeFadeoutThenPauseAnimation = null;
-            audio.pause();
-          },
-        });
+    const handleShouldBePaused = () => {
+      if (audio.paused) {
+        return;
       }
+      if (!fadeOut) {
+        audio.pause();
+        return;
+      }
+      // volume fadeout then pause
+      volumeFadeoutThenPauseAnimation = musicObject.animateVolume({
+        ...fadeOutDefaults,
+        ...fadeOut,
+        from: undefined,
+        to: 0,
+        oncancel: () => {
+          volumeFadeoutThenPauseAnimation = null;
+          audio.pause();
+        },
+        onfinish: () => {
+          volumeFadeoutThenPauseAnimation = null;
+          audio.pause();
+        },
+      });
+    };
+    const handleShouldBePlaying = () => {
       if (volumeFadeoutThenPauseAnimation) {
         audio.pause();
       }
@@ -321,7 +317,6 @@ export const music = ({
         audio.currentTime = startTime;
       }
       if (!fadeIn) {
-        musicObject.cancelVolumeAnimation();
         audio.play();
         return;
       }
@@ -335,6 +330,17 @@ export const music = ({
           audio.play();
         },
       });
+    };
+
+    const reasonToBePausedSetSignal = signal(new Set());
+    effect(() => {
+      const globalReasonToBePausedSet = globalReasonToBePausedSetSignal.value;
+      const reasonToBePausedSet = reasonToBePausedSetSignal.value;
+      if (globalReasonToBePausedSet.size > 0 || reasonToBePausedSet.size > 0) {
+        handleShouldBePaused();
+      } else {
+        handleShouldBePlaying();
+      }
     });
     const addReasonToBePaused = (reason) => {
       addToSetSignal(reasonToBePausedSetSignal, reason);
