@@ -5,6 +5,65 @@ import { userActivationFacade } from "/utils/user_activation.js";
 
 const musicSet = new Set();
 
+// global volume
+const musicGlobalVolumeSignal = signal(1);
+const musicGlobalVolumeAnimatedSignal = signal();
+const musicGlobalCurrentVolumeSignal = computed(() => {
+  const musicGlobalVolumeAnimated = musicGlobalVolumeAnimatedSignal.value;
+  const musicGlobalVolume = musicGlobalVolumeSignal.value;
+  const musicGlobalCurrentVolume =
+    musicGlobalVolumeAnimated === undefined
+      ? musicGlobalVolume
+      : musicGlobalVolumeAnimated;
+  return musicGlobalCurrentVolume;
+});
+export const useMusicGlobalVolume = () => {
+  return musicGlobalVolumeSignal.value;
+};
+export const setMusicGlobalVolume = (value, { animate = true } = {}) => {
+  cancelGlobalVolumeAnimation();
+  if (!animate) {
+    musicGlobalVolumeSignal.value = value;
+    return;
+  }
+  const from = musicGlobalVolumeSignal.value;
+  const to = value;
+  animateMusicGlobalVolume({
+    from,
+    to,
+    duration: 500,
+    easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
+    onstart: () => {
+      musicGlobalVolumeSignal.value = to;
+    },
+  });
+};
+let cancelGlobalVolumeAnimation = () => {};
+const animateMusicGlobalVolume = (props) => {
+  cancelGlobalVolumeAnimation();
+  const globalVolumeAnimation = animateNumber({
+    // when doc is hidden the browser won't let the animation run
+    // and onfinish() won't be called -> audio won't pause
+    canPlayWhenDocumentIsHidden: true,
+    ...props,
+    effect: (volumeValue) => {
+      musicGlobalVolumeAnimatedSignal.value = volumeValue;
+    },
+    onfinish: () => {
+      musicGlobalVolumeAnimatedSignal.value = undefined;
+      cancelGlobalVolumeAnimation = () => {};
+    },
+    oncancel: () => {
+      musicGlobalVolumeAnimatedSignal.value = undefined;
+    },
+  });
+  cancelGlobalVolumeAnimation = () => {
+    globalVolumeAnimation.cancel();
+    cancelGlobalVolumeAnimation = () => {};
+  };
+  return globalVolumeAnimation;
+};
+
 // muted/unmuted
 const globalReasonToBeMutedSetSignal = signal(new Set());
 export const useGlobalReasonToBeMutedSet = () => {
@@ -57,22 +116,9 @@ export const playAllMusics = () => {
   removeGlobalReasonToBePaused(REASON_ALL_MUSICS_PAUSED);
 };
 
-// global volume
-const musicGlobalVolumeSignal = signal(1);
-export const useMusicGlobalVolume = () => {
-  return musicGlobalVolumeSignal.value;
-};
-export const setMusicGlobalVolume = (value) => {
-  musicGlobalVolumeSignal.value = value;
-};
-// TODO: export a way to animate music global volume
-// so that the music follows
-
 const REASON_OTHER_MUSIC_PLAYING = "other_music_playing";
-
 let currentMusic = null;
 let musicPausedByOther = null;
-
 const fadeInDefaults = {
   duration: 600,
   easing: EASING.EASE_IN_EXPO,
@@ -112,23 +158,24 @@ export const music = ({
   const volumeAnimatedSignal = signal();
   const volumeSignal = signal(volume);
   const volumeCurrentSignal = computed(() => {
-    const volumeGlobal = musicGlobalVolumeSignal.value;
+    const musicGlobalCurrentVolume = musicGlobalCurrentVolumeSignal.value;
     const volumeAnimated = volumeAnimatedSignal.value;
     const volume = volumeSignal.value;
     const volumeToSet = volumeAnimated === undefined ? volume : volumeAnimated;
-    const volumeToSetResolved = volumeToSet * volumeGlobal;
+    const volumeToSetResolved = volumeToSet * musicGlobalCurrentVolume;
     return volumeToSetResolved;
   });
   effect(() => {
-    audio.volume = volumeCurrentSignal.value;
+    const volumeCurrent = volumeCurrentSignal.value;
+    audio.volume = volumeCurrent;
   });
   const setVolume = (
     value,
     { animated = volumeAnimation, duration = 500 } = {},
   ) => {
+    cancelVolumeAnimation();
     if (!animated) {
       volumeSignal.value = value;
-      volumeAnimatedSignal.value = undefined;
       return;
     }
     const from = volumeCurrentSignal.value;
@@ -138,6 +185,9 @@ export const music = ({
       to,
       duration,
       easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
+      onstart: () => {
+        volumeCurrentSignal.value = to;
+      },
     });
   };
   let cancelVolumeAnimation = () => {};
@@ -147,19 +197,19 @@ export const music = ({
       // when doc is hidden the browser won't let the animation run
       // and onfinish() won't be called -> audio won't pause
       canPlayWhenDocumentIsHidden: true,
+      ...props,
       effect: (volumeValue) => {
         volumeAnimatedSignal.value = volumeValue;
       },
-      ...props,
-    });
-    cancelVolumeAnimation = () => {
-      volumeAnimatedSignal.value = undefined;
-      volumeAnimation.cancel();
-      cancelVolumeAnimation = () => {};
-    };
-    volumeAnimation.finished.then(() => {
-      volumeAnimatedSignal.value = undefined;
-      cancelVolumeAnimation = () => {};
+      oncancel: () => {
+        volumeAnimatedSignal.value = undefined;
+        volumeAnimation.cancel();
+        cancelVolumeAnimation = () => {};
+      },
+      onfinish: () => {
+        volumeAnimatedSignal.value = undefined;
+        cancelVolumeAnimation = () => {};
+      },
     });
     return volumeAnimation;
   };
