@@ -38,18 +38,20 @@ export const sound = ({
     if (soundObject.onReasonToBeMutedChange) {
       soundObject.onReasonToBeMutedChange();
     }
-    if (reasonToBeMutedSet.size > 1) {
-      audio.muted = true;
-    }
+    audio.muted = true;
   };
   const removeReasonToBeMuted = (reason) => {
     reasonToBeMutedSet.delete(reason);
     if (soundObject.onReasonToBeMutedChange) {
       soundObject.onReasonToBeMutedChange();
     }
-    if (reasonToBeMutedSet.size === 0) {
-      audio.muted = false;
+    if (reasonToBeMutedSet.size > 0) {
+      return;
     }
+    if (!audio.muted) {
+      return;
+    }
+    audio.muted = false;
   };
   const mute = () => {
     addReasonToBeMuted(REASON_METHOD_CALL);
@@ -58,6 +60,9 @@ export const sound = ({
   const unmute = () => {
     removeReasonToBeMuted(REASON_METHOD_CALL);
   };
+  if (reasonToBeMutedSet.size > 0) {
+    audio.muted = true;
+  }
   if (muted) {
     mute();
   }
@@ -72,7 +77,6 @@ export const sound = ({
       return;
     }
     audio.pause();
-    return;
   };
   const removeReasonToBePaused = (reason) => {
     reasonToBePausedSet.delete(reason);
@@ -83,7 +87,6 @@ export const sound = ({
       audio.currentTime = startTime;
     }
     audio.play();
-    return;
   };
   const pause = () => {
     addReasonToBePaused(REASON_METHOD_CALL);
