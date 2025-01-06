@@ -1,70 +1,86 @@
+import { computed, effect, signal } from "@preact/signals";
 import { animateNumber, EASING } from "animation";
+import { addToSetSignal, deleteFromSetSignal } from "/utils/signal_and_set.js";
 import { userActivationFacade } from "/utils/user_activation.js";
 
-let debug = false;
-
 const musicSet = new Set();
-const globalReasonToBeMutedSet = new Set();
-const globalReasonToBePausedSet = new Set();
-const REASON_USER_INACTIVE = "user_inactive";
-const REASON_METHOD_CALL = "method_call";
-const REASON_GLOBAL_CALL = "global_call";
-const REASON_OTHER_MUSIC_PLAYING = "other_music_playing";
-let musicGlobalVolume = 1;
-const musicGlobalVolumeChangeCallbackSet = new Set();
 
+// muted/unmuted
+const globalReasonToBeMutedSetSignal = signal(new Set());
+export const useGlobalReasonToBeMutedSet = () => {
+  return globalReasonToBeMutedSetSignal.value;
+};
 export const addGlobalReasonToBeMuted = (reason) => {
-  globalReasonToBeMutedSet.add(reason);
-  for (const music of musicSet) {
-    music.addReasonToBeMuted(reason);
-  }
+  addToSetSignal(globalReasonToBeMutedSetSignal, reason);
 };
 export const removeGlobalReasonToBeMuted = (reason) => {
-  globalReasonToBeMutedSet.delete(reason);
-  for (const music of musicSet) {
-    music.removeReasonToBeMuted(reason);
-  }
+  deleteFromSetSignal(globalReasonToBeMutedSetSignal, reason);
 };
-export const setMusicGlobalVolume = (value) => {
-  if (value === musicGlobalVolume) {
-    return;
-  }
-  if (debug) {
-    console.log("set global volume to", value);
-  }
-  let previousValue = musicGlobalVolume;
-  musicGlobalVolume = value;
-  for (const musicGlobalVolumeChangeCallback of musicGlobalVolumeChangeCallbackSet) {
-    musicGlobalVolumeChangeCallback(previousValue);
-  }
+const REASON_MUSICS_ALL_MUTED = "all_musics_paused";
+const musicsAllMutedSignal = computed(() => {
+  const globalReasonToBeMutedSet = globalReasonToBeMutedSetSignal.value;
+  return globalReasonToBeMutedSet.has(REASON_MUSICS_ALL_MUTED);
+});
+export const useMusicsAllMuted = () => {
+  return musicsAllMutedSignal.value;
+};
+export const muteAllMusics = () => {
+  addGlobalReasonToBeMuted(REASON_MUSICS_ALL_MUTED);
+};
+export const unmuteAllMusics = () => {
+  removeGlobalReasonToBeMuted(REASON_MUSICS_ALL_MUTED);
 };
 
+// playing/paused
+const globalReasonToBePausedSetSignal = signal(new Set());
+export const useGlobalReasonToBePausedSet = () => {
+  return globalReasonToBePausedSetSignal.value;
+};
 export const addGlobalReasonToBePaused = (reason) => {
-  globalReasonToBePausedSet.add(reason);
-  for (const music of musicSet) {
-    if (music.canPlayWhilePaused) {
-      continue;
-    }
-    music.addReasonToBePaused(reason);
-  }
+  addToSetSignal(globalReasonToBePausedSetSignal, reason);
 };
 export const removeGlobalReasonToBePaused = (reason) => {
-  globalReasonToBePausedSet.delete(reason);
-  for (const music of musicSet) {
-    // console.log(`remove global reason to be paused from ${music.name}`);
-    music.removeReasonToBePaused(reason);
-  }
+  deleteFromSetSignal(globalReasonToBePausedSetSignal, reason);
+};
+const REASON_ALL_MUSICS_PAUSED = "all_musics_paused";
+const musicsAllPausedSignal = computed(() => {
+  const globalReasonToBePausedSet = globalReasonToBePausedSetSignal.value;
+  return globalReasonToBePausedSet.has(REASON_ALL_MUSICS_PAUSED);
+});
+export const useMusicsAllPaused = () => {
+  return musicsAllPausedSignal.value;
+};
+export const pauseAllMusics = () => {
+  addGlobalReasonToBePaused(REASON_ALL_MUSICS_PAUSED);
+};
+export const playAllMusics = () => {
+  removeGlobalReasonToBePaused(REASON_ALL_MUSICS_PAUSED);
 };
 
-if (!userActivationFacade.ok) {
-  addGlobalReasonToBePaused(REASON_USER_INACTIVE);
-  userActivationFacade.addChangeCallback(() => {
-    removeGlobalReasonToBePaused(REASON_USER_INACTIVE);
-  });
-}
+// global volume
+const musicGlobalVolumeSignal = signal(1);
+export const useMusicGlobalVolume = () => {
+  return musicGlobalVolumeSignal.value;
+};
+export const setMusicGlobalVolume = (value) => {
+  musicGlobalVolumeSignal.value = value;
+};
+// TODO: export a way to animate music global volume
+// so that the music follows
+
+const REASON_OTHER_MUSIC_PLAYING = "other_music_playing";
 
 let currentMusic = null;
 let musicPausedByOther = null;
+
+const fadeInDefaults = {
+  duration: 600,
+  easing: EASING.EASE_IN_EXPO,
+};
+const fadeOutDefaults = {
+  duration: 800,
+  easing: EASING.EASE_OUT_EXPO,
+};
 export const music = ({
   name,
   url,
@@ -78,9 +94,13 @@ export const music = ({
   volumeAnimation = true,
   fadeIn = true,
   fadeOut = true,
-  fadeInDuration = 600,
-  fadeOutDuration = 800,
 }) => {
+  if (fadeIn === true) {
+    fadeIn = {};
+  }
+  if (fadeOut === true) {
+    fadeOut = {};
+  }
   const musicObject = {};
 
   const audio = new Audio(url);
@@ -89,126 +109,95 @@ export const music = ({
     audio.currentTime = startTime;
   }
 
-  const reasonToBeMutedSet = new Set(globalReasonToBeMutedSet);
-  const addReasonToBeMuted = (reason) => {
-    reasonToBeMutedSet.add(reason);
-    if (musicObject.onReasonToBeMutedChange) {
-      musicObject.onReasonToBeMutedChange();
-    }
-    if (audio.muted) {
+  const volumeAnimatedSignal = signal();
+  const volumeSignal = signal(volume);
+  const volumeCurrentSignal = computed(() => {
+    const volumeGlobal = musicGlobalVolumeSignal.value;
+    const volumeAnimated = volumeAnimatedSignal.value;
+    const volume = volumeSignal.value;
+    const volumeToSet = volumeAnimated === undefined ? volume : volumeAnimated;
+    const volumeToSetResolved = volumeToSet * volumeGlobal;
+    return volumeToSetResolved;
+  });
+  effect(() => {
+    audio.volume = volumeCurrentSignal.value;
+  });
+  const setVolume = (
+    value,
+    { animated = volumeAnimation, duration = 500 } = {},
+  ) => {
+    if (!animated) {
+      volumeSignal.value = value;
+      volumeAnimatedSignal.value = undefined;
       return;
     }
-    audio.muted = true;
-  };
-  const removeReasonToBeMuted = (reason) => {
-    reasonToBeMutedSet.delete(reason);
-    if (musicObject.onReasonToBeMutedChange) {
-      musicObject.onReasonToBeMutedChange();
-    }
-    if (reasonToBeMutedSet.size > 0) {
-      return;
-    }
-    if (!audio.muted) {
-      return;
-    }
-    audio.muted = false;
-  };
-  const mute = () => {
-    addReasonToBeMuted(REASON_METHOD_CALL);
-    audio.muted = true;
-  };
-  const unmute = () => {
-    removeReasonToBeMuted(REASON_METHOD_CALL);
-  };
-  if (reasonToBeMutedSet.size > 0) {
-    audio.muted = true;
-  }
-  if (muted) {
-    mute();
-  }
-
-  let volumeAnimated;
-  let volumeAbsolute = volume * musicGlobalVolume;
-  const updateVolume = () => {
-    volumeAbsolute =
-      volumeAnimated === undefined ? volumeAbsolute : volumeAnimated;
-    audio.volume = volumeAbsolute;
-  };
-  const setAnimatedVolume = (value) => {
-    volumeAnimated = value;
-    updateVolume();
-  };
-  const setVolume = (value, { persistent = true } = {}) => {
-    const fromVolume = volumeAbsolute;
-    const toVolume = value * musicGlobalVolume;
-
-    if (persistent) {
-      volume = value;
-    }
-    if (!volumeAnimation) {
-      volumeAbsolute = toVolume;
-      updateVolume();
-      return;
-    }
+    const from = volumeCurrentSignal.value;
+    const to = value;
     animateVolume({
-      persistent,
-      from: fromVolume,
-      to: toVolume,
-      easing:
-        toVolume > fromVolume ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
-      duration: 500,
+      from,
+      to,
+      duration,
+      easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
     });
   };
   let cancelVolumeAnimation = () => {};
-  const animateVolume = ({
-    from,
-    to,
-    easing = EASING.EASE_IN_EXPO,
-    duration = 500,
-    ...props
-  }) => {
+  const animateVolume = (props) => {
     cancelVolumeAnimation();
     const volumeAnimation = animateNumber({
       // when doc is hidden the browser won't let the animation run
       // and onfinish() won't be called -> audio won't pause
       canPlayWhenDocumentIsHidden: true,
-      from,
-      to,
-      duration,
-      easing,
       effect: (volumeValue) => {
-        setAnimatedVolume(volumeValue);
+        volumeAnimatedSignal.value = volumeValue;
       },
       ...props,
     });
     cancelVolumeAnimation = () => {
-      volumeAnimated = undefined;
+      volumeAnimatedSignal.value = undefined;
       volumeAnimation.cancel();
+      cancelVolumeAnimation = () => {};
     };
     volumeAnimation.finished.then(() => {
-      volumeAnimated = undefined;
+      volumeAnimatedSignal.value = undefined;
       cancelVolumeAnimation = () => {};
     });
     return volumeAnimation;
   };
-  updateVolume();
-  musicGlobalVolumeChangeCallbackSet.add(() => {
-    setVolume(volume, { persistent: false });
-  });
 
-  const reasonToBePausedSet = new Set(globalReasonToBePausedSet);
-  const addReasonToBePaused = (reason) => {
-    reasonToBePausedSet.add(reason);
-    if (musicObject.onReasonToBePausedChange) {
-      musicObject.onReasonToBePausedChange();
+  const reasonToBeMutedSetSignal = signal(new Set());
+  effect(() => {
+    const globalReasonToBeMutedSet = globalReasonToBeMutedSetSignal.value;
+    const reasonToBeMutedSet = reasonToBeMutedSetSignal.value;
+    if (globalReasonToBeMutedSet.size > 0 || reasonToBeMutedSet.size > 0) {
+      audio.muted = true;
+    } else {
+      audio.muted = false;
     }
-    if (audio.paused) {
-      return;
-    }
+  });
+  const addReasonToBeMuted = (reason) => {
+    addToSetSignal(reasonToBeMutedSetSignal, reason);
+  };
+  const removeReasonToBeMuted = (reason) => {
+    deleteFromSetSignal(reasonToBeMutedSetSignal, reason);
+  };
+  const REASON_MUTED_VIA_METHOD = "muted_via_method";
+  const mute = () => {
+    addReasonToBeMuted(REASON_MUTED_VIA_METHOD);
+  };
+  const unmute = () => {
+    removeReasonToBeMuted(REASON_MUTED_VIA_METHOD);
+  };
+  if (muted) {
+    mute();
+  }
+
+  const reasonToBePausedSetSignal = signal(new Set());
+  const doPause = (reasonSet) => {
     if (
       currentMusic === musicObject &&
       musicPausedByOther &&
-      reason === REASON_METHOD_CALL
+      reasonSet.size === 1 &&
+      reasonSet.has(REASON_PAUSED_VIA_METHOD)
     ) {
       currentMusic = null;
       const toPlay = musicPausedByOther;
@@ -222,62 +211,75 @@ export const music = ({
       return;
     }
     animateVolume({
-      from: volume * musicGlobalVolume,
+      ...fadeOutDefaults,
+      ...fadeOut,
+      from: volume,
       to: 0,
-      duration: fadeOutDuration,
-      easing: EASING.EASE_OUT_EXPO,
       onfinish: () => {
         audio.pause();
       },
     });
   };
-  const removeReasonToBePaused = (reason) => {
-    reasonToBePausedSet.delete(reason);
-    if (reason === REASON_METHOD_CALL) {
-      reasonToBePausedSet.delete(REASON_OTHER_MUSIC_PLAYING);
-    }
-    if (musicObject.onReasonToBePausedChange) {
-      musicObject.onReasonToBePausedChange();
-    }
-    if (reasonToBePausedSet.size > 0) {
-      return;
-    }
+  const doPlay = () => {
     if (restartOnPlay) {
       audio.currentTime = startTime;
     }
-    if (reason === REASON_METHOD_CALL) {
-      if (currentMusic) {
-        const musicStopped = currentMusic;
-        currentMusic.addReasonToBePaused(REASON_OTHER_MUSIC_PLAYING);
-        musicPausedByOther = musicStopped;
-      }
+    if (currentMusic) {
+      const musicStopped = currentMusic;
+      currentMusic.addReasonToBePaused(REASON_OTHER_MUSIC_PLAYING);
+      musicPausedByOther = musicStopped;
     }
     currentMusic = musicObject;
     if (!fadeIn) {
       audio.play();
       return;
     }
-    setAnimatedVolume(0);
-    audio.play();
     animateVolume({
+      ...fadeInDefaults,
+      ...fadeIn,
       from: 0,
-      to: volume * musicGlobalVolume,
-      duration: fadeInDuration,
-      easing: EASING.EASE_IN_EXPO,
+      to: volume * musicGlobalVolumeSignal.value,
+      onstart: () => {
+        audio.play();
+      },
     });
   };
+  effect(() => {
+    const globalReasonToBePausedSet = globalReasonToBePausedSetSignal.value;
+    const reasonToBePausedSet = reasonToBePausedSetSignal.value;
+    if (globalReasonToBePausedSet.size > 0 || reasonToBePausedSet.size > 0) {
+      if (audio.paused) {
+        return;
+      }
+      const reasonUnionSet = new Set([
+        ...globalReasonToBePausedSet,
+        ...reasonToBePausedSet,
+      ]);
+      doPause(reasonUnionSet);
+      return;
+    }
+    if (!audio.paused) {
+      return;
+    }
+    doPlay();
+  });
+  const addReasonToBePaused = (reason) => {
+    addToSetSignal(reasonToBePausedSetSignal, reason);
+  };
+  const removeReasonToBePaused = (reason) => {
+    deleteFromSetSignal(reasonToBePausedSetSignal, reason);
+  };
+  const REASON_PAUSED_VIA_METHOD = "paused_via_method";
   const pause = () => {
-    addReasonToBePaused(REASON_METHOD_CALL);
+    addReasonToBePaused(REASON_PAUSED_VIA_METHOD);
   };
   const play = () => {
-    removeReasonToBePaused(REASON_METHOD_CALL);
+    removeReasonToBePaused(REASON_PAUSED_VIA_METHOD);
+    removeReasonToBePaused(REASON_OTHER_MUSIC_PLAYING);
   };
+  pause();
   if (autoplay) {
-    if (reasonToBePausedSet.size === 0) {
-      play();
-    }
-  } else {
-    pause();
+    play();
   }
 
   Object.assign(musicObject, {
@@ -291,13 +293,13 @@ export const music = ({
     mute,
     unmute,
 
-    reasonToBeMutedSet,
+    reasonToBeMutedSetSignal,
     addReasonToBeMuted,
     removeReasonToBeMuted,
 
     play,
     pause,
-    reasonToBePausedSet,
+    reasonToBePausedSetSignal,
     addReasonToBePaused,
     removeReasonToBePaused,
   });
@@ -305,18 +307,20 @@ export const music = ({
   return musicObject;
 };
 
-export const muteMusic = () => {
-  addGlobalReasonToBeMuted(REASON_GLOBAL_CALL);
+export const useReasonsToBeMuted = (music) => {
+  return Array.from(music.reasonToBeMutedSetSignal.value.values());
 };
-export const unmuteMusic = () => {
-  removeGlobalReasonToBeMuted(REASON_GLOBAL_CALL);
+export const useReasonsToBePaused = (music) => {
+  return Array.from(music.reasonToBePausedSetSignal.value.values());
 };
-export const pauseMusic = () => {
-  addGlobalReasonToBePaused(REASON_GLOBAL_CALL);
-};
-export const playMusic = () => {
-  removeGlobalReasonToBePaused(REASON_GLOBAL_CALL);
-};
+
+const REASON_USER_INACTIVE = "user_inactive";
+if (!userActivationFacade.ok) {
+  addGlobalReasonToBePaused(REASON_USER_INACTIVE);
+  userActivationFacade.addChangeCallback(() => {
+    removeGlobalReasonToBePaused(REASON_USER_INACTIVE);
+  });
+}
 
 // const pauseMusicUrl = import.meta.resolve("./pause.mp3");
 // const pauseMusic = music({

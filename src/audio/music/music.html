@@ -10,20 +10,19 @@
     <div id="root" style="position: relative"></div>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
-      import { useState } from "preact/hooks";
       import {
         music,
-        addGlobalReasonToBeMuted,
-        removeGlobalReasonToBeMuted,
-        addGlobalReasonToBePaused,
-        removeGlobalReasonToBePaused,
-      } from "./music.js";
-      import {
-        useVolume,
-        useMuted,
-        usePlaybackState,
+        useMusicsAllMuted,
+        muteAllMusics,
+        unmuteAllMusics,
+        useMusicsAllPaused,
+        playAllMusics,
+        pauseAllMusics,
+        useMusicGlobalVolume,
+        setMusicGlobalVolume,
         useReasonsToBePaused,
-      } from "../audio_hooks.js";
+      } from "./music.js";
+      import { useVolume, useMuted, usePlaybackState } from "../audio_hooks.js";
 
       const musicA = music({
         name: "a",
@@ -32,6 +31,7 @@
       const musicB = music({
         name: "b",
         url: import.meta.resolve("./sky.mp3"),
+        volume: 0.5,
       });
 
       // eslint-disable-next-line no-unused-vars
@@ -95,50 +95,45 @@
 
       // eslint-disable-next-line no-unused-vars
       const MuteUnMuteAllButton = () => {
-        const REASON_MUTED_GLOBALLY = "global_mute";
-        const [muted, mutedSetter] = useState(false);
+        const musicsAllMuted = useMusicsAllMuted();
 
         return (
           <button
             onClick={() => {
-              if (muted) {
-                removeGlobalReasonToBeMuted(REASON_MUTED_GLOBALLY);
-                mutedSetter(false);
+              if (musicsAllMuted) {
+                unmuteAllMusics();
               } else {
-                addGlobalReasonToBeMuted(REASON_MUTED_GLOBALLY);
-                mutedSetter(true);
+                muteAllMusics();
               }
             }}
           >
-            {muted ? "unmute all" : "mute all"}
+            {musicsAllMuted ? "unmute all" : "mute all"}
           </button>
         );
       };
 
       // eslint-disable-next-line no-unused-vars
       const PlayPauseAllButton = () => {
-        const REASON_PAUSED_GLOBALLY = "global_pause";
-        const [paused, pausedSetter] = useState(false);
-
+        const musicsAllPaused = useMusicsAllPaused();
         return (
           <button
             onClick={() => {
-              if (paused) {
-                removeGlobalReasonToBePaused(REASON_PAUSED_GLOBALLY);
-                pausedSetter(false);
+              if (musicsAllPaused) {
+                playAllMusics();
               } else {
-                addGlobalReasonToBePaused(REASON_PAUSED_GLOBALLY);
-                pausedSetter(true);
+                pauseAllMusics();
               }
             }}
           >
-            {paused ? "play all" : "pause all"}
+            {musicsAllPaused ? "play all" : "pause all"}
           </button>
         );
       };
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
+        const globalVolume = useMusicGlobalVolume();
+
         return (
           <div>
             <h1>Music Manager</h1>
@@ -146,8 +141,40 @@
             <div style="display:flex; flex-direction: column; margin: 10px;">
               <h3>Global controls</h3>
               <div>
+                <div>
+                  Global volume:
+                  <progress
+                    min="0"
+                    max="1"
+                    value={globalVolume}
+                    style="width: 100px"
+                  >
+                    {globalVolume}
+                  </progress>
+                  <button
+                    disabled={globalVolume === 0.6}
+                    onClick={() => setMusicGlobalVolume(0.6)}
+                  >
+                    0.6
+                  </button>
+                  <button
+                    disabled={globalVolume === 1}
+                    onClick={() => setMusicGlobalVolume(1)}
+                  >
+                    1
+                  </button>
+                </div>
+
                 <MuteUnMuteAllButton />
                 <PlayPauseAllButton />
+
+                <button
+                  onClick={() => {
+                    setMusicGlobalVolume(0.6);
+                  }}
+                >
+                  set global volume to 0.6 and pause all
+                </button>
               </div>
             </div>
 
