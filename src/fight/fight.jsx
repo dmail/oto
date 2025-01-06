@@ -74,6 +74,13 @@ export const Fight = ({ onFightEnd }) => {
   const dialogRef = useRef();
   const gamePaused = useGamePaused();
 
+  const [fightStep, fightStepSetter] = useState("waiting");
+  const fightIsWaiting = fightStep === "waiting";
+  const playerIsSelectingTarget = fightStep === "player_is_selecting_target";
+  const fightIsWon = fightStep === "won";
+  const fightIsLost = fightStep === "lost";
+  const fightIsOver = fightIsWon || fightIsLost;
+
   const opponentName = opponentNameSignal.value;
   const opponentAttack = opponentAttackSignal.value;
   const opponentDefense = opponentDefenseSignal.value;
@@ -83,8 +90,7 @@ export const Fight = ({ onFightEnd }) => {
   const decreaseOpponentHp = useCallback((value) => {
     opponentHpSetter((hp) => hp - value);
   }, []);
-  const opponentIsDead = opponentHp <= 0;
-  const fightIsOver = opponentIsDead;
+  const [opponentIsDead, opponentIsDeadSetter] = useState(false);
   const opponentAbilitiesBase = opponentAbilitiesSignal.value;
   const opponentStates = opponentStatesSignal.value;
   const opponentStateKey = opponentStates
@@ -133,16 +139,16 @@ export const Fight = ({ onFightEnd }) => {
   }, []);
   const backgroundCurtainRef = useRef();
 
-  const [turnState, turnStateSetter] = useState("");
   useKeyEffect({
     Escape: useCallback(() => {
-      if (turnState === "player_is_selecting_target") {
-        turnStateSetter("");
+      if (playerIsSelectingTarget) {
+        fightStepSetter("waiting");
       }
-    }, [turnState]),
+    }, [playerIsSelectingTarget]),
   });
 
   const performOpponentTurn = async () => {
+    fightStepSetter("opponent_turn_start");
     let abilityChoosen = null;
     for (const abilityKey of Object.keys(opponentAbilities)) {
       const ability = opponentAbilities[abilityKey];
@@ -168,9 +174,11 @@ export const Fight = ({ onFightEnd }) => {
     await heroRef.current.recoilAfterHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
     await heroRef.current.displayDamage(damage);
-    return { damage };
+    decreaseHeroHp(damage);
+    fightStepSetter("opponent_turn_end");
   };
   const performHeroTurn = async () => {
+    fightStepSetter("hero_turn_start");
     const heroAlert = dialogRef.current.alert("Hero attaque avec Epée -A-.", {
       timeout: 500,
     });
@@ -189,31 +197,44 @@ export const Fight = ({ onFightEnd }) => {
       oponentRef.current.displayDamage(damage),
       moveBackToPositionPromise,
     ]);
-    return {
-      damage,
-    };
+    decreaseOpponentHp(damage);
+    fightStepSetter("hero_turn_end");
   };
-  const performTurn = async ({ skipHero } = {}) => {
-    turnStateSetter("running");
-    if (!skipHero) {
-      const { damage } = await performHeroTurn();
-      const opponentHpNext = opponentHp - damage;
-      if (opponentHpNext <= 0) {
-        opponentDieSound.play();
-        await oponentRef.current.erase();
-        await new Promise((resolve) => setTimeout(resolve, 400));
-        victoryMusic.play();
-        decreaseOpponentHp(damage);
-        turnStateSetter("");
-        onFightEnd();
-        return;
-      }
-      decreaseOpponentHp(damage);
+  const checkTurnEndEffects = async () => {
+    if (opponentHp <= 0) {
+      opponentDieSound.play();
+      await oponentRef.current.erase();
+      opponentIsDeadSetter(true);
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      victoryMusic.play();
+      fightStepSetter("won");
+      onFightEnd("won");
+      return;
     }
-    const { damage } = await performOpponentTurn();
-    decreaseHeroHp(damage);
-    turnStateSetter("");
+    if (heroHp <= 0) {
+      // heroDieSound.play();
+      // TODO: an animation or something when hero dies
+      // heroIsDeadSetter(true);
+      // defeatMusic.play();
+      fightStepSetter("lost");
+      onFightEnd("lost");
+      return;
+    }
+    if (fightStep === "hero_turn_end") {
+      performOpponentTurn();
+      return;
+    }
+    if (fightStep === "opponent_turn_end") {
+      fightStepSetter("waiting");
+    }
+    return;
   };
+
+  useEffect(() => {
+    if (fightStep === "hero_turn_end" || fightStep === "opponent_turn_end") {
+      checkTurnEndEffects();
+    }
+  }, [fightStep, opponentHp]);
 
   const firstTurnRef = useRef(false);
   useEffect(() => {
@@ -227,7 +248,7 @@ export const Fight = ({ onFightEnd }) => {
     if (opponentSpeed <= heroSpeed) {
       return;
     }
-    performTurn({ skipHero: true });
+    performOpponentTurn();
   }, [gamePaused, opponentSpeed, heroSpeed]);
 
   return (
@@ -240,7 +261,8 @@ export const Fight = ({ onFightEnd }) => {
         <Box name="opponents_box" width="100%" height="55%">
           <Opponent
             ref={oponentRef}
-            turnState={turnState}
+            fightIsWaiting={fightIsWaiting}
+            playerIsSelectingTarget={playerIsSelectingTarget}
             isDead={opponentIsDead}
             name={opponentName}
             imageUrl={opponentImage.url}
@@ -250,7 +272,7 @@ export const Fight = ({ onFightEnd }) => {
             imageWidth={opponentImage.width}
             imageHeight={opponentImage.height}
             onSelect={() => {
-              performTurn();
+              performHeroTurn();
             }}
           />
         </Box>
@@ -265,12 +287,12 @@ export const Fight = ({ onFightEnd }) => {
             height="95%"
             contentX="center"
             contentY="end"
-            hidden={turnState !== "" || fightIsOver}
+            hidden={!fightIsWaiting || fightIsOver}
           >
             <MenuFight
               onAttack={() => {
-                if (turnState === "" && !gamePaused) {
-                  turnStateSetter("player_is_selecting_target");
+                if (fightIsWaiting && !gamePaused) {
+                  fightStepSetter("player_is_selecting_target");
                 }
               }}
             ></MenuFight>

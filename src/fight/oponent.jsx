@@ -14,7 +14,8 @@ export const Opponent = forwardRef(
   (
     {
       isDead,
-      turnState,
+      fightIsWaiting,
+      playerIsSelectingTarget,
       name,
       imageUrl,
       imageX,
@@ -90,7 +91,7 @@ export const Opponent = forwardRef(
         <Box name="top_ui" width="100%" innerSpacing="0.5em">
           <Message
             name="opponent_name"
-            hidden={turnState !== "" || isDead}
+            hidden={!fightIsWaiting || isDead}
             innerSpacing="0.7em"
           >
             {name}
@@ -102,12 +103,12 @@ export const Opponent = forwardRef(
           height="..."
           x="center"
           innerSpacing="10"
-          focused={turnState === "player_is_selecting_target"}
+          focused={playerIsSelectingTarget}
           focusedOutlineWidth="20%"
           focusedOutlineRadius={10}
           focusedOutlineSize={7}
           onClick={
-            turnState === "player_is_selecting_target"
+            playerIsSelectingTarget
               ? () => {
                   onSelect();
                 }
