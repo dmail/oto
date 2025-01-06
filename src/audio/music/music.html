@@ -176,6 +176,17 @@
                 >
                   set global volume to 0.6 and pause all
                 </button>
+
+                <button
+                  onClick={() => {
+                    pauseAllMusics();
+                    setTimeout(() => {
+                      playAllMusics();
+                    }, 200);
+                  }}
+                >
+                  repro fast leave back to page
+                </button>
               </div>
             </div>
 
