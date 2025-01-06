@@ -1,5 +1,4 @@
 import { computed, signal } from "@preact/signals";
-import { useBooleanState } from "hooks/use_boolean_state.js";
 import { useKeyEffect } from "hooks/use_key_effect.js";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { Ally } from "./ally.jsx";
@@ -8,10 +7,10 @@ import { MenuFight } from "./menu_fight.jsx";
 import { Opponent } from "./oponent.jsx";
 import { SwordAIcon } from "./sword_a.jsx";
 import { taurus } from "./taurus.js";
-import { WhiteCurtain } from "./white_curtain.jsx";
 import { music } from "/audio/music/music.js";
 import { sound } from "/audio/sound/sound.js";
 import { Box, borderWithStroke } from "/components/box/box.jsx";
+import { Curtain } from "/components/curtain/curtain.jsx";
 import { DialogTextBox } from "/components/dialog_text_box/dialog_text_box.jsx";
 import { Lifebar } from "/components/lifebar/lifebar.jsx";
 import { useGamePaused } from "/game_pause/game_pause.js";
@@ -71,7 +70,7 @@ const victoryMusic = music({
   volume: 0.5,
 });
 
-export const Fight = () => {
+export const Fight = ({ onFightEnd }) => {
   const dialogRef = useRef();
   const gamePaused = useGamePaused();
 
@@ -132,13 +131,7 @@ export const Fight = () => {
     battleMusic.play();
     // fightStartSound.play();
   }, []);
-  const [whiteCurtain, showWhiteCurtain, hideWhiteCurtain] = useBooleanState();
-  useEffect(() => {
-    const timeout = setTimeout(hideWhiteCurtain, 150);
-    return () => {
-      clearTimeout(timeout);
-    };
-  }, [whiteCurtain]);
+  const backgroundCurtainRef = useRef();
 
   const [turnState, turnStateSetter] = useState("");
   useKeyEffect({
@@ -175,7 +168,7 @@ export const Fight = () => {
     await heroRef.current.recoilAfterHit();
     await new Promise((resolve) => setTimeout(resolve, 150));
     await heroRef.current.displayDamage(damage);
-    decreaseHeroHp(damage);
+    return { damage };
   };
   const performHeroTurn = async () => {
     const heroAlert = dialogRef.current.alert("Hero attaque avec Epée -A-.", {
@@ -186,7 +179,7 @@ export const Fight = () => {
       damage = 0;
     }
     await heroRef.current.moveToAct();
-    showWhiteCurtain();
+    backgroundCurtainRef.current.show({ color: "white", autoHideMs: 200 });
     swordSound.play();
     await oponentRef.current.playWeaponAnimation();
     await heroAlert.close();
@@ -212,11 +205,13 @@ export const Fight = () => {
         victoryMusic.play();
         decreaseOpponentHp(damage);
         turnStateSetter("");
+        onFightEnd();
         return;
       }
       decreaseOpponentHp(damage);
     }
-    await performOpponentTurn();
+    const { damage } = await performOpponentTurn();
+    decreaseHeroHp(damage);
     turnStateSetter("");
   };
 
@@ -240,7 +235,7 @@ export const Fight = () => {
       <Box vertical name="game" width="100%" height="...">
         <Box name="background" absolute width="100%" height="100%">
           <MountainAndSkyBattleBackground />
-          <WhiteCurtain visible={whiteCurtain} />
+          <Curtain ref={backgroundCurtainRef} />
         </Box>
         <Box name="opponents_box" width="100%" height="55%">
           <Opponent

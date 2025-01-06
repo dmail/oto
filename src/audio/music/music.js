@@ -267,6 +267,9 @@ export const music = ({
     const unmute = () => {
       removeReasonToBeMuted(REASON_MUTED_VIA_METHOD);
     };
+    if (globalReasonToBeMutedSetSignal.value.size > 0) {
+      audio.muted = true;
+    }
     if (muted) {
       mute();
     }
