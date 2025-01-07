@@ -1,8 +1,4 @@
-import {
-  addGlobalReasonToBePaused,
-  removeGlobalReasonToBePaused,
-  setMusicGlobalVolume,
-} from "./music/music.js";
+import { setMusicGlobalVolume } from "./music/music.js";
 
 const localStorageItem = localStorage.getItem("volume_prefs");
 const volumePreferences =
@@ -41,15 +37,3 @@ export const applyGamePlayingEffectOnAudio = () => {
   gameIsPaused = false;
   updateMusicGlobalVolume();
 };
-
-const updateMusicWhenDocumentIsHidden = () => {
-  if (document.hidden) {
-    addGlobalReasonToBePaused("document_hidden");
-  } else {
-    removeGlobalReasonToBePaused("document_hidden");
-  }
-};
-updateMusicWhenDocumentIsHidden();
-document.addEventListener("visibilitychange", () => {
-  updateMusicWhenDocumentIsHidden();
-});

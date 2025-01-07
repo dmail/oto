@@ -1,14 +1,14 @@
 import { effect, signal } from "@preact/signals";
 
-const muteRequestedGloballySignal = signal(false);
+const soundsAllMutedSignal = signal(false);
 export const useSoundsAllMuted = () => {
-  return muteRequestedGloballySignal.value;
+  return soundsAllMutedSignal.value;
 };
 export const muteAllSounds = () => {
-  muteRequestedGloballySignal.value = true;
+  soundsAllMutedSignal.value = true;
 };
 export const unmuteAllSounds = () => {
-  muteRequestedGloballySignal.value = false;
+  soundsAllMutedSignal.value = false;
 };
 const soundSet = new Set();
 
@@ -37,8 +37,8 @@ export const sound = ({
     };
     effect(() => {
       const muteRequested = muteRequestedSignal.value;
-      const mutedRequestedGlobally = muteRequestedGloballySignal.value;
-      const shouldMute = muteRequested || mutedRequestedGlobally;
+      const soundsAllMuted = soundsAllMutedSignal.value;
+      const shouldMute = muteRequested || soundsAllMuted;
       if (shouldMute) {
         audio.muted = true;
       } else {

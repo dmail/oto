@@ -1,5 +1,7 @@
 // https://developer.mozilla.org/en-US/docs/Web/API/UserActivation
 
+import { signal } from "@preact/signals";
+
 const { userActivation } = window.navigator;
 const getUserActivationState = () => {
   if (userActivation.isActive) {
@@ -11,41 +13,19 @@ const getUserActivationState = () => {
   return "inactive";
 };
 
-const changeCallbackSet = new Set();
-const initialState = getUserActivationState();
-let state = initialState;
 const updateState = () => {
-  const newState = getUserActivationState();
-  if (newState === state) {
-    return false;
-  }
-  userActivationFacade.ok = newState !== "inactive";
-  state = newState;
-  for (const callback of changeCallbackSet) {
-    callback();
-  }
-  return true;
+  userActivationSignal.value = getUserActivationState();
 };
 
-export const userActivationFacade = {
-  ok: state !== "inactive",
-  addChangeCallback: (callback) => {
-    changeCallbackSet.add(callback);
-    return () => {
-      changeCallbackSet.delete(callback);
-    };
-  },
-  removeChangeCallback: (callback) => {
-    changeCallbackSet.delete(callback);
-  },
-};
+export const userActivationSignal = signal(getUserActivationState());
 
-if (state === "inactive") {
+if (userActivationSignal.peek() === "inactive") {
   const onmousedown = (mousedownEvent) => {
     if (!mousedownEvent.isTrusted) {
       return;
     }
-    if (updateState()) {
+    updateState();
+    if (userActivationSignal.peek() !== "inactive") {
       document.removeEventListener("mousedown", onmousedown, { capture: true });
       document.removeEventListener("keydown", onkeydown, { capture: true });
     }
@@ -54,7 +34,8 @@ if (state === "inactive") {
     if (!keydownEvent.isTrusted) {
       return;
     }
-    if (updateState()) {
+    updateState();
+    if (userActivationSignal.peek() !== "inactive") {
       document.removeEventListener("mousedown", onmousedown, { capture: true });
       document.removeEventListener("keydown", onkeydown, { capture: true });
     }
