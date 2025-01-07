@@ -1,5 +1,6 @@
 import { computed, effect, signal } from "@preact/signals";
 import { animateNumber, EASING } from "animation";
+import { documentHiddenSignal } from "/utils/document_visibility.js";
 import { userActivationSignal } from "/utils/user_activation.js";
 
 let playOneAtATime = true;
@@ -88,11 +89,6 @@ export const unmuteAllMusics = () => {
 };
 
 // playing/paused
-const documentHiddenSignal = signal(document.hidden);
-document.addEventListener("visibilitychange", () => {
-  documentHiddenSignal.value = document.hidden;
-});
-
 const musicsAllPausedSignal = signal(false);
 export const useMusicsAllPaused = () => {
   return musicsAllPausedSignal.value;
