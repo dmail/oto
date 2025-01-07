@@ -1,47 +1,34 @@
-import { effect, signal } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
 import {
   applyGamePausedEffectOnAudio,
   applyGamePlayingEffectOnAudio,
 } from "/audio/audio.js";
 
-const reasonsToBePausedSet = new Set();
-const REASON_DOCUMENT_HIDDEN = "document_hidden";
-const REASON_EXPLICIT = "explicitely_requested";
+const documentHiddenSignal = signal(document.hidden);
+document.addEventListener("visibilitychange", () => {
+  documentHiddenSignal.value = document.hidden;
+});
+const gamePauseRequestedSignal = signal(true);
+export const pauseGame = () => {
+  gamePauseRequestedSignal.value = true;
+};
+export const playGame = () => {
+  gamePauseRequestedSignal.value = false;
+};
 
-export const pausedSignal = signal(true);
-export const useGamePaused = () => pausedSignal.value;
-export const pause = () => {
-  addReasonToBePaused(REASON_EXPLICIT);
-};
-export const play = () => {
-  removeReasonToBePaused(REASON_EXPLICIT);
-  removeReasonToBePaused(REASON_DOCUMENT_HIDDEN);
-};
+export const gamePausedSignal = computed(() => {
+  const documentHidden = documentHiddenSignal.value;
+  const gamePauseRequested = gamePauseRequestedSignal.value;
+  return documentHidden || gamePauseRequested;
+});
+
+export const useGamePaused = () => gamePausedSignal.value;
+
 effect(() => {
-  const gamePaused = pausedSignal.value;
+  const gamePaused = gamePausedSignal.value;
   if (gamePaused) {
     applyGamePausedEffectOnAudio();
   } else {
     applyGamePlayingEffectOnAudio();
   }
-});
-
-const addReasonToBePaused = (reason) => {
-  reasonsToBePausedSet.add(reason);
-  pausedSignal.value = true;
-};
-const removeReasonToBePaused = (reason) => {
-  reasonsToBePausedSet.delete(reason);
-  if (reasonsToBePausedSet.size === 0) {
-    pausedSignal.value = false;
-  }
-};
-const pauseWhenDocumentIsHidden = () => {
-  if (document.hidden) {
-    addReasonToBePaused(REASON_DOCUMENT_HIDDEN);
-  }
-};
-pauseWhenDocumentIsHidden();
-document.addEventListener("visibilitychange", () => {
-  pauseWhenDocumentIsHidden();
 });

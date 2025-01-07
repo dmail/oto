@@ -1,4 +1,4 @@
-import { play } from "./game_pause.js";
+import { playGame } from "./game_pause.js";
 
 export const PauseDialog = ({ visible }) => {
   return (
@@ -16,7 +16,7 @@ export const PauseDialog = ({ visible }) => {
         alignItems: "center",
       }}
       onClick={() => {
-        play();
+        playGame();
       }}
     >
       <button disabled={!visible}>Play</button>

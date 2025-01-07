@@ -5,7 +5,7 @@ import { ButtonPlayPause } from "/audio/button_play_pause.jsx";
 import { Box, borderWithStroke } from "/components/box/box.jsx";
 import { Curtain } from "/components/curtain/curtain.jsx";
 import { Fight } from "/fight/fight.jsx";
-import { pause, play, useGamePaused } from "/game_pause/game_pause.js";
+import { pauseGame, playGame, useGamePaused } from "/game_pause/game_pause.js";
 import { PauseDialog } from "/game_pause/pause_dialog.jsx";
 
 export const Game = () => {
@@ -53,9 +53,9 @@ export const Game = () => {
         <button
           onClick={() => {
             if (gamePaused) {
-              play();
+              playGame();
             } else {
-              pause();
+              pauseGame();
             }
           }}
         >
