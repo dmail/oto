@@ -1,21 +1,16 @@
-const REASON_METHOD_CALL = "method_call";
-const REASON_GLOBAL_CALL = "global_call";
+import { effect, signal } from "@preact/signals";
 
+const muteRequestedGloballySignal = signal(false);
+export const useSoundsAllMuted = () => {
+  return muteRequestedGloballySignal.value;
+};
+export const muteAllSounds = () => {
+  muteRequestedGloballySignal.value = true;
+};
+export const unmuteAllSounds = () => {
+  muteRequestedGloballySignal.value = false;
+};
 const soundSet = new Set();
-const globalReasonToBeMutedSet = new Set();
-
-export const addGlobalReasonToBeMuted = (reason) => {
-  globalReasonToBeMutedSet.add(reason);
-  for (const sound of soundSet) {
-    sound.addReasonToBeMuted(reason);
-  }
-};
-export const removeGlobalReasonToBeMuted = (reason) => {
-  globalReasonToBeMutedSet.delete(reason);
-  for (const sound of soundSet) {
-    sound.removeReasonToBeMuted(reason);
-  }
-};
 
 export const sound = ({
   name,
@@ -32,96 +27,61 @@ export const sound = ({
     audio.currentTime = startTime;
   }
 
-  const reasonToBeMutedSet = new Set(globalReasonToBeMutedSet);
-  const addReasonToBeMuted = (reason) => {
-    reasonToBeMutedSet.add(reason);
-    if (soundObject.onReasonToBeMutedChange) {
-      soundObject.onReasonToBeMutedChange();
-    }
-    audio.muted = true;
-  };
-  const removeReasonToBeMuted = (reason) => {
-    reasonToBeMutedSet.delete(reason);
-    if (soundObject.onReasonToBeMutedChange) {
-      soundObject.onReasonToBeMutedChange();
-    }
-    if (reasonToBeMutedSet.size > 0) {
-      return;
-    }
-    if (!audio.muted) {
-      return;
-    }
-    audio.muted = false;
-  };
-  const mute = () => {
-    addReasonToBeMuted(REASON_METHOD_CALL);
-    audio.muted = true;
-  };
-  const unmute = () => {
-    removeReasonToBeMuted(REASON_METHOD_CALL);
-  };
-  if (reasonToBeMutedSet.size > 0) {
-    audio.muted = true;
-  }
-  if (muted) {
-    mute();
+  init_muted: {
+    const muteRequestedSignal = signal(muted);
+    const mute = () => {
+      muteRequestedSignal.value = true;
+    };
+    const unmute = () => {
+      muteRequestedSignal.value = false;
+    };
+    effect(() => {
+      const muteRequested = muteRequestedSignal.value;
+      const mutedRequestedGlobally = muteRequestedGloballySignal.value;
+      const shouldMute = muteRequested || mutedRequestedGlobally;
+      if (shouldMute) {
+        audio.muted = true;
+      } else {
+        audio.muted = false;
+      }
+    });
+    Object.assign(soundObject, {
+      mute,
+      unmute,
+    });
   }
 
-  const reasonToBePausedSet = new Set();
-  const addReasonToBePaused = (reason) => {
-    reasonToBePausedSet.add(reason);
-    if (soundObject.onReasonToBePausedChange) {
-      soundObject.onReasonToBePausedChange();
-    }
-    if (audio.paused) {
-      return;
-    }
-    audio.pause();
-  };
-  const removeReasonToBePaused = (reason) => {
-    reasonToBePausedSet.delete(reason);
-    if (reasonToBePausedSet.size > 0) {
-      return;
-    }
-    if (restartOnPlay) {
-      audio.currentTime = startTime;
-    }
-    audio.play();
-  };
-  const pause = () => {
-    addReasonToBePaused(REASON_METHOD_CALL);
-  };
-  const play = () => {
-    removeReasonToBePaused(REASON_METHOD_CALL);
-  };
-  pause();
+  init_paused: {
+    const playRequestedSignal = signal(false);
+    const play = () => {
+      playRequestedSignal.value = true;
+    };
+    const pause = () => {
+      playRequestedSignal.value = false;
+    };
+    effect(() => {
+      const playRequested = playRequestedSignal.value;
+      if (playRequested) {
+        if (restartOnPlay) {
+          audio.currentTime = startTime;
+        }
+        audio.play();
+      } else {
+        audio.pause();
+      }
+    });
+    Object.assign(soundObject, {
+      play,
+      pause,
+    });
+  }
 
   Object.assign(soundObject, {
     audio,
     name,
     url,
-
     volumeAtStart: volume,
-    mute,
-    unmute,
-
-    reasonToBeMutedSet,
-    addReasonToBeMuted,
-    removeReasonToBeMuted,
-
-    play,
-    pause,
-    reasonToBePausedSet,
-    addReasonToBePaused,
-    removeReasonToBePaused,
   });
   soundSet.add(soundObject);
   return soundObject;
-};
-
-export const muteSounds = () => {
-  addGlobalReasonToBeMuted(REASON_GLOBAL_CALL);
-};
-export const unmuteSounds = () => {
-  removeGlobalReasonToBeMuted(REASON_GLOBAL_CALL);
 };
