@@ -1,4 +1,4 @@
-import { mute, unmute, useMuted } from "./audio_signals.js";
+import { mute, unmute, useMuted } from "./audio.js";
 import { Box } from "/components/box/box.jsx";
 
 export const ButtonMuteUnmute = () => {

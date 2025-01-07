@@ -1,8 +1,4 @@
-import { computed, effect, signal } from "@preact/signals";
-import {
-  applyGamePausedEffectOnAudio,
-  applyGamePlayingEffectOnAudio,
-} from "/audio/audio.js";
+import { computed, signal } from "@preact/signals";
 import { documentHiddenSignal } from "/utils/document_visibility.js";
 
 const gamePauseRequestedSignal = signal(true);
@@ -18,11 +14,3 @@ export const gamePausedSignal = computed(() => {
   return documentHidden || gamePauseRequested;
 });
 export const useGamePaused = () => gamePausedSignal.value;
-effect(() => {
-  const gamePaused = gamePausedSignal.value;
-  if (gamePaused) {
-    applyGamePausedEffectOnAudio();
-  } else {
-    applyGamePlayingEffectOnAudio();
-  }
-});

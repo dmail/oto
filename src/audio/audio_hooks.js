@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect } from "preact/hooks";
+import { useSubscription } from "/utils/use_subscription.js";
 
 export const useAudio = (media) => {
   const { play, pause } = media;
@@ -14,109 +15,53 @@ export const useAudio = (media) => {
 
 export const useMuted = (media) => {
   const { audio } = media;
-  const cleanupRef = useRef(null);
-  const [muted, setMuted] = useState(audio.muted);
-
-  if (cleanupRef.current === null) {
-    const volumechange = () => {
-      setMuted(audio.muted);
-    };
-    audio.addEventListener("volumechange", volumechange);
-    cleanupRef.current = () => {
-      audio.removeEventListener("volumechange", volumechange);
-    };
-  }
-
-  useEffect(() => {
-    return () => {
-      cleanupRef.current();
-      cleanupRef.current = null;
-    };
-  }, []);
-
-  return muted;
+  return useSubscription(
+    () => audio.muted,
+    (onchange) => {
+      audio.addEventListener("volumechange", onchange);
+      return () => {
+        audio.removeEventListener("volumechange", onchange);
+      };
+    },
+  );
 };
 
 export const useVolume = (media) => {
   const { audio } = media;
-  const cleanupRef = useRef(null);
-  const [volume, setVolume] = useState(audio.volume);
-
-  if (cleanupRef.current === null) {
-    const volumechange = () => {
-      setVolume(audio.volume);
-    };
-    audio.addEventListener("volumechange", volumechange);
-    cleanupRef.current = () => {
-      audio.removeEventListener("volumechange", volumechange);
-    };
-  }
-
-  useEffect(() => {
-    return () => {
-      cleanupRef.current();
-      cleanupRef.current = null;
-    };
-  }, []);
-
-  return volume;
+  return useSubscription(
+    () => audio.volume,
+    (onchange) => {
+      audio.addEventListener("volumechange", onchange);
+      return () => {
+        audio.removeEventListener("volumechange", onchange);
+      };
+    },
+  );
 };
 
 export const usePlaybackState = (media) => {
   const { audio } = media;
-  const [playbackState, setPlaybackState] = useState(getPlaybackState(audio));
-  const cleanupRef = useRef(null);
-
-  if (cleanupRef.current === null) {
-    const onplay = () => {
-      setPlaybackState("playing");
-    };
-    const onpause = () => {
-      setPlaybackState("paused");
-    };
-    audio.addEventListener("play", onplay);
-    audio.addEventListener("pause", onpause);
-    cleanupRef.current = () => {
-      audio.removeEventListener("play", onplay);
-      audio.removeEventListener("pause", onpause);
-    };
-  }
-
-  useEffect(() => {
-    return () => {
-      cleanupRef.current();
-      cleanupRef.current = null;
-    };
-  }, []);
-
-  return playbackState;
-};
-const getPlaybackState = (audio) => {
-  if (audio.paused) {
-    return "paused";
-  }
-  return "playing";
-};
-
-export const useReasonsToBePaused = (media) => {
-  const [reasonsToBePaused, reasonsToBePausedSetter] = useState(
-    convertReasonSetToArray(media.reasonToBePausedSet),
+  return useSubscription(
+    () => {
+      if (audio.paused) {
+        return "paused";
+      }
+      return "playing";
+    },
+    (onchange) => {
+      audio.addEventListener("play", onchange);
+      audio.addEventListener("pause", onchange);
+      return () => {
+        audio.removeEventListener("play", onchange);
+        audio.removeEventListener("pause", onchange);
+      };
+    },
   );
-  media.onReasonToBePausedChange = () => {
-    reasonsToBePausedSetter(convertReasonSetToArray(media.reasonToBePausedSet));
-  };
-  useEffect(() => {
-    return () => {
-      delete media.onReasonToBePausedChange;
-    };
-  }, []);
-
-  return reasonsToBePaused;
 };
-const convertReasonSetToArray = (reasonSet) => {
-  const reasons = [];
-  for (const reason of reasonSet) {
-    reasons.push(reason);
-  }
-  return reasons;
+
+export const useIsPlaying = (media) => {
+  return usePlaybackState(media) === "playing";
+};
+export const useIsPaused = (media) => {
+  return usePlaybackState(media) === "paused";
 };
