@@ -12,6 +12,8 @@ export const useSprite = ({
   mirrorX,
   mirrorY,
   transparentColor,
+  sourceWidth = width,
+  sourceHeight = height,
 }) => {
   if (x === undefined) {
     x = 0;
@@ -67,7 +69,17 @@ export const useSprite = ({
       context.setTransform(...matrix);
       // context.setTransform(-1, 0, 0, 1, parseInt(width), 0);
     }
-    context.drawImage(image, x, y, width, height, 0, 0, width, height);
+    context.drawImage(
+      image,
+      x,
+      y,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      width,
+      height,
+    );
     if (hasTransformations) {
       context.restore();
     }

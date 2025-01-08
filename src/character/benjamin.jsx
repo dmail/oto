@@ -26,6 +26,8 @@ export const Benjamin = ({
   animate = true,
   ...props
 }) => {
+  const width = 17;
+  const height = 17;
   const hasAnimation = activity !== "";
   const [frame, playFrameAnimation, pauseFrameAnimation] = useFrame(
     ["a", "b"],
@@ -43,8 +45,8 @@ export const Benjamin = ({
     url: characterSpritesheetUrl,
     x,
     y,
-    width: 17,
-    height: 17,
+    width,
+    height,
     mirrorX,
     mirrorY,
     transparentColor: [
@@ -59,8 +61,8 @@ export const Benjamin = ({
       {...props}
       name="benjamin"
       ref={elementRef}
-      width={17}
-      height={17}
+      width={width}
+      height={height}
       style={{
         width: "100%",
         height: "100%",
