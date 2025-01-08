@@ -3,13 +3,13 @@ import { useImperativeHandle, useRef, useState } from "preact/hooks";
 import { useDigitsDisplayAnimation } from "/animations/use_digits_display_animation.js";
 import { useElementAnimation } from "/animations/use_element_animation.js";
 import { usePartyMemberHitAnimation } from "/animations/use_party_member_hit_animation.js";
-import { Benjamin } from "/character/benjamin.jsx";
 import { Box } from "/components/box/box.jsx";
+import { Benjamin } from "/components/character/benjamin.jsx";
 import { Digits } from "/components/text/digits.jsx";
 
 export const Ally = forwardRef((props, ref) => {
   const elementRef = useRef();
-  const [heroDamage, heroDamageSetter] = useState(null);
+  const [damage, damageSetter] = useState(null);
 
   const [moveToAct] = useElementAnimation({
     id: "ally_move_to_act",
@@ -28,13 +28,13 @@ export const Ally = forwardRef((props, ref) => {
     duration: 200,
   });
 
-  const heroDigitsElementRef = useRef();
+  const digitsElementRef = useRef();
   const [recoilAfterHit] = usePartyMemberHitAnimation({
     elementRef,
     duration: 500,
   });
   const [displayDamage] = useDigitsDisplayAnimation({
-    elementRef: heroDigitsElementRef,
+    elementRef: digitsElementRef,
     duration: 300,
     toY: -1.2,
   });
@@ -45,30 +45,30 @@ export const Ally = forwardRef((props, ref) => {
       moveBackToPosition,
       recoilAfterHit,
       displayDamage: async (value) => {
-        heroDamageSetter(value);
+        damageSetter(value);
         await displayDamage();
-        heroDamageSetter(null);
+        damageSetter(null);
       },
     };
   });
 
   return (
     <Box name="ally_box" ratio="1/1" height="100%" x="center">
-      <Benjamin elementRef={elementRef} direction="top" activity="walking" />
+      <Benjamin ref={elementRef} direction="top" activity="walking" />
       <Box
-        ref={heroDigitsElementRef}
-        name="hero_digits_box"
+        ref={digitsElementRef}
+        name="digits_box"
         absolute
-        hidden={heroDamage === null}
+        hidden={damage === null}
         width="100%"
         height="100%"
       >
         <Box x="center" y="end">
           <Digits
-            name="hero_digits"
+            name="digits"
             dx="0.3em" // for some reason it's better centered with that
           >
-            {heroDamage}
+            {damage}
           </Digits>
         </Box>
       </Box>
