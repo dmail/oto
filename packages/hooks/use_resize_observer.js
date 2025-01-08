@@ -69,6 +69,10 @@ export const useResizeObserver = (
         if (!entry) {
           return;
         }
+        if (!isMountedRef.current) {
+          // can happen because browser may call resize observer after component is unmounted
+          return;
+        }
         const boundingClientRect = elementToObserve.getBoundingClientRect();
         const newSize = {
           width: boundingClientRect.width,

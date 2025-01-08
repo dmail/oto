@@ -129,7 +129,7 @@ const TextComponent = ({
     performSizeSideEffects(() => {
       const svgElement = svgInnerRef.current;
       const textElement = textRef.current;
-      const computedStyle = window.getComputedStyle(svgInnerRef.current, null);
+      const computedStyle = window.getComputedStyle(svgElement, null);
       const fontSizeReference = parseFloat(computedStyle.fontSize);
       const fontSizeResolved = resolveSize(fontSize, {
         fontSize: fontSizeReference,
