@@ -1,13 +1,13 @@
+/*
+ * TODO:
+ *  - when there is an error while loading image draw a message on the canvas
+ */
+
 import { useDrawImage } from "hooks/use_draw_image.js";
+import { useImageLoader } from "hooks/use_image_loader.js";
 import { fromTransformations } from "matrix";
 import { forwardRef } from "preact/compat";
-import {
-  useImperativeHandle,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "preact/hooks";
+import { useImperativeHandle, useMemo, useRef } from "preact/hooks";
 
 export const Img = forwardRef(
   (
@@ -152,35 +152,6 @@ export const useImage = (
   }, [name, image, mirrorX, mirrorY, shouldReplace, x, y, width, height]);
 
   return imageTransformed;
-};
-
-export const useImageLoader = (url) => {
-  const imageRef = useRef(null);
-  const [imageLoaded, imageLoadedSetter] = useState(false);
-  const [loadError, loadErrorSetter] = useState(null);
-  useLayoutEffect(() => {
-    const image = new Image();
-    const onload = () => {
-      image.removeEventListener("error", onerror);
-      image.removeEventListener("load", onload);
-      imageRef.current = image;
-      imageLoadedSetter(true);
-    };
-    const onerror = (errorEvent) => {
-      image.removeEventListener("error", onerror);
-      image.removeEventListener("load", onload);
-      loadErrorSetter(errorEvent);
-    };
-    image.addEventListener("error", onerror);
-    image.addEventListener("load", onload);
-    image.src = url;
-    return () => {
-      image.removeEventListener("error", onerror);
-      image.removeEventListener("load", onload);
-    };
-  }, [url]);
-
-  return [imageRef.current, imageLoaded, loadError];
 };
 
 const createShouldReplace = (colorsToReplace) => {

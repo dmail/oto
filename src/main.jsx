@@ -5,7 +5,7 @@ import { goblinFontUrl } from "./components/text/font_urls.js";
 import { Game } from "./game/game.jsx";
 
 const GameWithErrorBoundary = () => {
-  const [error, resetError] = useErrorBoundary();
+  const [error] = useErrorBoundary();
   const goblinFont = useFontFace("goblin", {
     url: goblinFontUrl,
   });
@@ -13,10 +13,13 @@ const GameWithErrorBoundary = () => {
     if (!import.meta.hot) {
       return null;
     }
+    if (!error) {
+      return null;
+    }
     return import.meta.hot.events.beforePartialReload.addCallback(() => {
-      resetError();
+      import.meta.hot.invalidate();
     });
-  }, []);
+  }, [error]);
   if (error) {
     return `An error occurred: ${error.message}`;
   }

@@ -2,7 +2,7 @@
 
 import { batch, computed, effect, signal } from "@preact/signals";
 import { useDrawImage } from "hooks/use_draw_image.js";
-import { useImage } from "hooks/use_image.js";
+import { useImageLoader } from "hooks/use_image_loader.js";
 import { render } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { EyeClosedIconSvg } from "./eye_closed_icon.jsx";
@@ -602,7 +602,7 @@ const GridDrawing = ({ width, height, opacity, cellWidth, cellHeight }) => {
 };
 const ImageDrawing = ({ url, width, height, opacity }) => {
   const canvasRef = useRef();
-  const [image] = useImage(url);
+  const [image] = useImageLoader(url);
   const zoom = zoomSignal.value;
   const sourceWidth = image ? image.naturalWidth * zoom : 0;
   const sourceHeight = image ? image.naturalHeight * zoom : 0;
