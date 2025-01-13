@@ -1,5 +1,5 @@
 const opponentSpritesheetUrl = new URL(
-  "./opponent_sprite/opponent_sprite.png",
+  "./opponent_sprite.png",
   import.meta.url,
 );
 const hpAbove = (limit) => {

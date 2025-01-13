@@ -1,12 +1,12 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
-import { OpponentSprite } from "./opponent_sprite/opponent_sprite.jsx";
 import { SwordA } from "./sword_a.jsx";
 import { useCanvasEraseAnimation } from "/animations/use_canvas_erase_animation.js";
 import { useCanvasGlowAnimation } from "/animations/use_canvas_glow_animation.js";
 import { useDigitsDisplayAnimation } from "/animations/use_digits_display_animation.js";
 import { useElementAnimation } from "/animations/use_element_animation.js";
 import { Box } from "/components/box/box.jsx";
+import { Img } from "/components/img/img.jsx";
 import { Message } from "/components/message/message.jsx";
 import { Digits } from "/components/text/digits.jsx";
 
@@ -27,17 +27,17 @@ export const Opponent = forwardRef(
     },
     ref,
   ) => {
-    const elementRef = useRef();
+    const imgRef = useRef();
     const [glow] = useCanvasGlowAnimation({
       id: "enemy_glow",
-      elementRef,
+      elementRef: imgRef,
       from: "black",
       to: "white",
       duration: 300,
     });
     const [erase] = useCanvasEraseAnimation({
       id: "enemy_erase",
-      elementRef,
+      elementRef: imgRef,
       iterations: 4,
       duration: 300,
     });
@@ -115,8 +115,8 @@ export const Opponent = forwardRef(
               : undefined
           }
         >
-          <OpponentSprite
-            elementRef={elementRef}
+          <Img
+            ref={imgRef}
             url={imageUrl}
             transparentColor={imageTransparentColor}
             x={imageX}
