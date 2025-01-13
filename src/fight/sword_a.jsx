@@ -7,24 +7,7 @@ const WEAPON_CELLS = {
   sword_a: { x: 195, y: 265, width: 64, height: 64 },
 };
 
-export const SwordA = forwardRef((props, ref) => {
-  const { x, y, width, height } = WEAPON_CELLS[`sword_a`];
-
-  return (
-    <Img
-      ref={ref}
-      name="sword_a"
-      url={weaponSpriteSheetUrl}
-      width={width}
-      height={height}
-      x={x}
-      y={y}
-      {...props}
-    />
-  );
-});
-
-export const SwordAIcon = forwardRef((props, ref) => {
+export const SwordAImg = forwardRef((props, ref) => {
   const { x, y, width, height } = WEAPON_CELLS[`sword_a`];
 
   return (

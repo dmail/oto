@@ -1,6 +1,6 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
-import { SwordA } from "./sword_a.jsx";
+import { SwordAImg } from "./sword_a.jsx";
 import { useCanvasEraseAnimation } from "/animations/use_canvas_erase_animation.js";
 import { useCanvasGlowAnimation } from "/animations/use_canvas_glow_animation.js";
 import { useDigitsDisplayAnimation } from "/animations/use_digits_display_animation.js";
@@ -134,7 +134,7 @@ export const Opponent = forwardRef(
             x="center"
             y="center"
           >
-            <SwordA elementRef={weaponElementRef} />
+            <SwordAImg ref={weaponElementRef} />
           </Box>
           <Box
             ref={digitsElementRef}

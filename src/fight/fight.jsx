@@ -5,7 +5,7 @@ import { Ally } from "./ally.jsx";
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { MenuFight } from "./menu_fight.jsx";
 import { Opponent } from "./oponent.jsx";
-import { SwordAIcon } from "./sword_a.jsx";
+import { SwordAImg } from "./sword_a.jsx";
 import { taurus } from "./taurus.js";
 import { music } from "/audio/music/music.js";
 import { sound } from "/audio/sound/sound.js";
@@ -336,7 +336,7 @@ export const Fight = ({ onFightEnd }) => {
             <Lifebar value={heroHp} max={heroMaxHp} />
           </Box>
           <Box name="weapon_box" ratio="1/1" width="20%" x="end" y="center">
-            <SwordAIcon />
+            <SwordAImg />
           </Box>
         </Box>
         <Box
