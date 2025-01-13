@@ -11,11 +11,11 @@ export const MountainAndSkyBattleBackground = forwardRef((props, ref) => {
     <Img
       ref={ref}
       name="mountain_and_sky"
-      url={battleBackgroundsSpritesheetUrl}
-      width={254}
-      height={200}
-      x={260 * 1 + 5}
-      y={100 * 0 + 1}
+      source={battleBackgroundsSpritesheetUrl}
+      width="254"
+      height="200"
+      sourceX={260 * 1 + 5}
+      sourceY={100 * 0 + 1}
       {...props}
     />
   );

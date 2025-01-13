@@ -11,17 +11,31 @@ import { useImperativeHandle, useMemo, useRef } from "preact/hooks";
 
 export const Img = forwardRef(
   (
-    { url, x, y, width, height, mirrorX, mirrorY, transparentColor, ...props },
+    {
+      source,
+      width,
+      height,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      souceHeight,
+      mirrorX,
+      mirrorY,
+      transparentColor,
+      ...props
+    },
     ref,
   ) => {
     const innerRef = useRef();
     useImperativeHandle(ref, () => innerRef.current);
 
-    const image = useImage(url, {
-      x,
-      y,
+    const image = useImage(source, {
       width,
       height,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      souceHeight,
       mirrorX,
       mirrorY,
       transparentColor,
@@ -44,21 +58,21 @@ export const Img = forwardRef(
 );
 
 export const useImage = (
-  url,
+  source,
   {
     name,
-    x,
-    y,
     width,
     height,
+    sourceX,
+    sourceY,
+    sourceWidth = width,
+    sourceHeight = height,
     mirrorX,
     mirrorY,
     transparentColor,
-    sourceWidth = width,
-    sourceHeight = height,
   } = {},
 ) => {
-  const [image] = useImageLoader(url);
+  const [image] = useImageLoader(source);
   if (width === undefined) {
     width = image ? image.naturalWidth : undefined;
   } else {
@@ -69,15 +83,15 @@ export const useImage = (
   } else {
     height = parseInt(height);
   }
-  if (x === undefined) {
-    x = 0;
+  if (sourceX === undefined) {
+    sourceX = 0;
   } else {
-    x = parseInt(x);
+    sourceX = parseInt(sourceX);
   }
-  if (y === undefined) {
-    y = 0;
+  if (sourceY === undefined) {
+    sourceY = 0;
   } else {
-    y = parseInt(y);
+    sourceY = parseInt(sourceY);
   }
   if (transparentColor) {
     if (typeof transparentColor[0] === "number") {
@@ -122,8 +136,8 @@ export const useImage = (
     }
     context.drawImage(
       image,
-      x,
-      y,
+      sourceX,
+      sourceY,
       sourceWidth,
       sourceHeight,
       0,
@@ -149,7 +163,17 @@ export const useImage = (
       context.putImageData(imageData, 0, 0);
     }
     return canvas;
-  }, [name, image, mirrorX, mirrorY, shouldReplace, x, y, width, height]);
+  }, [
+    name,
+    image,
+    width,
+    height,
+    mirrorX,
+    mirrorY,
+    shouldReplace,
+    sourceX,
+    sourceY,
+  ]);
 
   return imageTransformed;
 };

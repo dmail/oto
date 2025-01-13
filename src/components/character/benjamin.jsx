@@ -46,11 +46,11 @@ export const Benjamin = forwardRef(
       <Img
         ref={ref}
         name="benjamin"
-        url={characterSpritesheetUrl}
-        width={17}
-        height={17}
-        x={x}
-        y={y}
+        source={characterSpritesheetUrl}
+        width="17"
+        height="17"
+        sourceX={x}
+        sourceY={y}
         mirrorX={mirrorX}
         mirrorY={mirrorY}
         transparentColor={[

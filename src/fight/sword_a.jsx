@@ -14,11 +14,11 @@ export const SwordAImg = forwardRef((props, ref) => {
     <Img
       ref={ref}
       name="sword_a"
-      url={weaponSpriteSheetUrl}
+      source={weaponSpriteSheetUrl}
       width={width}
       height={height}
-      x={x}
-      y={y}
+      sourceX={x}
+      sourceY={y}
       {...props}
     />
   );
