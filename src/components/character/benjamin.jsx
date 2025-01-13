@@ -1,8 +1,7 @@
-import { useDrawImage } from "hooks/use_draw_image.js";
-import { useSprite } from "hooks/use_sprite.js";
 import { forwardRef } from "preact/compat";
-import { useImperativeHandle, useLayoutEffect, useRef } from "preact/hooks";
+import { useLayoutEffect } from "preact/hooks";
 import { useFrame } from "/animations/use_frame.js";
+import { Img } from "/components/img/img.jsx";
 
 const characterSpritesheetUrl = new URL(
   "./character_spritesheet.png",
@@ -30,11 +29,6 @@ export const Benjamin = forwardRef(
     },
     ref,
   ) => {
-    const innerRef = useRef();
-    useImperativeHandle(ref, () => innerRef.current);
-
-    const width = 17;
-    const height = 17;
     const hasAnimation = activity !== "";
     const [frame, playFrameAnimation, pauseFrameAnimation] = useFrame(
       ["a", "b"],
@@ -45,35 +39,25 @@ export const Benjamin = forwardRef(
       playFrameAnimation();
       return pauseFrameAnimation;
     }, [animate, hasAnimation, playFrameAnimation, pauseFrameAnimation]);
-
     const { x, y, mirrorX, mirrorY } =
       HERO_STATE_CELL[`${activity}_${direction}_${frame}`];
-    const sprite = useSprite({
-      url: characterSpritesheetUrl,
-      x,
-      y,
-      width,
-      height,
-      mirrorX,
-      mirrorY,
-      transparentColor: [
-        [0, 206, 206],
-        [0, 155, 155],
-      ],
-    });
-    useDrawImage(innerRef.current, sprite);
 
     return (
-      <canvas
-        {...props}
-        ref={innerRef}
+      <Img
+        ref={ref}
         name="benjamin"
-        width={width}
-        height={height}
-        style={{
-          width: "100%",
-          height: "100%",
-        }}
+        url={characterSpritesheetUrl}
+        width={17}
+        height={17}
+        x={x}
+        y={y}
+        mirrorX={mirrorX}
+        mirrorY={mirrorY}
+        transparentColor={[
+          [0, 206, 206],
+          [0, 155, 155],
+        ]}
+        {...props}
       />
     );
   },
