@@ -1,6 +1,5 @@
-import { useDrawImage } from "hooks/use_draw_image.js";
-import { useSprite } from "hooks/use_sprite.js";
-import { useRef } from "preact/hooks";
+import { forwardRef } from "preact/compat";
+import { Img } from "/components/img/img.jsx";
 
 const weaponSpriteSheetUrl = new URL("./weapon.png", import.meta.url);
 
@@ -8,53 +7,36 @@ const WEAPON_CELLS = {
   sword_a: { x: 195, y: 265, width: 64, height: 64 },
 };
 
-export const SwordA = ({ elementRef = useRef(), ...props }) => {
+export const SwordA = forwardRef((props, ref) => {
   const { x, y, width, height } = WEAPON_CELLS[`sword_a`];
-  const sprite = useSprite({
-    url: weaponSpriteSheetUrl,
-    x,
-    y,
-    width,
-    height,
-  });
-  useDrawImage(elementRef.current, sprite);
 
   return (
-    <canvas
-      {...props}
+    <Img
+      ref={ref}
       name="sword_a"
-      ref={elementRef}
+      url={weaponSpriteSheetUrl}
       width={width}
       height={height}
-      style={{
-        width: "100%",
-        height: "100%",
-      }}
+      x={x}
+      y={y}
+      {...props}
     />
   );
-};
+});
 
-export const SwordAIcon = ({ elementRef = useRef(), ...props }) => {
+export const SwordAIcon = forwardRef((props, ref) => {
   const { x, y, width, height } = WEAPON_CELLS[`sword_a`];
-  const sprite = useSprite({
-    url: weaponSpriteSheetUrl,
-    x,
-    y,
-    width,
-    height,
-  });
-  useDrawImage(elementRef.current, sprite);
+
   return (
-    <canvas
-      {...props}
+    <Img
+      ref={ref}
       name="sword_a"
-      ref={elementRef}
+      url={weaponSpriteSheetUrl}
       width={width}
       height={height}
-      style={{
-        width: "100%",
-        height: "100%",
-      }}
+      x={x}
+      y={y}
+      {...props}
     />
   );
-};
+});
