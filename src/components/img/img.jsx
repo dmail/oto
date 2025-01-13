@@ -17,8 +17,7 @@ export const Img = forwardRef(
     const innerRef = useRef();
     useImperativeHandle(ref, () => innerRef.current);
 
-    const sprite = useSprite({
-      url,
+    const image = useImage(url, {
       x,
       y,
       width,
@@ -27,7 +26,7 @@ export const Img = forwardRef(
       mirrorY,
       transparentColor,
     });
-    useDrawImage(innerRef.current, sprite);
+    useDrawImage(innerRef.current, image);
 
     return (
       <canvas
@@ -44,48 +43,32 @@ export const Img = forwardRef(
   },
 );
 
-export const useImage = (url) => {
-  const imageRef = useRef(null);
-  const [imageLoaded, imageLoadedSetter] = useState(false);
-  const [loadError, loadErrorSetter] = useState(null);
-  useLayoutEffect(() => {
-    const image = new Image();
-    const onload = () => {
-      image.removeEventListener("error", onerror);
-      image.removeEventListener("load", onload);
-      imageRef.current = image;
-      imageLoadedSetter(true);
-    };
-    const onerror = (errorEvent) => {
-      image.removeEventListener("error", onerror);
-      image.removeEventListener("load", onload);
-      loadErrorSetter(errorEvent);
-    };
-    image.addEventListener("error", onerror);
-    image.addEventListener("load", onload);
-    image.src = url;
-    return () => {
-      image.removeEventListener("error", onerror);
-      image.removeEventListener("load", onload);
-    };
-  }, [url]);
-
-  return [imageRef.current, imageLoaded, loadError];
-};
-
-export const useSprite = ({
-  name,
+export const useImage = (
   url,
-  x,
-  y,
-  width,
-  height,
-  mirrorX,
-  mirrorY,
-  transparentColor,
-  sourceWidth = width,
-  sourceHeight = height,
-}) => {
+  {
+    name,
+    x,
+    y,
+    width,
+    height,
+    mirrorX,
+    mirrorY,
+    transparentColor,
+    sourceWidth = width,
+    sourceHeight = height,
+  } = {},
+) => {
+  const [image] = useImageLoader(url);
+  if (width === undefined) {
+    width = image ? image.naturalWidth : undefined;
+  } else {
+    width = parseInt(width);
+  }
+  if (height === undefined) {
+    height = image ? image.naturalHeight : undefined;
+  } else {
+    height = parseInt(height);
+  }
   if (x === undefined) {
     x = 0;
   } else {
@@ -96,8 +79,6 @@ export const useSprite = ({
   } else {
     y = parseInt(y);
   }
-  width = parseInt(width);
-  height = parseInt(height);
   if (transparentColor) {
     if (typeof transparentColor[0] === "number") {
       transparentColor = [transparentColor];
@@ -105,7 +86,6 @@ export const useSprite = ({
   } else {
     transparentColor = [];
   }
-  const [image] = useImage(url);
   const shouldReplace = useMemo(
     () => createShouldReplace(transparentColor),
     transparentColor.map((color) => `${color[0]}${color[1]}${color[2]}`),
@@ -172,6 +152,35 @@ export const useSprite = ({
   }, [name, image, mirrorX, mirrorY, shouldReplace, x, y, width, height]);
 
   return imageTransformed;
+};
+
+export const useImageLoader = (url) => {
+  const imageRef = useRef(null);
+  const [imageLoaded, imageLoadedSetter] = useState(false);
+  const [loadError, loadErrorSetter] = useState(null);
+  useLayoutEffect(() => {
+    const image = new Image();
+    const onload = () => {
+      image.removeEventListener("error", onerror);
+      image.removeEventListener("load", onload);
+      imageRef.current = image;
+      imageLoadedSetter(true);
+    };
+    const onerror = (errorEvent) => {
+      image.removeEventListener("error", onerror);
+      image.removeEventListener("load", onload);
+      loadErrorSetter(errorEvent);
+    };
+    image.addEventListener("error", onerror);
+    image.addEventListener("load", onload);
+    image.src = url;
+    return () => {
+      image.removeEventListener("error", onerror);
+      image.removeEventListener("load", onload);
+    };
+  }, [url]);
+
+  return [imageRef.current, imageLoaded, loadError];
 };
 
 const createShouldReplace = (colorsToReplace) => {
