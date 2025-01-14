@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "preact/hooks";
 
 export const useSubscription = (get, subscribe) => {
-  const [globalVolume, globalVolumeSetter] = useState(get());
+  const [value, valueSetter] = useState(get());
   const cleanupRef = useRef(null);
   if (cleanupRef.current === null) {
     const subscribeReturnValue = subscribe(() => {
-      globalVolumeSetter(get());
+      valueSetter(get());
     });
     if (typeof subscribeReturnValue === "function") {
       cleanupRef.current = subscribeReturnValue;
@@ -22,5 +22,5 @@ export const useSubscription = (get, subscribe) => {
       cleanupRef.current = null;
     };
   }, []);
-  return globalVolume;
+  return value;
 };

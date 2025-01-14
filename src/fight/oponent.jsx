@@ -117,12 +117,14 @@ export const Opponent = forwardRef(
         >
           <Img
             ref={imgRef}
-            source={imageUrl}
+            source={{
+              url: imageUrl,
+              x: imageX,
+              y: imageY,
+              transparentColor: imageTransparentColor,
+            }}
             width={imageWidth}
             height={imageHeight}
-            transparentColor={imageTransparentColor}
-            sourceX={imageX}
-            sourceY={imageY}
             hidden={isDead}
           />
           <Box

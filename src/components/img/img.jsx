@@ -10,118 +10,115 @@ import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useMemo, useRef } from "preact/hooks";
 
 export const Img = forwardRef(
-  (
-    {
-      source,
-      width,
-      height,
-      sourceX,
-      sourceY,
-      sourceWidth,
-      souceHeight,
-      mirrorX,
-      mirrorY,
-      transparentColor,
-      ...props
-    },
-    ref,
-  ) => {
+  ({ name, source, width, height, ...props }, ref) => {
     const innerRef = useRef();
     useImperativeHandle(ref, () => innerRef.current);
 
-    const image = useImage(source, {
+    const imageAsCanvas = useImageCanvas(source, {
       width,
       height,
-      sourceX,
-      sourceY,
-      sourceWidth,
-      souceHeight,
-      mirrorX,
-      mirrorY,
-      transparentColor,
     });
-    useDrawImage(innerRef.current, image);
+    useDrawImage(innerRef.current, imageAsCanvas);
 
     return (
       <canvas
-        {...props}
+        name={name}
         ref={innerRef}
         width={width}
         height={height}
+        {...props}
         style={{
           width: "100%",
           height: "100%",
+          ...props.style,
         }}
       />
     );
   },
 );
 
-export const useImage = (
-  source,
-  {
-    name,
-    width,
-    height,
-    sourceX,
-    sourceY,
-    sourceWidth = width,
-    sourceHeight = height,
-    mirrorX,
-    mirrorY,
-    transparentColor,
-  } = {},
-) => {
+export const useImageCanvas = (sourceArg, { name, width, height } = {}) => {
+  let source;
+  let sourceX;
+  let sourceY;
+  let sourceWidth;
+  let sourceHeight;
+  let sourceMirrorX;
+  let sourceMirrorY;
+  let sourceTransparentColor;
+
+  if (isPlainObject(sourceArg)) {
+    source = sourceArg.url || sourceArg.source;
+
+    sourceX = sourceArg.x;
+    if (sourceX === undefined) {
+      sourceX = 0;
+    } else {
+      sourceX = parseInt(sourceX);
+    }
+
+    sourceY = sourceArg.y;
+    if (sourceY === undefined) {
+      sourceY = 0;
+    } else {
+      sourceY = parseInt(sourceY);
+    }
+
+    sourceWidth = sourceArg.width;
+    sourceHeight = sourceArg.height;
+
+    sourceTransparentColor = sourceArg.transparentColor;
+    if (sourceTransparentColor === undefined) {
+      sourceTransparentColor = [];
+    } else if (typeof sourceTransparentColor[0] === "number") {
+      sourceTransparentColor = [sourceTransparentColor];
+    }
+
+    sourceMirrorX = sourceArg.mirrorX;
+    sourceMirrorY = sourceArg.mirrorY;
+  }
+
   const [image] = useImageLoader(source);
+  const [imageWidth, imageHeight] = getImageSize(image);
   if (width === undefined) {
-    width = image ? image.naturalWidth : undefined;
+    width = imageWidth;
   } else {
     width = parseInt(width);
   }
   if (height === undefined) {
-    height = image ? image.naturalHeight : undefined;
+    height = imageHeight;
   } else {
     height = parseInt(height);
   }
-  if (sourceX === undefined) {
-    sourceX = 0;
-  } else {
-    sourceX = parseInt(sourceX);
+  if (sourceWidth === undefined) {
+    sourceWidth = width;
   }
-  if (sourceY === undefined) {
-    sourceY = 0;
-  } else {
-    sourceY = parseInt(sourceY);
+  if (sourceHeight === undefined) {
+    sourceHeight = height;
   }
-  if (transparentColor) {
-    if (typeof transparentColor[0] === "number") {
-      transparentColor = [transparentColor];
-    }
-  } else {
-    transparentColor = [];
-  }
+
   const shouldReplace = useMemo(
-    () => createShouldReplace(transparentColor),
-    transparentColor.map((color) => `${color[0]}${color[1]}${color[2]}`),
+    () => createShouldReplace(sourceTransparentColor),
+    sourceTransparentColor.map((color) => `${color[0]}${color[1]}${color[2]}`),
   );
-  const imageTransformed = useMemo(() => {
-    if (!image) {
-      return null;
-    }
+  return useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = width;
     canvas.height = height;
-    const context = canvas.getContext("2d");
+    if (!image) {
+      return canvas;
+    }
+    const context = canvas.getContext("2d", { willReadFrequently: true });
     const transformations = {
-      ...(mirrorX || mirrorY
+      ...(sourceMirrorX || sourceMirrorY
         ? {
             flip: {
-              x: mirrorX,
-              y: mirrorY,
+              x: sourceMirrorX,
+              y: sourceMirrorY,
             },
             translate: {
-              x: mirrorX ? -parseInt(width) : 0,
-              y: mirrorY ? -parseInt(height) : 0,
+              x: sourceMirrorX ? -parseInt(width) : 0,
+              y: sourceMirrorY ? -parseInt(height) : 0,
             },
           }
         : {}),
@@ -168,17 +165,33 @@ export const useImage = (
     image,
     width,
     height,
-    mirrorX,
-    mirrorY,
-    shouldReplace,
     sourceX,
     sourceY,
+    sourceWidth,
+    sourceHeight,
+    sourceMirrorX,
+    sourceMirrorY,
+    shouldReplace,
   ]);
+};
 
-  return imageTransformed;
+const getImageSize = (object) => {
+  if (object instanceof HTMLImageElement || object instanceof SVGImageElement) {
+    return [object.naturalWidth, object.naturalHeight];
+  }
+  if (
+    object instanceof HTMLCanvasElement ||
+    object instanceof OffscreenCanvas
+  ) {
+    return [object.width, object.height];
+  }
+  return [undefined, undefined];
 };
 
 const createShouldReplace = (colorsToReplace) => {
+  if (!colorsToReplace) {
+    return null;
+  }
   if (colorsToReplace.length === 0) {
     return null;
   }
@@ -196,4 +209,17 @@ const createShouldReplace = (colorsToReplace) => {
       return r === c[0] && g === c[1] && b === c[2];
     });
   };
+};
+
+const isPlainObject = (obj) => {
+  if (typeof obj !== "object" || obj === null) {
+    return false;
+  }
+  let proto = obj;
+  while (Object.getPrototypeOf(proto) !== null) {
+    proto = Object.getPrototypeOf(proto);
+  }
+  return (
+    Object.getPrototypeOf(obj) === proto || Object.getPrototypeOf(obj) === null
+  );
 };
