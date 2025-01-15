@@ -1,3 +1,5 @@
+import { effect as signalsEffect } from "@preact/signals";
+import { animationsAllPausedSignal } from "./animation_signal.js";
 import { createAnimationAbortError } from "./utils/animation_abort_error.js";
 
 export const animate = ({
@@ -134,6 +136,13 @@ export const animate = ({
     );
     cancelNextFrame = requestNextFrame(next);
   };
-  animation.play();
+  signalsEffect(() => {
+    const animationsAllPaused = animationsAllPausedSignal.value;
+    if (animationsAllPaused) {
+      animation.pause();
+    } else {
+      animation.play();
+    }
+  });
   return animation;
 };

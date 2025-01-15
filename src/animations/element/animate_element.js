@@ -1,3 +1,5 @@
+import { effect } from "@preact/signals";
+import { animationsAllPausedSignal } from "../animation_signal.js";
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 import { EASING } from "../utils/easing.js";
 
@@ -101,7 +103,14 @@ export const animateElement = ({
       animation.playState = "idle";
     },
   };
-  animation.play();
+  effect(() => {
+    const animationsAllPaused = animationsAllPausedSignal.value;
+    if (animationsAllPaused) {
+      animation.pause();
+    } else {
+      animation.play();
+    }
+  });
   return animation;
 };
 
