@@ -55,7 +55,7 @@ const animateMusicGlobalVolume = (props) => {
   const globalVolumeAnimation = animateNumber({
     // when doc is hidden the browser won't let the animation run
     // and onfinish() won't be called -> audio won't pause
-    canPlayWhenDocumentIsHidden: true,
+    usage: "audio",
     ...props,
     effect: (volumeValue) => {
       musicGlobalVolumeAnimatedSignal.value = volumeValue;
@@ -155,7 +155,7 @@ export const music = ({
       const volumeAnimation = animateNumber({
         // when doc is hidden the browser won't let the animation run
         // and onfinish() won't be called -> audio won't pause
-        canPlayWhenDocumentIsHidden: true,
+        usage: "audio",
         ...rest,
         from,
         to,

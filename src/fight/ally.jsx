@@ -16,35 +16,35 @@ export const Ally = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => {
     return {
-      moveToAct: () => {
-        return animateElement(elementRef.current, {
+      moveToAct: async () => {
+        await animateElement(elementRef.current, {
           id: "ally_move_to_act",
           to: {
             y: -20,
           },
           duration: 200,
-        });
+        }).finished;
       },
-      moveBackToPosition: () => {
-        return animateElement(elementRef.current, {
+      moveBackToPosition: async () => {
+        await animateElement(elementRef.current, {
           id: "ally_move_back_to_position",
           to: {
             y: 0,
           },
           duration: 200,
-        });
+        }).finished;
       },
-      recoilAfterHit: () => {
-        return animateRecoilAfterHit(elementRef.current, {
+      recoilAfterHit: async () => {
+        await animateRecoilAfterHit(elementRef.current, {
           duration: 500,
-        });
+        }).finished;
       },
       displayDamage: async (value) => {
         damageSetter(value);
         await animateDamageDisplay(digitsElementRef.current, {
           duration: 300,
           toY: -1.2,
-        });
+        }).finished;
         damageSetter(null);
       },
     };

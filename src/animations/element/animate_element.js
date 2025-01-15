@@ -42,6 +42,7 @@ export const animateElement = ({
   });
   const webAnimation = new Animation(keyFrames, document.timeline);
   webAnimation.playbackRate = playbackRate;
+  let removeSignalEffect = noop;
   const animation = {
     playState: "idle",
     onstart,
@@ -58,11 +59,14 @@ export const animateElement = ({
         animation.playState = "running";
         return;
       }
-      const stopObservingElementRemoved = onceElementRemoved(element, () => {
+      let stopObservingElementRemoved = onceElementRemoved(element, () => {
         animation.cancel();
       });
       webAnimation.oncancel = () => {
         stopObservingElementRemoved();
+        stopObservingElementRemoved = noop;
+        removeSignalEffect();
+        removeSignalEffect = noop;
         animation.oncancel();
       };
       webAnimation.onfinish = () => {
@@ -103,7 +107,7 @@ export const animateElement = ({
       animation.playState = "idle";
     },
   };
-  effect(() => {
+  removeSignalEffect = effect(() => {
     const animationsAllPaused = animationsAllPausedSignal.value;
     if (animationsAllPaused) {
       animation.pause();

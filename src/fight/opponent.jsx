@@ -37,21 +37,21 @@ export const Opponent = forwardRef(
 
     useImperativeHandle(ref, () => {
       return {
-        glow: () => {
-          return glow(imgRef.current, {
+        glow: async () => {
+          await glow(imgRef.current, {
             id: "enemy_glow",
             elementRef: imgRef,
             from: "black",
             to: "white",
             duration: 300,
-          });
+          }).finished;
         },
-        erase: () => {
-          return erase(imgRef.current, {
+        erase: async () => {
+          await erase(imgRef.current, {
             id: "enemy_erase",
             iterations: 4,
             duration: 300,
-          });
+          }).finished;
         },
         playWeaponAnimation: async () => {
           weaponIsVisibleSetter(true);
@@ -64,14 +64,14 @@ export const Opponent = forwardRef(
               x: -15,
             },
             duration: 200,
-          });
+          }).finished;
           weaponIsVisibleSetter(false);
         },
         displayDamage: async (value) => {
           enemyDamageSetter(value);
           await animateDamageDisplay(digitsElementRef.current, {
             duration: 300,
-          });
+          }).finished;
           enemyDamageSetter(null);
         },
       };

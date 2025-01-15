@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { Ally } from "./ally.jsx";
 import { MountainAndSkyBattleBackground } from "./battle_background/battle_backgrounds.jsx";
 import { MenuFight } from "./menu_fight.jsx";
-import { Opponent } from "./oponent.jsx";
+import { Opponent } from "./opponent.jsx";
 import { SwordAImg } from "./sword_a.jsx";
 import { taurus } from "./taurus.js";
 import { music } from "/audio/music/music.js";

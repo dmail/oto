@@ -2,39 +2,42 @@ import { effect as signalsEffect } from "@preact/signals";
 import { animationsAllPausedSignal } from "./animation_signal.js";
 import { createAnimationAbortError } from "./utils/animation_abort_error.js";
 
+const noop = () => {};
+
 export const animate = ({
   duration = 300,
   fps,
   easing,
-  effect = () => {},
-  onprogress = () => {},
-  onstart = () => {},
-  onpause = () => {},
-  oncancel = () => {},
-  onfinish = () => {},
+  effect = noop,
+  onprogress = noop,
+  onstart = noop,
+  onpause = noop,
+  oncancel = noop,
+  onfinish = noop,
   loop = false,
-  // canPlayWhenGameIsPaused, // TODO (useful for volume transition)
-  canPlayWhenDocumentIsHidden,
+  usage = "display",
 }) => {
-  const requestNextFrame = canPlayWhenDocumentIsHidden
-    ? (callback) => {
-        const timeout = setTimeout(callback, 1000 / 60);
-        return () => {
-          clearTimeout(timeout);
+  const requestNextFrame =
+    usage === "audio"
+      ? (callback) => {
+          const timeout = setTimeout(callback, 1000 / 60);
+          return () => {
+            clearTimeout(timeout);
+          };
+        }
+      : (callback) => {
+          requestAnimationFrame(callback);
+          return () => {
+            cancelAnimationFrame(callback);
+          };
         };
-      }
-    : (callback) => {
-        requestAnimationFrame(callback);
-        return () => {
-          cancelAnimationFrame(callback);
-        };
-      };
 
   let cancelNextFrame;
   let resolveFinished;
   let rejectFinished;
   let previousStepMs;
   let msRemaining;
+  let removeSignalEffect = noop;
   const animation = {
     playState: "idle",
     progressRatio: 0,
@@ -97,6 +100,8 @@ export const animate = ({
       animation.progressRatio = animation.ratio = 0;
       animation.effect(animation.ratio, animation);
       rejectFinished(createAnimationAbortError());
+      removeSignalEffect();
+      removeSignalEffect = noop;
       animation.oncancel();
     },
   };
@@ -137,13 +142,15 @@ export const animate = ({
     );
     cancelNextFrame = requestNextFrame(next);
   };
-  signalsEffect(() => {
-    const animationsAllPaused = animationsAllPausedSignal.value;
-    if (animationsAllPaused) {
-      animation.pause();
-    } else {
-      animation.play();
-    }
-  });
+  if (usage === "display") {
+    removeSignalEffect = signalsEffect(() => {
+      const animationsAllPaused = animationsAllPausedSignal.value;
+      if (animationsAllPaused) {
+        animation.pause();
+      } else {
+        animation.play();
+      }
+    });
+  }
   return animation;
 };
