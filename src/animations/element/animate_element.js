@@ -100,11 +100,11 @@ export const animateElement = ({
       animation.playState = "finished";
     },
     cancel: () => {
-      if (animation.playState === "idle") {
+      if (animation.playState === "canceled") {
         return;
       }
       webAnimation.cancel();
-      animation.playState = "idle";
+      animation.playState = "canceled";
     },
   };
   removeSignalEffect = effect(() => {

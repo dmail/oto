@@ -91,12 +91,12 @@ export const animate = ({
       animation.onfinish();
     },
     cancel: () => {
-      if (animation.playState === "idle") {
+      if (animation.playState === "canceled") {
         return;
       }
       cancelNextFrame();
       previousStepMs = null;
-      animation.playState = "idle";
+      animation.playState = "canceled";
       animation.progressRatio = animation.ratio = 0;
       animation.effect(animation.ratio, animation);
       rejectFinished(createAnimationAbortError());

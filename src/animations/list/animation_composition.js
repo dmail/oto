@@ -1,12 +1,17 @@
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
-export const composeAnimations = (animations) => {
+export const composeAnimations = (
+  animations,
+  { oncancel = () => {}, onfinish = () => {} } = {},
+) => {
   let resolveFinished;
   let rejectFinished;
   let animationFinishedCounter;
   const composedAnimation = {
     playState: "idle",
     finished: null,
+    oncancel,
+    onfinish,
     play: () => {
       if (composedAnimation.playState === "running") {
         return;
@@ -43,26 +48,33 @@ export const composeAnimations = (animations) => {
       }
     },
     pause: () => {
+      if (composedAnimation.playState === "paused") {
+        return;
+      }
       for (const animation of animations) {
         animation.pause();
       }
       composedAnimation.playState = "paused";
     },
     finish: () => {
+      if (composedAnimation.playState === "finished") {
+        return;
+      }
       for (const animation of animations) {
         animation.finish();
       }
       composedAnimation.playState = "finished";
     },
     cancel: () => {
+      if (composedAnimation.playState === "canceled") {
+        return;
+      }
       for (const animation of animations) {
         animation.cancel();
       }
-      composedAnimation.playState = "idle";
+      composedAnimation.playState = "canceled";
       composedAnimation.oncancel();
     },
-    oncancel: () => {},
-    onfinish: () => {},
   };
   composedAnimation.play();
   return composedAnimation;
