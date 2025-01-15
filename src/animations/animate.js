@@ -59,8 +59,9 @@ export const animate = ({
     play: () => {
       if (animation.playState === "paused") {
         previousStepMs = Date.now();
-        cancelNext = requestNext(next);
         animation.playState = "running";
+        animation.onstart();
+        cancelNext = requestNext(next);
         return;
       }
       if (
@@ -76,8 +77,8 @@ export const animate = ({
         animation.ratio = 0;
         animation.playState = "running";
         animation.effect(animation.ratio, animation);
-        cancelNext = requestNext(next);
         animation.onstart();
+        cancelNext = requestNext(next);
         return;
       }
     },
@@ -182,6 +183,8 @@ export const animate = ({
         animation.play();
       }
     });
+  } else {
+    animation.play();
   }
   return animation;
 };

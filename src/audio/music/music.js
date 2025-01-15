@@ -37,16 +37,14 @@ export const setMusicGlobalVolume = (value, { animate = true } = {}) => {
     musicGlobalVolumeSignal.value = value;
     return;
   }
-  const from = musicGlobalVolumeSignal.value;
+  const from = musicGlobalCurrentVolumeSignal.peek();
   const to = value;
+  musicGlobalVolumeSignal.value = value;
   animateMusicGlobalVolume({
     from,
     to,
     duration: 500,
     easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
-    onstart: () => {
-      musicGlobalVolumeSignal.value = to;
-    },
   });
 };
 let cancelGlobalVolumeAnimation = NO_OP;
@@ -181,6 +179,7 @@ export const music = ({
 
     effect(() => {
       const volumeCurrent = volumeCurrentSignal.value;
+      // console.log({ name, volume: volumeCurrent });
       audio.volume = volumeCurrent;
     });
     const setVolume = (
