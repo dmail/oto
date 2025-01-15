@@ -1,4 +1,4 @@
-import { createAnimationAbortError } from "./animation_abort_error.js";
+import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
 export const composeAnimations = (animations) => {
   let resolveFinished;

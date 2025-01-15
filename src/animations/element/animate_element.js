@@ -1,5 +1,5 @@
-import { createAnimationAbortError } from "./animation_abort_error";
-import { EASING } from "./easing";
+import { createAnimationAbortError } from "../utils/animation_abort_error.js";
+import { EASING } from "../utils/easing.js";
 
 const noop = () => {};
 
@@ -74,7 +74,7 @@ export const animateElement = ({
           throw createAnimationAbortError();
         },
       );
-      animation.play();
+      webAnimation.play();
       animation.playState = "running";
       animation.onstart();
     },
@@ -101,6 +101,7 @@ export const animateElement = ({
       animation.playState = "idle";
     },
   };
+  animation.play();
   return animation;
 };
 

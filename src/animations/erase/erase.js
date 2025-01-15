@@ -1,5 +1,5 @@
 import { animate } from "../animate.js";
-import { animateSequence } from "../animate_sequence.js";
+import { animateSequence } from "../list/animate_sequence.js";
 
 export const erase = (
   canvas,

@@ -1,5 +1,5 @@
 import { computed, effect, signal } from "@preact/signals";
-import { animateNumber, EASING } from "animation";
+import { animateNumber, EASING } from "/animations/animation.js";
 import { documentHiddenSignal } from "/utils/document_visibility.js";
 import { userActivationSignal } from "/utils/user_activation.js";
 

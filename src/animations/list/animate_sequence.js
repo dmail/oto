@@ -1,4 +1,4 @@
-import { createAnimationAbortError } from "./animation_abort_error";
+import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
 export const animateSequence = (
   animationExecutors,

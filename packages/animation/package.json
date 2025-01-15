@@ -1,7 +1,0 @@
-{
-  "name": "animation",
-  "private": true,
-  "exports": {
-    ".": "./src/animation.js"
-  }
-}

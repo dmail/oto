@@ -1,8 +1,8 @@
 import { animate } from "../animate.js";
-import { animateSequence } from "../animate_sequence.js";
-import { applyRatioToDiff } from "../apply_ratio_to_diff.js";
-import { EASING } from "../easing.js";
-import { WELL_KNOWN_COLORS } from "../well_known_colors.js";
+import { animateSequence } from "../list/animate_sequence.js";
+import { applyRatioToDiff } from "../utils/apply_ratio_to_diff.js";
+import { EASING } from "../utils/easing.js";
+import { WELL_KNOWN_COLORS } from "../utils/well_known_colors.js";
 
 export const glow = (
   canvas,

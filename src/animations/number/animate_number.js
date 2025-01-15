@@ -1,5 +1,5 @@
-import { animate } from "./animate.js";
-import { applyRatioToDiff } from "./apply_ratio_to_diff.js";
+import { animate } from "../animate.js";
+import { applyRatioToDiff } from "../utils/apply_ratio_to_diff.js";
 
 export const animateNumber = ({
   from,

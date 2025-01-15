@@ -6,7 +6,7 @@ export const createAnimationAbortError = () => {
 };
 
 window.addEventListener("unhandledrejection", (event) => {
-  const { reason } = event.reason;
+  const { reason } = event;
   if (reason && reason.name === "AbortError" && reason.isAnimationAbortError) {
     event.preventDefault();
   }

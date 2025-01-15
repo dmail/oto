@@ -1,6 +1,6 @@
-import { animateNumber } from "animation";
 import { forwardRef } from "preact/compat";
 import { useEffect, useImperativeHandle, useRef, useState } from "preact/hooks";
+import { animateNumber } from "/animations/animation.js";
 
 export const Curtain = forwardRef((props, ref) => {
   const innerRef = useRef();

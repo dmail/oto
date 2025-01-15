@@ -4,45 +4,38 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="./preact_logo.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Glow test</title>
+    <title>Animate number test</title>
   </head>
   <body>
     <div id="root" style="position: relative">
       <fieldset>
         <legend>Controls</legend>
-        From: <input name="from" type="text" /> To:
-        <input name="to" type="text" />
+        From: <input name="from" type="number" /> To:
+        <input name="to" type="number" />
         <br />
         <button name="play">Play</button>
         <button name="pause">Pause</button>
-        <button name="finish">Finish</button>
       </fieldset>
       <div>
-        <canvas id="output"></canvas>
-        <div id="steps"></div>
+        Number:
+        <span id="output"></span>
       </div>
     </div>
     <script type="module">
-      import { glow, EASING } from "animation";
+      import { animateNumber } from "./animate_number.js";
 
-      const canvas = document.querySelector("canvas");
-      const context = canvas.getContext("2d");
-      context.beginPath(); // Start a new path
-      context.rect(0, 0, canvas.width, canvas.height); // Add a rectangle to the current path
-      context.fill();
-
-      let from = "black";
+      let from = 10;
       const fromInput = document.querySelector('[name="from"]');
       fromInput.value = from;
       fromInput.oninput = () => {
-        from = fromInput.value;
+        from = parseInt(fromInput.value);
         update();
       };
-      let to = "green";
+      let to = 0;
       const toInput = document.querySelector('[name="to"]');
       toInput.value = to;
       toInput.oninput = () => {
-        to = toInput.value;
+        to = parseInt(toInput.value);
         update();
       };
 
@@ -50,17 +43,15 @@
       const playButton = document.querySelector('[name="play"]');
       playButton.onclick = () => {
         if (!animation) {
-          animation = glow(canvas, {
-            fromColor: from,
-            toColor: to,
-            duration: 1500,
-            iterations: 2,
+          animation = animateNumber({
+            from,
+            to,
+            duration: 1000,
             fps: 10,
             onprogress: () => {
-              document.querySelector("#steps").innerHTML +=
-                `${animation.color.join(",")}<br />`;
+              document.querySelector("#output").innerHTML +=
+                `${Math.round(animation.value)}<br />`;
             },
-            easing: EASING.LINEAR,
           });
           animation.onfinish = () => {
             update();
@@ -75,39 +66,29 @@
         animation.pause();
         update();
       };
-      const finishButton = document.querySelector('[name="finish"]');
-      finishButton.onclick = () => {
-        animation.finish();
-        update();
-      };
 
       const update = () => {
         if (!animation) {
           playButton.disabled = false;
           pauseButton.disabled = true;
-          finishButton.disabled = true;
           return;
         }
         if (animation.playState === "running") {
           playButton.disabled = true;
           pauseButton.disabled = false;
-          finishButton.disabled = false;
           return;
         }
         if (animation.playState === "paused") {
           playButton.disabled = false;
           pauseButton.disabled = true;
-          finishButton.disabled = false;
           return;
         }
         if (animation.playState === "finished") {
           playButton.disabled = false;
           pauseButton.disabled = true;
-          finishButton.disabled = true;
           return;
         }
       };
-      update();
     </script>
   </body>
 </html>
