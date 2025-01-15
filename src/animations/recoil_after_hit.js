@@ -21,16 +21,14 @@ export const animateRecoilAfterHit = (element, { duration } = {}) => {
   const steps = [];
   for (const { y, duration } of verticalMoves) {
     steps.push(() => {
-      return animateElement({
-        element,
+      return animateElement(element, {
         to: { y },
         duration: duration / 2,
         easing: EASING.EASE,
       });
     });
     steps.push(() => {
-      return animateElement({
-        element,
+      return animateElement(element, {
         to: { y: 0 },
         duration: duration / 2,
         easing: EASING.EASE,

@@ -40,8 +40,7 @@ export const animateDamageDisplay = (
   const steps = [];
   for (const { y, duration, playbackRate } of verticalMoves) {
     steps.push(() => {
-      return animateElement({
-        element,
+      return animateElement(element, {
         to: { y },
         duration: duration / 2,
         easing: EASING.EASE,
@@ -49,8 +48,7 @@ export const animateDamageDisplay = (
       });
     });
     steps.push(() => {
-      return animateElement({
-        element,
+      return animateElement(element, {
         to: { y: 0 },
         duration: duration / 2,
         easing: EASING.EASE,

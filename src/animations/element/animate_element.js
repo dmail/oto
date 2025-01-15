@@ -5,22 +5,24 @@ import { EASING } from "../utils/easing.js";
 
 const noop = () => {};
 
-export const animateElement = ({
-  // id,
+export const animateElement = (
   element,
-  from,
-  to,
-  duration = 500,
-  iterations = 1,
-  fill = "forwards",
-  playbackRate = 1,
-  onstart = noop,
-  onprogress = noop,
-  onpause = noop,
-  onfinish = noop,
-  oncancel = noop,
-  easing,
-}) => {
+  {
+    // id,
+    from,
+    to,
+    duration = 500,
+    iterations = 1,
+    fill = "forwards",
+    playbackRate = 1,
+    onstart = noop,
+    onprogress = noop,
+    onpause = noop,
+    onfinish = noop,
+    oncancel = noop,
+    easing,
+  },
+) => {
   const [fromTransform] = stepFromAnimationDescription(from);
   const [toTransform] = stepFromAnimationDescription(to);
 
