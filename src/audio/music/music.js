@@ -32,7 +32,7 @@ export const useMusicGlobalVolume = () => {
   return musicGlobalVolumeSignal.value;
 };
 export const setMusicGlobalVolume = (value, { animate = true } = {}) => {
-  cancelGlobalVolumeAnimation();
+  removeGlobalVolumeAnimation();
   if (!animate) {
     musicGlobalVolumeSignal.value = value;
     return;
@@ -47,9 +47,9 @@ export const setMusicGlobalVolume = (value, { animate = true } = {}) => {
     easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
   });
 };
-let cancelGlobalVolumeAnimation = NO_OP;
+let removeGlobalVolumeAnimation = NO_OP;
 const animateMusicGlobalVolume = (props) => {
-  cancelGlobalVolumeAnimation();
+  removeGlobalVolumeAnimation();
   const globalVolumeAnimation = animateNumber({
     // when doc is hidden the browser won't let the animation run
     // and onfinish() won't be called -> audio won't pause
@@ -58,18 +58,18 @@ const animateMusicGlobalVolume = (props) => {
     effect: (volumeValue) => {
       musicGlobalVolumeAnimatedSignal.value = volumeValue;
     },
-    oncancel: () => {
+    onremove: () => {
       musicGlobalVolumeAnimatedSignal.value = undefined;
-      cancelGlobalVolumeAnimation = NO_OP;
+      removeGlobalVolumeAnimation = NO_OP;
     },
     onfinish: () => {
       musicGlobalVolumeAnimatedSignal.value = undefined;
-      cancelGlobalVolumeAnimation = NO_OP;
+      removeGlobalVolumeAnimation = NO_OP;
       props.onfinish?.();
     },
   });
-  cancelGlobalVolumeAnimation = () => {
-    globalVolumeAnimation.cancel();
+  removeGlobalVolumeAnimation = () => {
+    globalVolumeAnimation.remove();
   };
   return globalVolumeAnimation;
 };
@@ -141,15 +141,15 @@ export const music = ({
       return volumeToSetResolved;
     });
 
-    let cancelVolumeAnimation = NO_OP;
+    let removeVolumeAnimation = NO_OP;
     const animateVolume = ({
       from = volumeCurrentSignal.peek(),
       to = volumeSignal.peek(),
-      oncancel = NO_OP,
+      onremove = NO_OP,
       onfinish = NO_OP,
       ...rest
     }) => {
-      cancelVolumeAnimation();
+      removeVolumeAnimation();
       const volumeAnimation = animateNumber({
         // when doc is hidden the browser won't let the animation run
         // and onfinish() won't be called -> audio won't pause
@@ -160,19 +160,19 @@ export const music = ({
         effect: (volumeValue) => {
           volumeAnimatedSignal.value = volumeValue;
         },
-        oncancel: () => {
+        onremove: () => {
           volumeAnimatedSignal.value = undefined;
-          cancelVolumeAnimation = NO_OP;
-          oncancel();
+          removeVolumeAnimation = NO_OP;
+          onremove();
         },
         onfinish: () => {
-          cancelVolumeAnimation = NO_OP;
+          removeVolumeAnimation = NO_OP;
           volumeAnimatedSignal.value = undefined;
           onfinish();
         },
       });
-      cancelVolumeAnimation = () => {
-        volumeAnimation.cancel();
+      removeVolumeAnimation = () => {
+        volumeAnimation.remove();
       };
       return volumeAnimation;
     };
@@ -186,7 +186,7 @@ export const music = ({
       value,
       { animated = volumeAnimation, duration = 500 } = {},
     ) => {
-      cancelVolumeAnimation();
+      removeVolumeAnimation();
       if (!animated) {
         volumeSignal.value = value;
         return;
@@ -207,8 +207,8 @@ export const music = ({
     Object.assign(musicObject, {
       setVolume,
       animateVolume,
-      cancelVolumeAnimation: () => {
-        cancelVolumeAnimation();
+      removeVolumeAnimation: () => {
+        removeVolumeAnimation();
       },
     });
   }
@@ -254,7 +254,7 @@ export const music = ({
         ...fadeOut,
         from: undefined,
         to: 0,
-        oncancel: () => {
+        onremove: () => {
           volumeFadeoutThenPauseAnimation = null;
           audio.pause();
         },
@@ -275,7 +275,7 @@ export const music = ({
       }
 
       if (volumeFadeoutThenPauseAnimation) {
-        volumeFadeoutThenPauseAnimation.cancel();
+        volumeFadeoutThenPauseAnimation.remove();
       }
       if (!audio.paused) {
         return;

@@ -32,7 +32,7 @@ export const Curtain = forwardRef((props, ref) => {
           },
         });
         setCleanup(() => {
-          opacityAnimation.cancel();
+          opacityAnimation.remove();
         });
       },
       show: ({ color = "white", opacity = 0.5, autoHideMs } = {}) => {
