@@ -12,7 +12,9 @@ export const animateElement = ({
   iterations = 1,
   fill = "forwards",
   playbackRate = 1,
+  onstart = noop,
   onprogress = noop,
+  onpause = noop,
   onfinish = noop,
   oncancel = noop,
   easing,
@@ -31,52 +33,75 @@ export const animateElement = ({
   } else {
     element.style.animationTimingFunction = "";
   }
-  const animation = element.animate(steps, {
+  const keyFrames = new KeyframeEffect(element, steps, {
     duration,
     fill,
     iterations,
   });
-  animation.playbackRate = playbackRate;
-  animation.oncancel = () => {
-    elementAnimation.oncancel();
-  };
-  animation.onfinish = () => {
-    elementAnimation.onfinish();
-  };
-  animation.finished.then(
-    () => {
-      // console.log("commit styles on ", id);
-      animation.commitStyles();
-      // animation.cancel();
-    },
-    () => {
-      // ignore cancellation
-    },
-  );
-  const elementAnimation = {
+  const webAnimation = new Animation(keyFrames, document.timeline);
+  webAnimation.playbackRate = playbackRate;
+  const animation = {
+    playState: "idle",
+    onstart,
     onprogress,
-    onfinish,
+    onpause,
     oncancel,
+    onfinish,
     play: () => {
+      if (animation.playState === "running") {
+        return;
+      }
+      if (animation.playState === "paused") {
+        webAnimation.play();
+        animation.playState = "running";
+        return;
+      }
+      const stopObservingElementRemoved = onceElementRemoved(element, () => {
+        animation.cancel();
+      });
+      webAnimation.oncancel = () => {
+        stopObservingElementRemoved();
+        animation.oncancel();
+      };
+      webAnimation.onfinish = () => {
+        animation.onfinish();
+      };
+      animation.finished = webAnimation.finished.then(
+        () => {
+          webAnimation.commitStyles();
+        },
+        () => {
+          throw createAnimationAbortError();
+        },
+      );
       animation.play();
-      elementAnimation.finished = animation.finished;
+      animation.playState = "running";
+      animation.onstart();
     },
     pause: () => {
-      animation.pause();
+      if (animation.playState === "paused") {
+        return;
+      }
+      webAnimation.pause();
+      animation.playState = "paused";
+      animation.onpause();
     },
     finish: () => {
-      animation.finish();
+      if (animation.playState === "finished") {
+        return;
+      }
+      webAnimation.finish();
+      animation.playState = "finished";
     },
     cancel: () => {
-      if (animation.playState !== "finished") {
-        animation.cancel();
+      if (animation.playState === "idle") {
+        return;
       }
+      webAnimation.cancel();
+      animation.playState = "idle";
     },
-    finished: animation.finished.catch(() => {
-      throw createAnimationAbortError();
-    }),
   };
-  return elementAnimation;
+  return animation;
 };
 
 export const stepFromAnimationDescription = (animationDescription) => {
@@ -128,4 +153,36 @@ const createAnimationTimingFunction = (easing, steps = 10) => {
     progress += stepRatio;
   }
   return `linear(${values.join(", ")});`;
+};
+
+const onceElementRemoved = (element, callback) => {
+  const observer = new MutationObserver(function (mutations) {
+    let mutationForRemoval;
+    for (const mutation of mutations) {
+      if (mutation.type !== "childList") {
+        continue;
+      }
+      const { removedNodes } = mutation;
+      if (removedNodes.length === 0) {
+        continue;
+      }
+      for (const removedNode of removedNodes) {
+        if (removedNode === element) {
+          mutationForRemoval = mutation;
+          break;
+        }
+      }
+      if (mutationForRemoval) {
+        break;
+      }
+    }
+    if (mutationForRemoval) {
+      observer.disconnect();
+      callback();
+    }
+  });
+  observer.observe(element.parentNode, { childList: true });
+  return () => {
+    observer.disconnect();
+  };
 };

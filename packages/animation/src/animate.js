@@ -7,8 +7,9 @@ export const animate = ({
   effect = () => {},
   onprogress = () => {},
   onstart = () => {},
-  onfinish = () => {},
+  onpause = () => {},
   oncancel = () => {},
+  onfinish = () => {},
   loop = false,
   canPlayWhenDocumentIsHidden,
 }) => {
@@ -36,9 +37,11 @@ export const animate = ({
     progressRatio: 0,
     ratio: 0,
     effect,
+    onstart,
     onprogress,
-    onfinish,
+    onpause,
     oncancel,
+    onfinish,
     finished: null,
     play: () => {
       if (animation.playState === "running") {
@@ -47,20 +50,21 @@ export const animate = ({
       if (animation.playState === "paused") {
         animation.playState = "running";
         previousStepMs = Date.now();
-      } else {
-        animation.playState = "running";
-        previousStepMs = Date.now();
-        msRemaining = duration;
-        animation.finished = new Promise((resolve, reject) => {
-          resolveFinished = resolve;
-          rejectFinished = reject;
-        });
-        animation.progressRatio = 0;
-        animation.ratio = 0;
-        animation.effect(animation.ratio, animation);
-        onstart();
+        cancelNextFrame = requestNextFrame(next);
+        return;
       }
+      animation.playState = "running";
+      previousStepMs = Date.now();
+      msRemaining = duration;
+      animation.finished = new Promise((resolve, reject) => {
+        resolveFinished = resolve;
+        rejectFinished = reject;
+      });
+      animation.progressRatio = 0;
+      animation.ratio = 0;
+      animation.effect(animation.ratio, animation);
       cancelNextFrame = requestNextFrame(next);
+      animation.onstart();
     },
     pause: () => {
       if (animation.playState === "paused") {
@@ -68,6 +72,7 @@ export const animate = ({
       }
       cancelNextFrame();
       animation.playState = "paused";
+      animation.onpause();
     },
     finish: () => {
       if (animation.playState === "finished") {
