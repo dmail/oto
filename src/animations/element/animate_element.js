@@ -21,6 +21,7 @@ export const animateElement = (
     onfinish = noop,
     onremove = noop,
     easing,
+    canPlayWhilePaused,
   },
 ) => {
   const [fromTransform] = stepFromAnimationDescription(from);
@@ -44,7 +45,7 @@ export const animateElement = (
   });
   const webAnimation = new Animation(keyFrames, document.timeline);
   webAnimation.playbackRate = playbackRate;
-  let removeSignalEffect = noop;
+  let removeSignalEffect;
   let stopObservingElementRemoved;
   const createFinishedPromise = () => {
     return webAnimation.finished.then(
@@ -110,19 +111,25 @@ export const animateElement = (
         stopObservingElementRemoved();
         stopObservingElementRemoved = undefined;
       }
-      removeSignalEffect();
-      removeSignalEffect = noop;
+      if (removeSignalEffect) {
+        removeSignalEffect();
+        removeSignalEffect = undefined;
+      }
       animation.playState = "removed";
     },
   };
-  removeSignalEffect = effect(() => {
-    const animationsAllPaused = animationsAllPausedSignal.value;
-    if (animationsAllPaused) {
-      animation.pause();
-    } else {
-      animation.play();
-    }
-  });
+  if (canPlayWhilePaused) {
+    animation.play();
+  } else {
+    removeSignalEffect = effect(() => {
+      const animationsAllPaused = animationsAllPausedSignal.value;
+      if (animationsAllPaused) {
+        animation.pause();
+      } else {
+        animation.play();
+      }
+    });
+  }
   return animation;
 };
 
