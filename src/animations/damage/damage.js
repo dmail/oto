@@ -1,29 +1,11 @@
-import { animateElement, animateSequence, EASING } from "animation";
-import { useCallback } from "preact/hooks";
-import { useAnimate } from "./use_animate.js";
+import { animateElement } from "../element/animate_element.js";
+import { animateSequence } from "../list/animate_sequence.js";
+import { EASING } from "../utils/easing.js";
 
-export const useDigitsDisplayAnimation = ({
-  elementRef,
-  duration,
-  playbackRate = 0.5,
-  toY = -0.4,
-  ...props
-}) => {
-  const animate = useCallback(() => {
-    return animateDigitsDisplay(elementRef.current, {
-      duration,
-      playbackRate,
-      toY,
-    });
-  }, [duration, playbackRate, toY]);
-
-  return useAnimate({
-    animate,
-    ...props,
-  });
-};
-
-const animateDigitsDisplay = (element, { toY, duration, playbackRate }) => {
+export const animateDamageDisplay = (
+  element,
+  { toY = -0.4, duration, playbackRate = 0.5 },
+) => {
   let from = 0;
   const interval = (to) => {
     const stepDuration = (to - from) * duration;

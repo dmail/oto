@@ -1,10 +1,12 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
 import { SwordAImg } from "./sword_a.jsx";
-import { useCanvasEraseAnimation } from "/animations/use_canvas_erase_animation.js";
-import { useCanvasGlowAnimation } from "/animations/use_canvas_glow_animation.js";
-import { useDigitsDisplayAnimation } from "/animations/use_digits_display_animation.js";
-import { useElementAnimation } from "/animations/use_element_animation.js";
+import {
+  animateDamageDisplay,
+  animateElement,
+  erase,
+  glow,
+} from "/animations/animation.js";
 import { Box } from "/components/box/box.jsx";
 import { Img } from "/components/img/img.jsx";
 import { Message } from "/components/message/message.jsx";
@@ -28,53 +30,48 @@ export const Opponent = forwardRef(
     ref,
   ) => {
     const imgRef = useRef();
-    const [glow] = useCanvasGlowAnimation({
-      id: "enemy_glow",
-      elementRef: imgRef,
-      from: "black",
-      to: "white",
-      duration: 300,
-    });
-    const [erase] = useCanvasEraseAnimation({
-      id: "enemy_erase",
-      elementRef: imgRef,
-      iterations: 4,
-      duration: 300,
-    });
-
     const digitsElementRef = useRef();
-    const [displayDamage] = useDigitsDisplayAnimation({
-      elementRef: digitsElementRef,
-      duration: 300,
-    });
     const weaponElementRef = useRef();
-    const [playWeaponAnimation] = useElementAnimation({
-      id: "weapon_animation",
-      elementRef: weaponElementRef,
-      from: {
-        x: 25,
-      },
-      to: {
-        x: -15,
-      },
-      duration: 200,
-    });
     const [weaponIsVisible, weaponIsVisibleSetter] = useState(false);
-
     const [enemyDamage, enemyDamageSetter] = useState(null);
 
     useImperativeHandle(ref, () => {
       return {
-        glow,
-        erase,
+        glow: () => {
+          return glow(imgRef.current, {
+            id: "enemy_glow",
+            elementRef: imgRef,
+            from: "black",
+            to: "white",
+            duration: 300,
+          });
+        },
+        erase: () => {
+          return erase(imgRef.current, {
+            id: "enemy_erase",
+            iterations: 4,
+            duration: 300,
+          });
+        },
         playWeaponAnimation: async () => {
           weaponIsVisibleSetter(true);
-          await playWeaponAnimation();
+          await animateElement(weaponElementRef.current, {
+            id: "weapon_animation",
+            from: {
+              x: 25,
+            },
+            to: {
+              x: -15,
+            },
+            duration: 200,
+          });
           weaponIsVisibleSetter(false);
         },
         displayDamage: async (value) => {
           enemyDamageSetter(value);
-          await displayDamage();
+          await animateDamageDisplay(digitsElementRef.current, {
+            duration: 300,
+          });
           enemyDamageSetter(null);
         },
       };

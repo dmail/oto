@@ -1,3 +1,4 @@
+export { animateDamageDisplay } from "./damage/damage.js";
 export {
   animateElement,
   stepFromAnimationDescription,

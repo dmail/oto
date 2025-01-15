@@ -2,7 +2,12 @@ import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
 export const animateSequence = (
   animationExecutors,
-  { onfinish = () => {}, oncancel = () => {} } = {},
+  {
+    onstart = () => {},
+    oncancel = () => {},
+    onpause = () => {},
+    onfinish = () => {},
+  } = {},
 ) => {
   let resolveFinished;
   let rejectFinished;
@@ -11,6 +16,10 @@ export const animateSequence = (
   const animationSequence = {
     playState: "idle",
     finished: null,
+    onstart,
+    oncancel,
+    onpause,
+    onfinish,
     play: () => {
       if (animationSequence.playState === "running") {
         return;
@@ -30,13 +39,13 @@ export const animateSequence = (
       }
     },
     pause: () => {
-      animationSequence.playState = "paused";
       if (currentAnimation) {
         currentAnimation.pause();
       }
+      animationSequence.playState = "paused";
+      animationSequence.onpause();
     },
     finish: () => {
-      animationSequence.playState = "finished";
       if (currentAnimation) {
         currentAnimation.finish();
         while (childAnimationIndex < animationExecutors.length) {
@@ -46,6 +55,7 @@ export const animateSequence = (
         }
         currentAnimation = null;
       }
+      animationSequence.playState = "finished";
       resolveFinished();
       animationSequence.onfinish();
     },
@@ -54,8 +64,6 @@ export const animateSequence = (
       rejectFinished(createAnimationAbortError());
       animationSequence.oncancel();
     },
-    onfinish,
-    oncancel,
   };
   const startNext = () => {
     childAnimationIndex++;
