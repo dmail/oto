@@ -4,8 +4,8 @@ export const animateSequence = (
   animationExecutors,
   {
     onstart = () => {},
-    oncancel = () => {},
     onpause = () => {},
+    onremove = () => {},
     onfinish = () => {},
   } = {},
 ) => {
@@ -17,8 +17,8 @@ export const animateSequence = (
     playState: "idle",
     finished: null,
     onstart,
-    oncancel,
     onpause,
+    onremove,
     onfinish,
     play: () => {
       if (animationSequence.playState === "running") {
@@ -65,13 +65,13 @@ export const animateSequence = (
       resolveFinished();
       animationSequence.onfinish();
     },
-    cancel: () => {
+    remove: () => {
       if (animationSequence.playState === "idle") {
         return;
       }
-      currentAnimation.cancel();
+      currentAnimation.remove();
       rejectFinished(createAnimationAbortError());
-      animationSequence.oncancel();
+      animationSequence.onremove();
       animationSequence.playState = "idle";
     },
   };
@@ -88,8 +88,8 @@ export const animateSequence = (
         startNext();
       }
     };
-    currentAnimation.oncancel = () => {
-      animationSequence.cancel();
+    currentAnimation.onremove = () => {
+      animationSequence.remove();
     };
   };
   animationSequence.play();

@@ -2,7 +2,7 @@ import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
 export const animateParallel = (
   animations,
-  { oncancel = () => {}, onfinish = () => {} } = {},
+  { onremove = () => {}, onfinish = () => {} } = {},
 ) => {
   let resolveFinished;
   let rejectFinished;
@@ -10,7 +10,7 @@ export const animateParallel = (
   const parallelAnimation = {
     playState: "idle",
     finished: null,
-    oncancel,
+    onremove,
     onfinish,
     play: () => {
       if (parallelAnimation.playState === "running") {
@@ -40,10 +40,8 @@ export const animateParallel = (
             resolveFinished();
           }
         };
-        // eslint-disable-next-line no-loop-func
-        animation.oncancel = () => {
-          rejectFinished(createAnimationAbortError());
-          parallelAnimation.oncancel();
+        animation.onremove = () => {
+          parallelAnimation.remove();
         };
       }
     },
@@ -65,15 +63,16 @@ export const animateParallel = (
       }
       parallelAnimation.playState = "finished";
     },
-    cancel: () => {
-      if (parallelAnimation.playState === "canceled") {
+    remove: () => {
+      if (parallelAnimation.playState === "removed") {
         return;
       }
       for (const animation of animations) {
-        animation.cancel();
+        animation.remove();
       }
-      parallelAnimation.playState = "canceled";
-      parallelAnimation.oncancel();
+      parallelAnimation.playState = "removed";
+      parallelAnimation.onremove();
+      rejectFinished(createAnimationAbortError());
     },
   };
   parallelAnimation.play();

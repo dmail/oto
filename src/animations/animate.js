@@ -12,7 +12,7 @@ export const animate = ({
   onprogress = noop,
   onstart = noop,
   onpause = noop,
-  oncancel = noop,
+  onremove = noop,
   onfinish = noop,
   loop = false,
   usage = "display",
@@ -46,14 +46,14 @@ export const animate = ({
   };
 
   const animation = {
-    playState: "idle", // "idle", "running", "paused", "canceled", "finished"
+    playState: "idle", // "idle", "running", "paused", "removed", "finished"
     progressRatio: 0,
     ratio: 0,
     effect,
     onstart,
     onprogress,
     onpause,
-    oncancel,
+    onremove,
     onfinish,
     finished: createFinishedPromise(),
     play: () => {
@@ -109,7 +109,7 @@ export const animate = ({
         animation.onfinish();
       }
     },
-    cancel: () => {
+    remove: () => {
       if (
         animation.playState === "idle" ||
         animation.playState === "running" ||
@@ -124,7 +124,7 @@ export const animate = ({
         previousStepMs = null;
         animation.progressRatio = animation.ratio = 0;
         animation.effect(animation.ratio, animation);
-        animation.playState = "canceled";
+        animation.playState = "removed";
         if (rejectFinished) {
           rejectFinished(createAnimationAbortError());
           rejectFinished = undefined;
@@ -133,7 +133,7 @@ export const animate = ({
           removeSignalEffect();
           removeSignalEffect = undefined;
         }
-        animation.oncancel();
+        animation.onremove();
       }
     },
   };

@@ -19,7 +19,7 @@ export const animateElement = (
     onprogress = noop,
     onpause = noop,
     onfinish = noop,
-    oncancel = noop,
+    onremove = noop,
     easing,
   },
 ) => {
@@ -45,6 +45,7 @@ export const animateElement = (
   const webAnimation = new Animation(keyFrames, document.timeline);
   webAnimation.playbackRate = playbackRate;
   let removeSignalEffect = noop;
+  let stopObservingElementRemoved;
   const createFinishedPromise = () => {
     return webAnimation.finished.then(
       () => {
@@ -60,7 +61,7 @@ export const animateElement = (
     onstart,
     onprogress,
     onpause,
-    oncancel,
+    onremove,
     onfinish,
     finished: createFinishedPromise(),
     play: () => {
@@ -72,16 +73,9 @@ export const animateElement = (
         animation.playState = "running";
         return;
       }
-      let stopObservingElementRemoved = onceElementRemoved(element, () => {
-        animation.cancel();
+      stopObservingElementRemoved = onceElementRemoved(element, () => {
+        animation.remove();
       });
-      webAnimation.oncancel = () => {
-        stopObservingElementRemoved();
-        stopObservingElementRemoved = noop;
-        removeSignalEffect();
-        removeSignalEffect = noop;
-        animation.oncancel();
-      };
       webAnimation.onfinish = () => {
         animation.onfinish();
       };
@@ -107,12 +101,18 @@ export const animateElement = (
       webAnimation.finish();
       animation.playState = "finished";
     },
-    cancel: () => {
-      if (animation.playState === "canceled") {
+    remove: () => {
+      if (animation.playState === "removed") {
         return;
       }
       webAnimation.cancel();
-      animation.playState = "canceled";
+      if (stopObservingElementRemoved) {
+        stopObservingElementRemoved();
+        stopObservingElementRemoved = undefined;
+      }
+      removeSignalEffect();
+      removeSignalEffect = noop;
+      animation.playState = "removed";
     },
   };
   removeSignalEffect = effect(() => {
