@@ -13,6 +13,7 @@ export const animate = ({
   oncancel = () => {},
   onfinish = () => {},
   loop = false,
+  // canPlayWhenGameIsPaused, // TODO (useful for volume transition)
   canPlayWhenDocumentIsHidden,
 }) => {
   const requestNextFrame = canPlayWhenDocumentIsHidden
