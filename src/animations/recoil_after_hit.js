@@ -1,23 +1,8 @@
-import { animateElement, animateSequence, EASING } from "animation";
-import { useCallback } from "preact/hooks";
-import { useAnimate } from "./use_animate.js";
+import { animateElement } from "./element/animate_element.js";
+import { animateSequence } from "./list/animate_sequence.js";
+import { EASING } from "./utils/easing.js";
 
-export const usePartyMemberHitAnimation = ({
-  elementRef,
-  duration,
-  ...props
-}) => {
-  const animate = useCallback(() => {
-    return animatePartyMemberHit(elementRef.current, { duration });
-  }, [duration]);
-
-  return useAnimate({
-    animate,
-    ...props,
-  });
-};
-
-const animatePartyMemberHit = (element, { duration }) => {
+export const animateRecoilAfterHit = (element, { duration } = {}) => {
   let from = 0;
   const interval = (to) => {
     const stepDuration = (to - from) * duration;

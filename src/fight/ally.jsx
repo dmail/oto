@@ -1,8 +1,10 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
-import { useDigitsDisplayAnimation } from "/animations/use_digits_display_animation.js";
-import { useElementAnimation } from "/animations/use_element_animation.js";
-import { usePartyMemberHitAnimation } from "/animations/use_party_member_hit_animation.js";
+import {
+  animateDamageDisplay,
+  animateElement,
+  animateRecoilAfterHit,
+} from "/animations/animation.js";
 import { Box } from "/components/box/box.jsx";
 import { Benjamin } from "/components/character/benjamin.jsx";
 import { Digits } from "/components/text/digits.jsx";
@@ -10,43 +12,39 @@ import { Digits } from "/components/text/digits.jsx";
 export const Ally = forwardRef((props, ref) => {
   const elementRef = useRef();
   const [damage, damageSetter] = useState(null);
-
-  const [moveToAct] = useElementAnimation({
-    id: "ally_move_to_act",
-    elementRef,
-    to: {
-      y: -20,
-    },
-    duration: 200,
-  });
-  const [moveBackToPosition] = useElementAnimation({
-    id: "ally_move_back_to_position",
-    elementRef,
-    to: {
-      y: 0,
-    },
-    duration: 200,
-  });
-
   const digitsElementRef = useRef();
-  const [recoilAfterHit] = usePartyMemberHitAnimation({
-    elementRef,
-    duration: 500,
-  });
-  const [displayDamage] = useDigitsDisplayAnimation({
-    elementRef: digitsElementRef,
-    duration: 300,
-    toY: -1.2,
-  });
 
   useImperativeHandle(ref, () => {
     return {
-      moveToAct,
-      moveBackToPosition,
-      recoilAfterHit,
+      moveToAct: () => {
+        return animateElement(elementRef.current, {
+          id: "ally_move_to_act",
+          to: {
+            y: -20,
+          },
+          duration: 200,
+        });
+      },
+      moveBackToPosition: () => {
+        return animateElement(elementRef.current, {
+          id: "ally_move_back_to_position",
+          to: {
+            y: 0,
+          },
+          duration: 200,
+        });
+      },
+      recoilAfterHit: () => {
+        return animateRecoilAfterHit(elementRef.current, {
+          duration: 500,
+        });
+      },
       displayDamage: async (value) => {
         damageSetter(value);
-        await displayDamage();
+        await animateDamageDisplay(digitsElementRef.current, {
+          duration: 300,
+          toY: -1.2,
+        });
         damageSetter(null);
       },
     };

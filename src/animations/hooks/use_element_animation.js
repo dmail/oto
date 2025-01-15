@@ -1,5 +1,8 @@
-import { animateElement, stepFromAnimationDescription } from "animation";
 import { useCallback } from "preact/hooks";
+import {
+  animateElement,
+  stepFromAnimationDescription,
+} from "../element/animate_element.js";
 import { useAnimate } from "./use_animate.js";
 
 export const useElementAnimation = ({
