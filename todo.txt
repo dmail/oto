@@ -1,4 +1,7 @@
-- animation mort du monstre
+- navigation url (ouverture de la dialog pause par exemple) ?paused=1
+- le bouton back doit fermer la dialog pause comme le ferait un clic
+- le bouton pause ouvre les options de gestions du sons etc
+
 - écran de game over (choix retry/revenir a la carte du monde)
 - faire la carte du monde
 

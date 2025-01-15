@@ -1,3 +1,4 @@
+import { createAnimationAbortError } from "./animation_abort_error";
 import { EASING } from "./easing";
 
 const noop = () => {};
@@ -71,7 +72,9 @@ export const animateElement = ({
         animation.cancel();
       }
     },
-    finished: animation.finished,
+    finished: animation.finished.catch(() => {
+      throw createAnimationAbortError();
+    }),
   };
   return elementAnimation;
 };

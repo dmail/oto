@@ -1,3 +1,5 @@
+import { createAnimationAbortError } from "./animation_abort_error.js";
+
 export const animate = ({
   duration = 300,
   fps,
@@ -26,6 +28,7 @@ export const animate = ({
 
   let cancelNextFrame;
   let resolveFinished;
+  let rejectFinished;
   let previousStepMs;
   let msRemaining;
   const animation = {
@@ -38,7 +41,9 @@ export const animate = ({
     oncancel,
     finished: null,
     play: () => {
-      if (animation.playState === "running") return;
+      if (animation.playState === "running") {
+        return;
+      }
       if (animation.playState === "paused") {
         animation.playState = "running";
         previousStepMs = Date.now();
@@ -46,8 +51,9 @@ export const animate = ({
         animation.playState = "running";
         previousStepMs = Date.now();
         msRemaining = duration;
-        animation.finished = new Promise((resolve) => {
+        animation.finished = new Promise((resolve, reject) => {
           resolveFinished = resolve;
+          rejectFinished = reject;
         });
         animation.progressRatio = 0;
         animation.ratio = 0;
@@ -57,12 +63,16 @@ export const animate = ({
       cancelNextFrame = requestNextFrame(next);
     },
     pause: () => {
-      if (animation.playState === "paused") return;
+      if (animation.playState === "paused") {
+        return;
+      }
       cancelNextFrame();
       animation.playState = "paused";
     },
     finish: () => {
-      if (animation.playState === "finished") return;
+      if (animation.playState === "finished") {
+        return;
+      }
       cancelNextFrame();
       setProgress(1);
       animation.playState = "finished";
@@ -70,10 +80,15 @@ export const animate = ({
       animation.onfinish();
     },
     cancel: () => {
+      if (animation.playState === "idle") {
+        return;
+      }
       cancelNextFrame();
       previousStepMs = null;
+      animation.playState = "idle";
       animation.progressRatio = animation.ratio = 0;
       animation.effect(animation.ratio, animation);
+      rejectFinished(createAnimationAbortError());
       animation.oncancel();
     },
   };

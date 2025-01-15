@@ -1,10 +1,12 @@
+import { createAnimationAbortError } from "./animation_abort_error.js";
+
 export const composeAnimations = (animations) => {
   let resolveFinished;
+  let rejectFinished;
   let animationFinishedCounter;
   const composedAnimation = {
     playState: "idle",
     finished: null,
-    oncancel: () => {},
     play: () => {
       if (composedAnimation.playState === "running") {
         return;
@@ -19,8 +21,9 @@ export const composeAnimations = (animations) => {
         composedAnimation.playState = "running";
         return;
       }
-      composedAnimation.finished = new Promise((resolve) => {
+      composedAnimation.finished = new Promise((resolve, reject) => {
         resolveFinished = resolve;
+        rejectFinished = reject;
       });
       animationFinishedCounter = 0;
       for (const animation of animations) {
@@ -31,6 +34,11 @@ export const composeAnimations = (animations) => {
             composedAnimation.onfinish();
             resolveFinished();
           }
+        };
+        // eslint-disable-next-line no-loop-func
+        animation.oncancel = () => {
+          rejectFinished(createAnimationAbortError());
+          composedAnimation.oncancel();
         };
       }
     },
@@ -50,8 +58,10 @@ export const composeAnimations = (animations) => {
       for (const animation of animations) {
         animation.cancel();
       }
+      composedAnimation.playState = "idle";
       composedAnimation.oncancel();
     },
+    oncancel: () => {},
     onfinish: () => {},
   };
   composedAnimation.play();
