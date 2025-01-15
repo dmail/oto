@@ -43,6 +43,16 @@ export const animateElement = ({
   const webAnimation = new Animation(keyFrames, document.timeline);
   webAnimation.playbackRate = playbackRate;
   let removeSignalEffect = noop;
+  const createFinishedPromise = () => {
+    return webAnimation.finished.then(
+      () => {
+        webAnimation.commitStyles();
+      },
+      () => {
+        throw createAnimationAbortError();
+      },
+    );
+  };
   const animation = {
     playState: "idle",
     onstart,
@@ -50,6 +60,7 @@ export const animateElement = ({
     onpause,
     oncancel,
     onfinish,
+    finished: createFinishedPromise(),
     play: () => {
       if (animation.playState === "running") {
         return;
@@ -72,15 +83,10 @@ export const animateElement = ({
       webAnimation.onfinish = () => {
         animation.onfinish();
       };
-      animation.finished = webAnimation.finished.then(
-        () => {
-          webAnimation.commitStyles();
-        },
-        () => {
-          throw createAnimationAbortError();
-        },
-      );
       webAnimation.play();
+      if (animation.playState === "finished") {
+        animation.finished = createFinishedPromise();
+      }
       animation.playState = "running";
       animation.onstart();
     },

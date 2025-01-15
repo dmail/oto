@@ -1,32 +1,32 @@
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
-export const composeAnimations = (
+export const animateParallel = (
   animations,
   { oncancel = () => {}, onfinish = () => {} } = {},
 ) => {
   let resolveFinished;
   let rejectFinished;
   let animationFinishedCounter;
-  const composedAnimation = {
+  const parallelAnimation = {
     playState: "idle",
     finished: null,
     oncancel,
     onfinish,
     play: () => {
-      if (composedAnimation.playState === "running") {
+      if (parallelAnimation.playState === "running") {
         return;
       }
       if (
-        composedAnimation.playState === "paused" ||
-        composedAnimation.playState === "finished"
+        parallelAnimation.playState === "paused" ||
+        parallelAnimation.playState === "finished"
       ) {
         for (const animation of animations) {
           animation.play();
         }
-        composedAnimation.playState = "running";
+        parallelAnimation.playState = "running";
         return;
       }
-      composedAnimation.finished = new Promise((resolve, reject) => {
+      parallelAnimation.finished = new Promise((resolve, reject) => {
         resolveFinished = resolve;
         rejectFinished = reject;
       });
@@ -36,46 +36,46 @@ export const composeAnimations = (
         animation.onfinish = () => {
           animationFinishedCounter++;
           if (animationFinishedCounter === animations.length) {
-            composedAnimation.onfinish();
+            parallelAnimation.onfinish();
             resolveFinished();
           }
         };
         // eslint-disable-next-line no-loop-func
         animation.oncancel = () => {
           rejectFinished(createAnimationAbortError());
-          composedAnimation.oncancel();
+          parallelAnimation.oncancel();
         };
       }
     },
     pause: () => {
-      if (composedAnimation.playState === "paused") {
+      if (parallelAnimation.playState === "paused") {
         return;
       }
       for (const animation of animations) {
         animation.pause();
       }
-      composedAnimation.playState = "paused";
+      parallelAnimation.playState = "paused";
     },
     finish: () => {
-      if (composedAnimation.playState === "finished") {
+      if (parallelAnimation.playState === "finished") {
         return;
       }
       for (const animation of animations) {
         animation.finish();
       }
-      composedAnimation.playState = "finished";
+      parallelAnimation.playState = "finished";
     },
     cancel: () => {
-      if (composedAnimation.playState === "canceled") {
+      if (parallelAnimation.playState === "canceled") {
         return;
       }
       for (const animation of animations) {
         animation.cancel();
       }
-      composedAnimation.playState = "canceled";
-      composedAnimation.oncancel();
+      parallelAnimation.playState = "canceled";
+      parallelAnimation.oncancel();
     },
   };
-  composedAnimation.play();
-  return composedAnimation;
+  parallelAnimation.play();
+  return parallelAnimation;
 };

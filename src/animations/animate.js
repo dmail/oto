@@ -17,7 +17,7 @@ export const animate = ({
   loop = false,
   usage = "display",
 }) => {
-  const requestNextFrame =
+  const requestNext =
     usage === "audio"
       ? (callback) => {
           const timeout = setTimeout(callback, 1000 / 60);
@@ -32,14 +32,21 @@ export const animate = ({
           };
         };
 
-  let cancelNextFrame;
+  let cancelNext;
   let resolveFinished;
   let rejectFinished;
   let previousStepMs;
   let msRemaining;
-  let removeSignalEffect = noop;
+  let removeSignalEffect;
+  const createFinishedPromise = () => {
+    return new Promise((resolve, reject) => {
+      resolveFinished = resolve;
+      rejectFinished = reject;
+    });
+  };
+
   const animation = {
-    playState: "idle",
+    playState: "idle", // "idle", "running", "paused", "canceled", "finished"
     progressRatio: 0,
     ratio: 0,
     effect,
@@ -48,61 +55,85 @@ export const animate = ({
     onpause,
     oncancel,
     onfinish,
-    finished: null,
+    finished: createFinishedPromise(),
     play: () => {
-      if (animation.playState === "running") {
-        return;
-      }
       if (animation.playState === "paused") {
-        animation.playState = "running";
         previousStepMs = Date.now();
-        cancelNextFrame = requestNextFrame(next);
+        cancelNext = requestNext(next);
+        animation.playState = "running";
         return;
       }
-      animation.playState = "running";
-      previousStepMs = Date.now();
-      msRemaining = duration;
-      animation.finished = new Promise((resolve, reject) => {
-        resolveFinished = resolve;
-        rejectFinished = reject;
-      });
-      animation.progressRatio = 0;
-      animation.ratio = 0;
-      animation.effect(animation.ratio, animation);
-      cancelNextFrame = requestNextFrame(next);
-      animation.onstart();
+      if (
+        animation.playState === "idle" ||
+        animation.playState === "finished"
+      ) {
+        previousStepMs = Date.now();
+        msRemaining = duration;
+        if (animation.playState === "finished") {
+          animation.finished = createFinishedPromise();
+        }
+        animation.progressRatio = 0;
+        animation.ratio = 0;
+        animation.playState = "running";
+        animation.effect(animation.ratio, animation);
+        cancelNext = requestNext(next);
+        animation.onstart();
+        return;
+      }
     },
     pause: () => {
-      if (animation.playState === "paused") {
+      if (animation.playState === "running") {
+        cancelNext();
+        cancelNext = undefined;
+        animation.playState = "paused";
+        animation.onpause();
         return;
       }
-      cancelNextFrame();
-      animation.playState = "paused";
-      animation.onpause();
     },
     finish: () => {
-      if (animation.playState === "finished") {
-        return;
+      if (
+        animation.playState === "idle" ||
+        animation.playState === "running" ||
+        animation.playState === "paused"
+      ) {
+        if (cancelNext) {
+          // cancelNext is undefined when "idle" or "paused"
+          cancelNext();
+          cancelNext = undefined;
+        }
+        setProgress(1);
+        animation.playState = "finished";
+        resolveFinished();
+        resolveFinished = undefined;
+        animation.onfinish();
       }
-      cancelNextFrame();
-      setProgress(1);
-      animation.playState = "finished";
-      resolveFinished();
-      animation.onfinish();
     },
     cancel: () => {
-      if (animation.playState === "canceled") {
-        return;
+      if (
+        animation.playState === "idle" ||
+        animation.playState === "running" ||
+        animation.playState === "paused" ||
+        animation.playState === "finished"
+      ) {
+        if (cancelNext) {
+          // cancelNext is undefined when "idle", "paused" or "finished"
+          cancelNext();
+          cancelNext = undefined;
+        }
+        previousStepMs = null;
+        animation.progressRatio = animation.ratio = 0;
+        animation.effect(animation.ratio, animation);
+        animation.playState = "canceled";
+        if (rejectFinished) {
+          rejectFinished(createAnimationAbortError());
+          rejectFinished = undefined;
+        }
+        if (removeSignalEffect) {
+          removeSignalEffect();
+          removeSignalEffect = undefined;
+        }
+        animation.oncancel();
       }
-      cancelNextFrame();
-      previousStepMs = null;
-      animation.playState = "canceled";
-      animation.progressRatio = animation.ratio = 0;
-      animation.effect(animation.ratio, animation);
-      rejectFinished(createAnimationAbortError());
-      removeSignalEffect();
-      removeSignalEffect = noop;
-      animation.oncancel();
     },
   };
   const setProgress = (progressRatio) => {
@@ -132,7 +163,7 @@ export const animate = ({
       return;
     }
     if (msEllapsedSincePreviousStep < stepMinDuration) {
-      cancelNextFrame = requestNextFrame(next);
+      cancelNext = requestNext(next);
       return;
     }
     previousStepMs = stepMs;
@@ -140,7 +171,7 @@ export const animate = ({
     setProgress(
       animation.progressRatio + msEllapsedSincePreviousStep / duration,
     );
-    cancelNextFrame = requestNextFrame(next);
+    cancelNext = requestNext(next);
   };
   if (usage === "display") {
     removeSignalEffect = signalsEffect(() => {
