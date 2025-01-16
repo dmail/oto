@@ -2,6 +2,10 @@
 - le bouton back doit fermer la dialog pause comme le ferait un clic
 - le bouton pause ouvre les options de gestions du sons etc
 
+- cancel une animation devrait la ramener vers son point de départ?
+  - on pourrait passer animate=true pour utiliser le temps restant pour revenir au point de départ
+  - est ce qu'il existe un truc comme ça avec web animation API?
+
 - écran de game over (choix retry/revenir a la carte du monde)
 - faire la carte du monde
 

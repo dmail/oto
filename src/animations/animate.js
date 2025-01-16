@@ -6,6 +6,7 @@ const noop = () => {};
 
 export const animate = ({
   duration = 300,
+  delay = 0,
   fps,
   easing,
   effect = noop,
@@ -33,6 +34,7 @@ export const animate = ({
         };
 
   let cancelNext;
+  const delayController = createDelayController(delay);
   let resolveFinished;
   let rejectFinished;
   let previousStepMs;
@@ -58,17 +60,18 @@ export const animate = ({
     finished: createFinishedPromise(),
     play: () => {
       if (animation.playState === "paused") {
-        previousStepMs = Date.now();
-        animation.playState = "running";
-        animation.onstart();
-        cancelNext = requestNext(next);
+        delayController.nowOrOnceDelayEllapsed(() => {
+          previousStepMs = Date.now();
+          animation.playState = "running";
+          animation.onstart();
+          cancelNext = requestNext(next);
+        });
         return;
       }
       if (
         animation.playState === "idle" ||
         animation.playState === "finished"
       ) {
-        previousStepMs = Date.now();
         msRemaining = duration;
         if (animation.playState === "finished") {
           animation.finished = createFinishedPromise();
@@ -76,16 +79,22 @@ export const animate = ({
         animation.progressRatio = 0;
         animation.ratio = 0;
         animation.playState = "running";
-        animation.effect(animation.ratio, animation);
-        animation.onstart();
-        cancelNext = requestNext(next);
+        delayController.nowOrOnceDelayEllapsed(() => {
+          previousStepMs = Date.now();
+          animation.effect(animation.ratio, animation);
+          animation.onstart();
+          cancelNext = requestNext(next);
+        });
         return;
       }
     },
     pause: () => {
       if (animation.playState === "running") {
-        cancelNext();
-        cancelNext = undefined;
+        delayController.pause();
+        if (cancelNext) {
+          cancelNext();
+          cancelNext = undefined;
+        }
         animation.playState = "paused";
         animation.onpause();
         return;
@@ -97,6 +106,7 @@ export const animate = ({
         animation.playState === "running" ||
         animation.playState === "paused"
       ) {
+        delayController.remove();
         if (cancelNext) {
           // cancelNext is undefined when "idle" or "paused"
           cancelNext();
@@ -116,6 +126,7 @@ export const animate = ({
         animation.playState === "paused" ||
         animation.playState === "finished"
       ) {
+        delayController.remove();
         if (cancelNext) {
           // cancelNext is undefined when "idle", "paused" or "finished"
           cancelNext();
@@ -187,4 +198,42 @@ export const animate = ({
     animation.play();
   }
   return animation;
+};
+
+const createDelayController = (ms) => {
+  let remainingMs = ms;
+  let timeout;
+  let startMs;
+
+  const controller = {
+    nowOrOnceDelayEllapsed: (callback) => {
+      if (remainingMs <= 0) {
+        callback();
+        return;
+      }
+      startMs = Date.now();
+      timeout = setTimeout(() => {
+        remainingMs = 0;
+        callback();
+      }, remainingMs);
+    },
+    pause: () => {
+      if (timeout === undefined) {
+        return;
+      }
+      const ellapsedMs = startMs - Date.now();
+      startMs = undefined;
+      remainingMs -= ellapsedMs;
+      clearTimeout(timeout);
+      timeout = undefined;
+    },
+    remove: () => {
+      if (timeout !== undefined) {
+        clearTimeout(timeout);
+        timeout = undefined;
+      }
+    },
+  };
+
+  return controller;
 };

@@ -1,63 +1,58 @@
 import { forwardRef } from "preact/compat";
-import { useEffect, useImperativeHandle, useRef, useState } from "preact/hooks";
-import { animateNumber } from "/animations/animation.js";
+import { useImperativeHandle, useRef } from "preact/hooks";
+import { animateElement, animateSequence } from "/animations/animation.js";
 
 export const Curtain = forwardRef((props, ref) => {
   const innerRef = useRef();
-  const [visible, visibleSetter] = useState(false);
-  const cleanupRef = useRef(null);
-
-  const setCleanup = (value = null) => {
-    const cleanup = cleanupRef.current;
-    if (cleanup) {
-      cleanup();
-      cleanupRef.current = value;
-    }
-  };
 
   useImperativeHandle(ref, () => {
-    const hide = () => {
-      visibleSetter(false);
-    };
-
     return {
-      fadeIn: ({ color = "black", fromOpacity = 0, toOpacity = 1 } = {}) => {
-        setCleanup(null);
-        visibleSetter(true);
-        const opacityAnimation = animateNumber({
-          from: fromOpacity,
-          to: toOpacity,
-          effect: (opacity) => {
+      fadeIn: async ({
+        color = "black",
+        fromOpacity = 0,
+        toOpacity = 1,
+      } = {}) => {
+        await animateElement(innerRef.current, {
+          from: { opacity: fromOpacity },
+          to: { opacity: toOpacity },
+          effect: ({ opacity }) => {
             drawCurtain(innerRef.current, { color, opacity });
           },
         });
-        setCleanup(() => {
-          opacityAnimation.remove();
+      },
+      show: async ({ color = "white", opacity = 0.5, autoHideMs } = {}) => {
+        await animateSequence([
+          () => {
+            return animateElement(innerRef.current, {
+              from: { display: "none" },
+              to: { display: "block" },
+              duration: 0,
+              effect: () => {
+                drawCurtain(innerRef.current, { color, opacity });
+              },
+            });
+          },
+          ...(autoHideMs
+            ? [
+                () => {
+                  return animateElement(innerRef.current, {
+                    to: { display: "none" },
+                    delay: autoHideMs,
+                    duration: 0,
+                  });
+                },
+              ]
+            : []),
+        ]).finished;
+      },
+      hide: () => {
+        animateElement(innerRef.current, {
+          to: { display: "none" },
+          duration: 0,
         });
       },
-      show: ({ color = "white", opacity = 0.5, autoHideMs } = {}) => {
-        setCleanup(null);
-        drawCurtain(innerRef.current, { color, opacity });
-        visibleSetter(true);
-        if (autoHideMs) {
-          const hideTimeout = setTimeout(() => {
-            setCleanup(null);
-            hide();
-          }, autoHideMs);
-          setCleanup(() => {
-            clearTimeout(hideTimeout);
-          });
-        }
-      },
-      hide,
     };
   });
-
-  useEffect(() => {
-    return () => {
-      setCleanup(null);
-    };
-  }, []);
 
   return (
     <canvas
@@ -67,7 +62,6 @@ export const Curtain = forwardRef((props, ref) => {
       style={{
         width: "100%",
         height: "100%",
-        display: visible ? "block" : "none",
         position: "absolute",
         left: 0,
         top: 0,

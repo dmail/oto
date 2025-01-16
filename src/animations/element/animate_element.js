@@ -8,10 +8,11 @@ const noop = () => {};
 export const animateElement = (
   element,
   {
-    // id,
+    id,
     from,
     to,
     duration = 500,
+    delay,
     iterations = 1,
     fill = "forwards",
     playbackRate = 1,
@@ -24,14 +25,14 @@ export const animateElement = (
     canPlayWhilePaused,
   },
 ) => {
-  const [fromTransform] = stepFromAnimationDescription(from);
-  const [toTransform] = stepFromAnimationDescription(to);
+  const fromStep = stepFromAnimationDescription(from);
+  const toStep = stepFromAnimationDescription(to);
 
   const steps = [];
-  if (fromTransform) {
-    steps.push({ transform: fromTransform });
+  if (fromStep) {
+    steps.push(fromStep);
   }
-  steps.push({ transform: toTransform });
+  steps.push(toStep);
   if (easing) {
     element.style.animationTimingFunction =
       createAnimationTimingFunction(easing);
@@ -39,7 +40,9 @@ export const animateElement = (
     element.style.animationTimingFunction = "";
   }
   const keyFrames = new KeyframeEffect(element, steps, {
+    id,
     duration,
+    delay,
     fill,
     iterations,
   });
@@ -135,7 +138,7 @@ export const animateElement = (
 
 export const stepFromAnimationDescription = (animationDescription) => {
   if (!animationDescription) {
-    return [""];
+    return null;
   }
   const transforms = [];
   let x = animationDescription.x;
@@ -161,7 +164,8 @@ export const stepFromAnimationDescription = (animationDescription) => {
   if (typeof scaleX === "number") {
     transforms.push(`scaleX(${scaleX})`);
   }
-  return [transforms.join(" ")];
+  let opacity = animationDescription.opacity;
+  return { transform: transforms.join(" "), opacity };
 };
 
 const createAnimationTimingFunction = (easing, steps = 10) => {
