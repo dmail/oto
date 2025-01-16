@@ -3,7 +3,7 @@ import { useImperativeHandle, useRef, useState } from "preact/hooks";
 import { SwordAImg } from "./sword_a.jsx";
 import {
   animateDamageDisplay,
-  animateElement,
+  ANIMATION,
   erase,
   glow,
 } from "/animations/animation.js";
@@ -55,7 +55,7 @@ export const Opponent = forwardRef(
         },
         playWeaponAnimation: async () => {
           weaponIsVisibleSetter(true);
-          await animateElement(weaponElementRef.current, {
+          await ANIMATION.animateElement(weaponElementRef.current, {
             id: "weapon_animation",
             from: {
               x: 25,

@@ -1,16 +1,16 @@
 import { computed, effect, signal } from "@preact/signals";
-import { animateNumber, EASING } from "/animations/animation.js";
+import { ANIMATION } from "/animations/animation.js";
 import { documentHiddenSignal } from "/utils/document_visibility.js";
 import { userActivationSignal } from "/utils/user_activation.js";
 
 let playOneAtATime = true;
 const fadeInDefaults = {
   duration: 600,
-  easing: EASING.EASE_IN_EXPO,
+  easing: ANIMATION.EASING.EASE_IN_EXPO,
 };
 const fadeOutDefaults = {
   duration: 1500,
-  easing: EASING.EASE_OUT_EXPO,
+  easing: ANIMATION.EASING.EASE_OUT_EXPO,
 };
 
 const NO_OP = () => {};
@@ -44,13 +44,16 @@ export const setMusicGlobalVolume = (value, { animate = true } = {}) => {
     from,
     to,
     duration: 500,
-    easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
+    easing:
+      to > from
+        ? ANIMATION.EASING.EASE_IN_EXPO
+        : ANIMATION.EASING.EASE_OUT_EXPO,
   });
 };
 let removeGlobalVolumeAnimation = NO_OP;
 const animateMusicGlobalVolume = (props) => {
   removeGlobalVolumeAnimation();
-  const globalVolumeAnimation = animateNumber({
+  const globalVolumeAnimation = ANIMATION.animateNumber({
     // when doc is hidden the browser won't let the animation run
     // and onfinish() won't be called -> audio won't pause
     usage: "audio",
@@ -150,7 +153,7 @@ export const music = ({
       ...rest
     }) => {
       removeVolumeAnimation();
-      const volumeAnimation = animateNumber({
+      const volumeAnimation = ANIMATION.animateNumber({
         // when doc is hidden the browser won't let the animation run
         // and onfinish() won't be called -> audio won't pause
         usage: "audio",
@@ -197,7 +200,10 @@ export const music = ({
         from,
         to,
         duration,
-        easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
+        easing:
+          to > from
+            ? ANIMATION.EASING.EASE_IN_EXPO
+            : ANIMATION.EASING.EASE_OUT_EXPO,
         onstart: () => {
           volumeCurrentSignal.value = to;
         },
