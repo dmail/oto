@@ -1,6 +1,6 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef } from "preact/hooks";
-import { animateElement, animateSequence } from "/animations/animation.js";
+import { ANIMATION } from "/animations/animation.js";
 
 export const Curtain = forwardRef((props, ref) => {
   const innerRef = useRef();
@@ -12,30 +12,28 @@ export const Curtain = forwardRef((props, ref) => {
         fromOpacity = 0,
         toOpacity = 1,
       } = {}) => {
-        await animateElement(innerRef.current, {
+        drawCurtain(innerRef.current, { color, opacity: 1 });
+        await ANIMATION.animateElement(innerRef.current, {
           from: { opacity: fromOpacity },
           to: { opacity: toOpacity },
-          effect: ({ opacity }) => {
-            drawCurtain(innerRef.current, { color, opacity });
-          },
         });
       },
       show: async ({ color = "white", opacity = 0.5, autoHideMs } = {}) => {
-        await animateSequence([
+        const canvas = innerRef.current;
+        drawCurtain(canvas, { color, opacity });
+
+        await ANIMATION.sequence([
           () => {
-            return animateElement(innerRef.current, {
-              from: { display: "none" },
+            canvas.style.display = "block";
+            return ANIMATION.animateElement(innerRef.current, {
               to: { display: "block" },
               duration: 0,
-              effect: () => {
-                drawCurtain(innerRef.current, { color, opacity });
-              },
             });
           },
           ...(autoHideMs
             ? [
                 () => {
-                  return animateElement(innerRef.current, {
+                  return ANIMATION.animateElement(innerRef.current, {
                     to: { display: "none" },
                     delay: autoHideMs,
                     duration: 0,
@@ -46,7 +44,7 @@ export const Curtain = forwardRef((props, ref) => {
         ]).finished;
       },
       hide: () => {
-        animateElement(innerRef.current, {
+        ANIMATION.animateElement(innerRef.current, {
           to: { display: "none" },
           duration: 0,
         });

@@ -27,6 +27,8 @@ export const animateElement = (
 ) => {
   const fromStep = stepFromAnimationDescription(from);
   const toStep = stepFromAnimationDescription(to);
+  const fromDisplay = from?.display;
+  const toDisplay = to.display;
 
   const steps = [];
   if (fromStep) {
@@ -51,14 +53,9 @@ export const animateElement = (
   let removeSignalEffect;
   let stopObservingElementRemoved;
   const createFinishedPromise = () => {
-    return webAnimation.finished.then(
-      () => {
-        webAnimation.commitStyles();
-      },
-      () => {
-        throw createAnimationAbortError();
-      },
-    );
+    return webAnimation.finished.catch(() => {
+      throw createAnimationAbortError();
+    });
   };
   const animation = {
     playState: "idle",
@@ -73,6 +70,9 @@ export const animateElement = (
         return;
       }
       if (animation.playState === "paused") {
+        if (fromDisplay) {
+          element.style.display = fromDisplay;
+        }
         webAnimation.play();
         animation.playState = "running";
         return;
@@ -81,8 +81,15 @@ export const animateElement = (
         animation.remove();
       });
       webAnimation.onfinish = () => {
+        webAnimation.commitStyles();
+        if (toDisplay) {
+          element.style.display = toDisplay;
+        }
         animation.onfinish();
       };
+      if (fromDisplay) {
+        element.style.display = fromDisplay;
+      }
       webAnimation.play();
       if (animation.playState === "finished") {
         animation.finished = createFinishedPromise();
@@ -140,32 +147,43 @@ export const stepFromAnimationDescription = (animationDescription) => {
   if (!animationDescription) {
     return null;
   }
-  const transforms = [];
-  let x = animationDescription.x;
-  let y = animationDescription.y;
-  let angleX = animationDescription.angleX;
-  let angleY = animationDescription.angleY;
-  let scaleX = animationDescription.scaleX;
-  if (animationDescription.mirrorX) {
-    angleY = typeof angleY === "number" ? angleY + 180 : 180;
+  const step = {};
+  transform: {
+    const transforms = [];
+    let x = animationDescription.x;
+    let y = animationDescription.y;
+    let angleX = animationDescription.angleX;
+    let angleY = animationDescription.angleY;
+    let scaleX = animationDescription.scaleX;
+    if (animationDescription.mirrorX) {
+      angleY = typeof angleY === "number" ? angleY + 180 : 180;
+    }
+    if (typeof x === "number") {
+      transforms.push(`translateX(${x}px)`);
+    }
+    if (typeof y === "number") {
+      transforms.push(`translateY(${y}px)`);
+    }
+    if (typeof angleX === "number") {
+      transforms.push(`rotateX(${angleX}deg)`);
+    }
+    if (typeof angleY === "number") {
+      transforms.push(`rotateY(${angleY}deg)`);
+    }
+    if (typeof scaleX === "number") {
+      transforms.push(`scaleX(${scaleX})`);
+    }
+    if (transforms.length) {
+      step.transform = transforms.join(" ");
+    }
   }
-  if (typeof x === "number") {
-    transforms.push(`translateX(${x}px)`);
+  opacity: {
+    let opacity = animationDescription.opacity;
+    if (opacity !== undefined) {
+      step.opacity = opacity;
+    }
   }
-  if (typeof y === "number") {
-    transforms.push(`translateY(${y}px)`);
-  }
-  if (typeof angleX === "number") {
-    transforms.push(`rotateX(${angleX}deg)`);
-  }
-  if (typeof angleY === "number") {
-    transforms.push(`rotateY(${angleY}deg)`);
-  }
-  if (typeof scaleX === "number") {
-    transforms.push(`scaleX(${scaleX})`);
-  }
-  let opacity = animationDescription.opacity;
-  return { transform: transforms.join(" "), opacity };
+  return step;
 };
 
 const createAnimationTimingFunction = (easing, steps = 10) => {
