@@ -51,6 +51,32 @@
               >
                 hide
               </button>
+
+              <button
+                onClick={() => {
+                  ref.current.show({ color: "red" });
+                  setTimeout(() => {
+                    ref.current.hide();
+                  }, 500);
+                }}
+              >
+                show + auto hide after 0.5s
+              </button>
+
+              <button
+                onClick={() => {
+                  ref.current.fadeIn({ color: "red" });
+                }}
+              >
+                fadein
+              </button>
+              <button
+                onClick={() => {
+                  ref.current.fadeOut();
+                }}
+              >
+                fadeout
+              </button>
             </fieldset>
           </div>
         );

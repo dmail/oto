@@ -34,7 +34,9 @@ export const animateElement = (
   if (fromStep) {
     steps.push(fromStep);
   }
-  steps.push(toStep);
+  if (toStep) {
+    steps.push(toStep);
+  }
   if (easing) {
     element.style.animationTimingFunction =
       createAnimationTimingFunction(easing);
@@ -81,9 +83,14 @@ export const animateElement = (
         animation.remove();
       });
       webAnimation.onfinish = () => {
-        webAnimation.commitStyles();
-        if (toDisplay) {
+        if (toDisplay && toDisplay !== "none") {
           element.style.display = toDisplay;
+        }
+        if (toStep) {
+          webAnimation.commitStyles();
+        }
+        if (toDisplay && toDisplay === "none") {
+          element.style.display = "none";
         }
         animation.onfinish();
       };
@@ -182,6 +189,9 @@ export const stepFromAnimationDescription = (animationDescription) => {
     if (opacity !== undefined) {
       step.opacity = opacity;
     }
+  }
+  if (Object.keys(step).length === 0) {
+    return null;
   }
   return step;
 };

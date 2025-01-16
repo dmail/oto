@@ -187,7 +187,10 @@ export const Fight = ({ onFightEnd }) => {
       damage = 0;
     }
     await heroRef.current.moveToAct();
-    backgroundCurtainRef.current.show({ color: "white", autoHideMs: 200 });
+    backgroundCurtainRef.current.show({ color: "white" });
+    setTimeout(() => {
+      backgroundCurtainRef.current?.hide();
+    }, 200);
     swordSound.play();
     await oponentRef.current.playWeaponAnimation();
     await heroAlert.close();

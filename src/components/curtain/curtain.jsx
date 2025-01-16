@@ -7,46 +7,31 @@ export const Curtain = forwardRef((props, ref) => {
 
   useImperativeHandle(ref, () => {
     return {
-      fadeIn: async ({
-        color = "black",
-        fromOpacity = 0,
-        toOpacity = 1,
-      } = {}) => {
-        drawCurtain(innerRef.current, { color, opacity: 1 });
-        await ANIMATION.animateElement(innerRef.current, {
-          from: { opacity: fromOpacity },
-          to: { opacity: toOpacity },
-        });
-      },
-      show: async ({ color = "white", opacity = 0.5, autoHideMs } = {}) => {
+      show: ({ color = "white", opacity = 0.5 } = {}) => {
         const canvas = innerRef.current;
         drawCurtain(canvas, { color, opacity });
-
-        await ANIMATION.sequence([
-          () => {
-            canvas.style.display = "block";
-            return ANIMATION.animateElement(innerRef.current, {
-              to: { display: "block" },
-              duration: 0,
-            });
-          },
-          ...(autoHideMs
-            ? [
-                () => {
-                  return ANIMATION.animateElement(innerRef.current, {
-                    to: { display: "none" },
-                    delay: autoHideMs,
-                    duration: 0,
-                  });
-                },
-              ]
-            : []),
-        ]).finished;
+        ANIMATION.animateElement(canvas, {
+          to: { display: "block", opacity },
+          duration: 0,
+        });
       },
       hide: () => {
         ANIMATION.animateElement(innerRef.current, {
           to: { display: "none" },
           duration: 0,
+        });
+      },
+      fadeIn: async ({ color = "black", toOpacity = 1 } = {}) => {
+        const canvas = innerRef.current;
+        drawCurtain(canvas, { color, opacity: 1 });
+        await ANIMATION.animateElement(canvas, {
+          from: { display: "block" },
+          to: { opacity: toOpacity },
+        });
+      },
+      fadeOut: async ({ toOpacity = 0 } = {}) => {
+        await ANIMATION.animateElement(innerRef.current, {
+          to: { opacity: toOpacity },
         });
       },
     };
