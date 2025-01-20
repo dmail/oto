@@ -20,15 +20,30 @@
         goBack,
         goForward,
         reload,
-        useDocumentIsLoading,
+        useNavigationReadyState,
         useCanStopNavigation,
         stopNavigation,
         useUrlBooleanParam,
         useUrlStringParam,
       } from "./nav.js";
 
+      let resolveNavigationToPageA;
       setRouteHandlers([
+        ({ searchParams }) => {
+          const page = searchParams.get("page");
+          console.log({ page });
+          if (page === "A") {
+            console.log("return async");
+            return async () => {
+              await new Promise((resolve) => {
+                resolveNavigationToPageA = resolve;
+              });
+            };
+          }
+          return null;
+        },
         () => {
+          // a priori 404 handling ici
           return () => {};
         },
       ]);
@@ -69,7 +84,6 @@
             </details>
 
             <div>
-              Current page: {page}
               <div>
                 <button
                   disabled={page === "A"}
@@ -89,6 +103,19 @@
                 </button>
               </div>
             </div>
+
+            <div>
+              <div>PAGE CONTENT</div>
+              <div style="border: 1px solid black; padding: 10px">
+                {page === "A" ? (
+                  <PageA />
+                ) : page === "B" ? (
+                  <PageB />
+                ) : (
+                  "nothing"
+                )}
+              </div>
+            </div>
           </div>
         );
       };
@@ -97,14 +124,14 @@
       const NavControls = () => {
         const canGoBack = useCanGoBack();
         const canGoForward = useCanGoForward();
-        const documentIsLoading = useDocumentIsLoading();
+        const navReadyState = useNavigationReadyState();
         const canStopNavigation = useCanStopNavigation();
 
         return (
           <fieldset>
             <legend>nav controls (or use browser controls)</legend>
 
-            <div>document is loading: {documentIsLoading ? "yes" : "no"}</div>
+            <div>nav state: {navReadyState}</div>
 
             <button
               disabled={!canStopNavigation}
@@ -139,6 +166,17 @@
             </button>
           </fieldset>
         );
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const PageA = () => {
+        console.log("render page a");
+        return "PageA";
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const PageB = () => {
+        return "PageB";
       };
 
       render(<App />, document.getElementById("root"));

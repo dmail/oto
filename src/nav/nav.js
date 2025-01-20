@@ -49,37 +49,7 @@ export const useDocumentIsLoading = () => {
   return documentIsLoadingSignal.value;
 };
 
-const canStopNavigationSignal = computed(() => {
-  const documentIsLoading = documentIsLoadingSignal.value;
-  if (documentIsLoading) {
-    return true;
-  }
-  return false;
-});
-export const useCanStopNavigation = () => {
-  return canStopNavigationSignal.value;
-};
-
-const currentNavigationSignal = computed(() => {
-  const documentIsLoading = documentIsLoadingSignal.value();
-  if (documentIsLoading) {
-    return "loading";
-  }
-  return "complete";
-});
-
-let currentNavigateEvent;
-export const stopNavigation = () => {
-  const documentIsLoading = documentIsLoadingSignal.value;
-  if (documentIsLoading) {
-    window.stop();
-    return;
-  }
-  if (currentNavigateEvent) {
-    currentNavigateEvent.preventDefault();
-    return;
-  }
-};
+const currentNavigationSignal = signal(null);
 export const setRouteHandlers = (routeHandlers) => {
   navigation.addEventListener("navigate", (event) => {
     if (!event.canIntercept) {
@@ -88,17 +58,63 @@ export const setRouteHandlers = (routeHandlers) => {
     if (event.hashChange || event.downloadRequest !== null) {
       return;
     }
-    currentNavigateEvent = null;
     const url = event.destination.url;
     for (const routeHandlerCandidate of routeHandlers) {
-      const returnValue = routeHandlerCandidate(url);
+      const urlObject = new URL(url);
+      const returnValue = routeHandlerCandidate({
+        url,
+        searchParams: urlObject.searchParams,
+        pathname: urlObject.pathname,
+        hash: urlObject.hash,
+      });
       if (returnValue) {
-        currentNavigateEvent = event;
         event.intercept({ handler: returnValue });
+        currentNavigationSignal.value = {
+          event,
+        };
         return;
       }
     }
   });
+  navigation.navigate(window.location.href, { history: "replace" });
+};
+navigation.addEventListener("navigateerror", () => {
+  currentNavigationSignal.value = null;
+});
+navigation.addEventListener("navigatesuccess", () => {
+  currentNavigationSignal.value = null;
+});
+const navigationReadyStateSignal = computed(() => {
+  const documentIsLoading = documentIsLoadingSignal.value;
+  if (documentIsLoading) {
+    return "document_loading";
+  }
+  const currentNavigation = currentNavigationSignal.value;
+  if (currentNavigation) {
+    return "navigation_loading";
+  }
+  return "complete";
+});
+export const useNavigationReadyState = () => {
+  return navigationReadyStateSignal.value;
+};
+export const useNavigationIsLoading = () => {
+  return navigationReadyStateSignal.value !== "complete";
+};
+export const useCanStopNavigation = () => {
+  return navigationReadyStateSignal.value !== "complete";
+};
+export const stopNavigation = () => {
+  const documentIsLoading = documentIsLoadingSignal.value;
+  if (documentIsLoading) {
+    window.stop();
+    return;
+  }
+  const currentNavigation = currentNavigationSignal.value;
+  if (currentNavigation) {
+    currentNavigation.event.preventDefault();
+    return;
+  }
 };
 
 const urlSignal = signal(navigation.currentEntry.url);
