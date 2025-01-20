@@ -50,46 +50,121 @@ export const useDocumentIsLoading = () => {
   return documentIsLoadingSignal.value;
 };
 
+const LOADING = { id: "loading" };
+const ABORTED = { id: "aborted" };
+
 const currentNavigationSignal = signal(null);
-export const setRouteHandlers = (routeHandlers) => {
-  navigation.addEventListener("navigate", (event) => {
-    if (!event.canIntercept) {
-      return;
+const routeSet = new Set();
+let fallbackRoute;
+const createRoute = ({ test, load = () => {} }) => {
+  const readyStateSignal = signal("idle");
+
+  const onStart = () => {
+    readyStateSignal.value = LOADING;
+  };
+  const onAbort = () => {
+    readyStateSignal.value = ABORTED;
+  };
+  const onError = (error) => {
+    readyStateSignal.value = {
+      error,
+    };
+  };
+  const onEnd = (data) => {
+    readyStateSignal.value = {
+      data,
+    };
+  };
+
+  return {
+    test,
+    load,
+
+    onStart,
+    onAbort,
+    onError,
+    onEnd,
+    readyStateSignal,
+  };
+};
+
+navigation.addEventListener("navigate", (event) => {
+  if (!event.canIntercept) {
+    return;
+  }
+  if (event.hashChange || event.downloadRequest !== null) {
+    return;
+  }
+  const url = event.destination.url;
+  let matchingRoute;
+  for (const routeCandidate of routeSet) {
+    const urlObject = new URL(url);
+    const returnValue = routeCandidate.test({
+      url,
+      searchParams: urlObject.searchParams,
+      pathname: urlObject.pathname,
+      hash: urlObject.hash,
+    });
+    if (returnValue) {
+      matchingRoute = routeCandidate;
+      break;
     }
-    if (event.hashChange || event.downloadRequest !== null) {
-      return;
-    }
-    const url = event.destination.url;
-    for (const routeHandlerCandidate of routeHandlers) {
-      const urlObject = new URL(url);
-      const returnValue = routeHandlerCandidate({
-        url,
-        searchParams: urlObject.searchParams,
-        pathname: urlObject.pathname,
-        hash: urlObject.hash,
-      });
-      if (returnValue) {
-        currentNavigationSignal.value = { event };
-        const { signal } = event;
-        signal.addEventListener("abort", () => {
-          currentNavigationSignal.value = null;
-        });
-        const handler = async () => {
-          try {
-            await returnValue({ signal });
-          } finally {
-            currentNavigationSignal.value = null;
-          }
-        };
-        event.intercept({ handler });
-        return;
-      }
-    }
+  }
+  if (!matchingRoute && fallbackRoute) {
+    matchingRoute = fallbackRoute;
+  }
+  if (!matchingRoute) {
+    return;
+  }
+  currentNavigationSignal.value = { event };
+  const { signal } = event;
+  signal.addEventListener("abort", () => {
+    matchingRoute.onAbort();
+    currentNavigationSignal.value = null;
   });
+  const handler = async () => {
+    try {
+      matchingRoute.onStart();
+      await matchingRoute.load({ signal });
+      matchingRoute.onEnd();
+    } finally {
+      matchingRoute.onError();
+      currentNavigationSignal.value = null;
+    }
+  };
+  event.intercept({ handler });
+});
+
+export const registerRoutes = ({ fallback, ...rest }) => {
+  const routes = {};
+  for (const key of Object.keys(rest)) {
+    const route = createRoute(rest[key]);
+    routes[key] = route;
+    routeSet.add(route);
+  }
+  if (fallback) {
+    fallbackRoute = createRoute(fallback);
+  }
   navigation.navigate(window.location.href, {
     history: "replace",
   });
+  return routes;
 };
+export const injectRoute = (params) => {
+  const route = createRoute(params);
+  routeSet.add(route);
+  return route;
+};
+export const useRoute = (route) => {
+  const readyState = route.readyStateSignal.value;
+  const isLoading = readyState === LOADING;
+  const isAborted = readyState === ABORTED;
+  const error = readyState.error;
+  const data = readyState.data;
+
+  return [isLoading, isAborted, error, data];
+};
+
 const navigationReadyStateSignal = computed(() => {
   const documentIsLoading = documentIsLoadingSignal.value;
   if (documentIsLoading) {

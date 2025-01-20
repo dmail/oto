@@ -11,10 +11,34 @@
     <img src="/__delayed__.js" />
 
     <script type="module" jsenv-type="module/jsx">
+      /*
+TODO: 
+
+- show a button to resolve pageA promise to see if it works
+
+- get a way to get route data if any (result of the load function)
+I think useRoute should be split into
+ - useRouteIsLoading
+ - useRouteLoadingIsAborted
+ - useRouteLoadError
+ - useRouteLoadedData
+- for route with dynamic params, a way to get the current param (but I bet getting it from url
+remains the better solution)
+
+- test with pageA and pageB being in the url pathname
+ (requires to update jsenv)
+
+- test how cancellation is propagated 
+test with an api accepting abort signal
+whatever may reject a promise when an abort signal is triggered
+
+*/
+
       import { render } from "preact";
       import {
         useUrl,
-        setRouteHandlers,
+        registerRoutes,
+        useRoute,
         useCanGoBack,
         useCanGoForward,
         goBack,
@@ -28,23 +52,28 @@
       } from "./nav.js";
 
       let resolveNavigationToPageA;
-      setRouteHandlers([
-        ({ searchParams }) => {
-          const page = searchParams.get("page");
-          if (page === "A") {
-            return async () => {
-              await new Promise((resolve) => {
-                resolveNavigationToPageA = resolve;
-              });
-            };
-          }
-          return null;
+      const { pageA, pageB } = registerRoutes({
+        pageA: {
+          test: ({ searchParams }) => {
+            return searchParams.get("page") === "A";
+          },
+          load: async () => {
+            await new Promise((resolve) => {
+              resolveNavigationToPageA = resolve;
+            });
+          },
         },
-        () => {
-          // a priori 404 handling ici
-          return () => {};
+        pageB: {
+          test: ({ searchParams }) => {
+            return searchParams.get("page") === "B";
+          },
         },
-      ]);
+        fallback: {
+          load: () => {
+            console.log("load fallback");
+          },
+        },
+      });
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
@@ -168,12 +197,26 @@
 
       // eslint-disable-next-line no-unused-vars
       const PageA = () => {
-        return "PageA";
+        const [isLoading, isAborted] = useRoute(pageA);
+        if (isLoading) {
+          return "page A loading...";
+        }
+        if (isAborted) {
+          return `page A load aborted`;
+        }
+        return "page A content";
       };
 
       // eslint-disable-next-line no-unused-vars
       const PageB = () => {
-        return "PageB";
+        const [isLoading, isAborted] = useRoute(pageB);
+        if (isLoading) {
+          return "page B loading...";
+        }
+        if (isAborted) {
+          return `page B load aborted`;
+        }
+        return "page B content";
       };
 
       render(<App />, document.getElementById("root"));
