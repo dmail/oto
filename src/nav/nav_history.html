@@ -12,13 +12,6 @@
       import { render } from "preact";
       import { signal, useSignalEffect } from "@preact/signals";
       import { useState, useCallback } from "preact/hooks";
-      import {
-        useCanGoBack,
-        useCanGoForward,
-        goBack,
-        goForward,
-        reload,
-      } from "./nav.js";
 
       const urlSignal = signal(window.location.href);
       window.addEventListener("popstate", (popstateEvent) => {
@@ -130,43 +123,31 @@
               Content
             </details>
 
-            <NavControls />
+            <fieldset>
+              <legend>nav controls (or use browser controls)</legend>
+              <button
+                onClick={() => {
+                  window.history.back();
+                }}
+              >
+                back
+              </button>
+              <button
+                onClick={() => {
+                  window.history.forward();
+                }}
+              >
+                forward
+              </button>
+              <button
+                onClick={() => {
+                  window.location.reload();
+                }}
+              >
+                reload
+              </button>
+            </fieldset>
           </div>
-        );
-      };
-
-      // eslint-disable-next-line no-unused-vars
-      const NavControls = () => {
-        const canGoBack = useCanGoBack();
-        const canGoForward = useCanGoForward();
-
-        return (
-          <fieldset>
-            <legend>nav controls (or use browser controls)</legend>
-            <button
-              disabled={!canGoBack}
-              onClick={() => {
-                goBack();
-              }}
-            >
-              back
-            </button>
-            <button
-              disabled={!canGoForward}
-              onClick={() => {
-                goForward();
-              }}
-            >
-              forward
-            </button>
-            <button
-              onClick={() => {
-                reload();
-              }}
-            >
-              reload
-            </button>
-          </fieldset>
         );
       };
 
