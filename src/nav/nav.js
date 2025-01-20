@@ -1,7 +1,12 @@
-// https://github.com/WICG/navigation-api
-// https://developer.mozilla.org/en-US/docs/Web/API/Navigation
+/*
+next step is to see if we can cancel a pending navigation
+
+- https://github.com/WICG/navigation-api
+- https://developer.mozilla.org/en-US/docs/Web/API/Navigation
+*/
 
 import { computed, signal } from "@preact/signals";
+import { useCallback } from "preact/hooks";
 
 export const canGoBackSignal = signal(navigation.canGoBack);
 export const useCanGoBack = () => {
@@ -15,37 +20,28 @@ export const useCanGoForward = () => {
   return canGoForwardSignal.value;
 };
 export const goForward = () => {
-  navigation.foward();
+  navigation.forward();
 };
+navigation.addEventListener("currententrychange", () => {
+  canGoBackSignal.value = navigation.canGoBack;
+  canGoForwardSignal.value = navigation.canGoForward;
+});
+navigation.addEventListener("navigatesuccess", () => {
+  canGoBackSignal.value = navigation.canGoBack;
+  canGoForwardSignal.value = navigation.canGoForward;
+});
 
 export const reload = () => {
   navigation.reload();
 };
 
-export const goTo = (url) => {
-  const entries = navigation.entries();
-  const prevEntry = entries[navigation.currentEntry.index - 1];
-  if (prevEntry && prevEntry.url === url) {
-    goBack();
-    return;
-  }
-  const nextEntry = entries[navigation.currentEntry.index + 1];
-  if (nextEntry && nextEntry.url === url) {
-    goForward();
-    return;
-  }
-  navigation.navigate(url);
-};
-
 const documentIsLoadingSignal = signal(true);
 if (document.readyState === "complete") {
   documentIsLoadingSignal.value = false;
-  // isNavigatingSignal.value = false;
 } else {
   document.addEventListener("readystatechange", () => {
     if (document.readyState === "complete") {
       documentIsLoadingSignal.value = false;
-      // isNavigatingSignal.value = false
     }
   });
 }
@@ -83,22 +79,127 @@ export const stopNavigation = () => {
     currentNavigateEvent.preventDefault();
   }
 };
+export const setRouteHandlers = (routeHandlers) => {
+  navigation.addEventListener("navigate", (event) => {
+    if (!event.canIntercept) {
+      return;
+    }
+    if (event.hashChange || event.downloadRequest !== null) {
+      return;
+    }
+    currentNavigateEvent = null;
+    const url = event.destination.url;
+    for (const routeHandlerCandidate of routeHandlers) {
+      const returnValue = routeHandlerCandidate(url);
+      if (returnValue) {
+        currentNavigateEvent = event;
+        event.intercept({ handler: returnValue });
+        return;
+      }
+    }
+  });
+};
 
-navigation.addEventListener("navigate", (event) => {
-  if (!event.canIntercept) {
-    return;
-  }
-  if (event.hashChange || event.downloadRequest !== null) {
-    return;
-  }
-  currentNavigateEvent = event;
-});
+const urlSignal = signal(navigation.currentEntry.url);
 navigation.addEventListener("currententrychange", () => {
-  canGoBackSignal.value = navigation.canGoBack;
-  canGoForwardSignal.value = navigation.canGoForward;
+  //   console.log(
+  //     "currententrychange",
+  //     "from",
+  //     e.from.url,
+  //     "to",
+  //     navigation.currentEntry.url,
+  //   );
+  urlSignal.value = navigation.currentEntry.url;
 });
+export const useUrl = () => {
+  return urlSignal.value;
+};
+export const goTo = (url) => {
+  const currentUrl = urlSignal.peek();
+  if (url === currentUrl) {
+    return;
+  }
+  const entries = navigation.entries();
+  const prevEntry = entries[navigation.currentEntry.index - 1];
+  if (prevEntry && prevEntry.url === url) {
+    goBack();
+    return;
+  }
+  const nextEntry = entries[navigation.currentEntry.index + 1];
+  if (nextEntry && nextEntry.url === url) {
+    goForward();
+    return;
+  }
+  navigation.navigate(url);
+};
 
-navigation.addEventListener("navigatesuccess", () => {
-  canGoBackSignal.value = navigation.canGoBack;
-  canGoForwardSignal.value = navigation.canGoForward;
-});
+const urlParamSignalMap = new Map();
+// can be called multiple times by hooks
+const signalForUrlBooleanParam = (name) => {
+  const existingSignal = urlParamSignalMap.get(name);
+  if (existingSignal) {
+    return existingSignal;
+  }
+  const signalForFirstCall = computed(() => {
+    const url = urlSignal.value;
+    return new URL(url).searchParams.has(name);
+  });
+  urlParamSignalMap.set(name, signalForFirstCall);
+  return signalForFirstCall;
+};
+export const useUrlBooleanParam = (name) => {
+  const urlBooleanParamSignal = signalForUrlBooleanParam(name);
+  const urlBooleanParam = urlBooleanParamSignal.value;
+  const enable = useCallback(() => {
+    const urlWithBooleanParam = withUrlBooleanParam(name);
+    goTo(urlWithBooleanParam);
+  }, [name]);
+  const disable = useCallback(() => {
+    const urlWithoutBooleanParam = withoutUrlBooleanParam(name);
+    goTo(urlWithoutBooleanParam);
+  }, [name]);
+  return [urlBooleanParam, enable, disable];
+};
+
+const updateUrl = (urlTransformer) => {
+  const url = window.location.href;
+  const newUrl = urlTransformer(url);
+  if (!newUrl) {
+    return url;
+  }
+  const newUrlString = String(newUrl);
+  const newUrlNormalized = normalizeUrl(newUrlString);
+  return newUrlNormalized;
+};
+const withUrlBooleanParam = (name) => {
+  return updateUrl((url) => {
+    const urlObject = new URL(url);
+    const { searchParams } = urlObject;
+    if (searchParams.has(name)) {
+      return null;
+    }
+    searchParams.set(name, "");
+    return urlObject.toString();
+  });
+};
+const withoutUrlBooleanParam = (name) => {
+  return updateUrl((url) => {
+    const urlObject = new URL(url);
+    const { searchParams } = urlObject;
+    if (!searchParams.has(name)) {
+      return null;
+    }
+    searchParams.delete(name);
+    return urlObject.toString();
+  });
+};
+const normalizeUrl = (url) => {
+  if (url.includes("?")) {
+    // disable on data urls (would mess up base64 encoding)
+    if (url.startsWith("data:")) {
+      return url;
+    }
+    return url.replace(/[=](?=&|$)/g, "");
+  }
+  return url;
+};

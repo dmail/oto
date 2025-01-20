@@ -12,9 +12,9 @@
 
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
-      import { signal, useSignalEffect } from "@preact/signals";
-      import { useState, useCallback } from "preact/hooks";
       import {
+        useUrl,
+        setRouteHandlers,
         useCanGoBack,
         useCanGoForward,
         goBack,
@@ -23,17 +23,15 @@
         useDocumentIsLoading,
         useCanStopNavigation,
         stopNavigation,
+        useUrlBooleanParam,
       } from "./nav.js";
 
-      const urlSignal = signal(window.location.href);
-      navigation.addEventListener("navigate", (navigateEvent) => {
-        console.log("navigate event", navigateEvent);
+      setRouteHandlers([
+        () => {
+          return () => {};
+        },
+      ]);
 
-        urlSignal.value = window.location.href;
-        // TODO: we must update the UI accoringly
-        // I guess UI should be listening to the url signal
-        // and if it matches act accordingly
-      });
       // const urlParamSignal = (name) => {
       //   return computed(() => {
       //     const url = urlSignal.value;
@@ -42,84 +40,15 @@
       //   });
       // };
 
-      const goToUrl = (url) => {
-        if (url === window.location.href) {
-          return;
-        }
-        window.history.pushState(undefined, "", url);
-        urlSignal.value = url;
-      };
-      const updateUrl = (urlTransformer) => {
-        const url = window.location.href;
-        const newUrl = urlTransformer(url);
-        if (!newUrl) {
-          return;
-        }
-        const newUrlString = String(newUrl);
-        const newUrlNormalized = normalizeUrl(newUrlString);
-        if (newUrlNormalized !== url) {
-          goToUrl(newUrlNormalized);
-        }
-      };
-      const normalizeUrl = (url) => {
-        if (url.includes("?")) {
-          // disable on data urls (would mess up base64 encoding)
-          if (url.startsWith("data:")) {
-            return url;
-          }
-          return url.replace(/[=](?=&|$)/g, "");
-        }
-        return url;
-      };
-      const addBooleanSearchParam = (name) => {
-        return updateUrl((url) => {
-          const urlObject = new URL(url);
-          const { searchParams } = urlObject;
-          if (searchParams.has(name)) {
-            return null;
-          }
-          searchParams.set(name, "");
-          return urlObject.toString();
-        });
-      };
-      const removeBooleanSearchParam = (name) => {
-        return updateUrl((url) => {
-          const urlObject = new URL(url);
-          const { searchParams } = urlObject;
-          if (!searchParams.has(name)) {
-            return null;
-          }
-          searchParams.delete(name);
-          return urlObject.toString();
-        });
-      };
-
-      const useUrlBooleanParam = (name) => {
-        const url = urlSignal.value;
-        const searchParams = new URL(url).searchParams;
-        const [value, valueSetter] = useState(searchParams.has(name));
-        useSignalEffect(() => {
-          const url = urlSignal.value;
-          const searchParams = new URL(url).searchParams;
-          valueSetter(searchParams.has(name));
-        }, [urlSignal]);
-        const enable = useCallback(() => {
-          addBooleanSearchParam(name);
-        }, []);
-        const disable = useCallback(() => {
-          removeBooleanSearchParam(name);
-        }, []);
-        return [value, enable, disable];
-      };
-
       // eslint-disable-next-line no-unused-vars
       const App = () => {
+        const url = useUrl();
         const [opened, openDetails, closeDetails] =
           useUrlBooleanParam("opened");
 
         return (
           <div>
-            <div>url : {urlSignal.value}</div>
+            <div>url: {url}</div>
 
             <button
               onClick={async () => {
@@ -159,7 +88,7 @@
           <fieldset>
             <legend>nav controls (or use browser controls)</legend>
 
-            <div>documentIsLoading: {documentIsLoading ? "yes" : "no"}</div>
+            <div>document is loading: {documentIsLoading ? "yes" : "no"}</div>
 
             <button
               disabled={!canStopNavigation}
