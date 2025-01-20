@@ -77,6 +77,7 @@ export const stopNavigation = () => {
   }
   if (currentNavigateEvent) {
     currentNavigateEvent.preventDefault();
+    return;
   }
 };
 export const setRouteHandlers = (routeHandlers) => {
@@ -135,18 +136,19 @@ export const goTo = (url) => {
 
 const urlParamSignalMap = new Map();
 // can be called multiple times by hooks
-const signalForUrlBooleanParam = (name) => {
+const signalForUrlParam = (name, getter) => {
   const existingSignal = urlParamSignalMap.get(name);
   if (existingSignal) {
     return existingSignal;
   }
   const signalForFirstCall = computed(() => {
     const url = urlSignal.value;
-    return new URL(url).searchParams.has(name);
+    return getter(url);
   });
   urlParamSignalMap.set(name, signalForFirstCall);
   return signalForFirstCall;
 };
+
 export const useUrlBooleanParam = (name) => {
   const urlBooleanParamSignal = signalForUrlBooleanParam(name);
   const urlBooleanParam = urlBooleanParamSignal.value;
@@ -160,16 +162,10 @@ export const useUrlBooleanParam = (name) => {
   }, [name]);
   return [urlBooleanParam, enable, disable];
 };
-
-const updateUrl = (urlTransformer) => {
-  const url = window.location.href;
-  const newUrl = urlTransformer(url);
-  if (!newUrl) {
-    return url;
-  }
-  const newUrlString = String(newUrl);
-  const newUrlNormalized = normalizeUrl(newUrlString);
-  return newUrlNormalized;
+const signalForUrlBooleanParam = (name) => {
+  return signalForUrlParam(name, (url) => {
+    return new URL(url).searchParams.has(name);
+  });
 };
 const withUrlBooleanParam = (name) => {
   return updateUrl((url) => {
@@ -192,6 +188,62 @@ const withoutUrlBooleanParam = (name) => {
     searchParams.delete(name);
     return urlObject.toString();
   });
+};
+
+export const useUrlStringParam = (
+  name,
+  // TODO: add a param to enum the allowed values
+) => {
+  const urlStringParamSignal = signalForUrlStringParam(name);
+  const urlStringParam = urlStringParamSignal.value;
+  const set = useCallback(
+    (value) => {
+      if (value) {
+        const urlWithStringParam = withUrlStringParam(name, value);
+        goTo(urlWithStringParam);
+        return;
+      }
+      const urlWithoutStringParam = withoutUrlStringParam(name);
+      goTo(urlWithoutStringParam);
+    },
+    [name],
+  );
+  return [urlStringParam, set];
+};
+const signalForUrlStringParam = (name) => {
+  return signalForUrlParam(name, (url) => {
+    return new URL(url).searchParams.get(name);
+  });
+};
+const withUrlStringParam = (name, value) => {
+  return updateUrl((url) => {
+    const urlObject = new URL(url);
+    const { searchParams } = urlObject;
+    searchParams.set(name, value);
+    return urlObject.toString();
+  });
+};
+const withoutUrlStringParam = (name) => {
+  return updateUrl((url) => {
+    const urlObject = new URL(url);
+    const { searchParams } = urlObject;
+    if (!searchParams.has(name)) {
+      return null;
+    }
+    searchParams.delete(name);
+    return urlObject.toString();
+  });
+};
+
+const updateUrl = (urlTransformer) => {
+  const url = window.location.href;
+  const newUrl = urlTransformer(url);
+  if (!newUrl) {
+    return url;
+  }
+  const newUrlString = String(newUrl);
+  const newUrlNormalized = normalizeUrl(newUrlString);
+  return newUrlNormalized;
 };
 const normalizeUrl = (url) => {
   if (url.includes("?")) {

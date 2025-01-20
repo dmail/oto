@@ -24,6 +24,7 @@
         useCanStopNavigation,
         stopNavigation,
         useUrlBooleanParam,
+        useUrlStringParam,
       } from "./nav.js";
 
       setRouteHandlers([
@@ -32,19 +33,12 @@
         },
       ]);
 
-      // const urlParamSignal = (name) => {
-      //   return computed(() => {
-      //     const url = urlSignal.value;
-      //     const { searchParams } = new URL(url);
-      //     return searchParams.has(name);
-      //   });
-      // };
-
       // eslint-disable-next-line no-unused-vars
       const App = () => {
         const url = useUrl();
         const [opened, openDetails, closeDetails] =
           useUrlBooleanParam("opened");
+        const [page, pageSetter] = useUrlStringParam("page");
 
         return (
           <div>
@@ -58,6 +52,8 @@
               let window "load" occur
             </button>
 
+            <NavControls />
+
             <details
               open={opened}
               onToggle={(toggleEvent) => {
@@ -68,11 +64,31 @@
                 }
               }}
             >
-              <summary>Summary</summary>
-              Content
+              <summary>Details summary</summary>
+              Details content
             </details>
 
-            <NavControls />
+            <div>
+              Current page: {page}
+              <div>
+                <button
+                  disabled={page === "A"}
+                  onClick={() => {
+                    pageSetter("A");
+                  }}
+                >
+                  A
+                </button>
+                <button
+                  disabled={page === "B"}
+                  onClick={() => {
+                    pageSetter("B");
+                  }}
+                >
+                  B
+                </button>
+              </div>
+            </div>
           </div>
         );
       };
