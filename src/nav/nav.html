@@ -31,9 +31,7 @@
       setRouteHandlers([
         ({ searchParams }) => {
           const page = searchParams.get("page");
-          console.log({ page });
           if (page === "A") {
-            console.log("return async");
             return async () => {
               await new Promise((resolve) => {
                 resolveNavigationToPageA = resolve;
@@ -170,7 +168,6 @@
 
       // eslint-disable-next-line no-unused-vars
       const PageA = () => {
-        console.log("render page a");
         return "PageA";
       };
 

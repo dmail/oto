@@ -3,6 +3,7 @@ next step is to see if we can cancel a pending navigation
 
 - https://github.com/WICG/navigation-api
 - https://developer.mozilla.org/en-US/docs/Web/API/Navigation
+- https://glitch.com/edit/#!/gigantic-honored-octagon?path=index.html%3A1%3A0
 */
 
 import { computed, signal } from "@preact/signals";
@@ -68,22 +69,27 @@ export const setRouteHandlers = (routeHandlers) => {
         hash: urlObject.hash,
       });
       if (returnValue) {
-        event.intercept({ handler: returnValue });
-        currentNavigationSignal.value = {
-          event,
+        currentNavigationSignal.value = { event };
+        const { signal } = event;
+        signal.addEventListener("abort", () => {
+          currentNavigationSignal.value = null;
+        });
+        const handler = async () => {
+          try {
+            await returnValue({ signal });
+          } finally {
+            currentNavigationSignal.value = null;
+          }
         };
+        event.intercept({ handler });
         return;
       }
     }
   });
-  navigation.navigate(window.location.href, { history: "replace" });
+  navigation.navigate(window.location.href, {
+    history: "replace",
+  });
 };
-navigation.addEventListener("navigateerror", () => {
-  currentNavigationSignal.value = null;
-});
-navigation.addEventListener("navigatesuccess", () => {
-  currentNavigationSignal.value = null;
-});
 const navigationReadyStateSignal = computed(() => {
   const documentIsLoading = documentIsLoadingSignal.value;
   if (documentIsLoading) {
@@ -112,7 +118,7 @@ export const stopNavigation = () => {
   }
   const currentNavigation = currentNavigationSignal.value;
   if (currentNavigation) {
-    currentNavigation.event.preventDefault();
+    window.stop();
     return;
   }
 };
