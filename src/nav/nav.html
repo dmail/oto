@@ -8,6 +8,8 @@
   </head>
   <body>
     <div id="root" style="position: relative"></div>
+    <img src="/__delayed__.js" />
+
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
       import { signal, useSignalEffect } from "@preact/signals";
@@ -18,12 +20,15 @@
         goBack,
         goForward,
         reload,
+        useDocumentIsLoading,
+        useCanStopNavigation,
+        stopNavigation,
       } from "./nav.js";
 
       const urlSignal = signal(window.location.href);
-      window.addEventListener("popstate", (popstateEvent) => {
-        console.log("window.history.length", window.history.length);
-        console.log("pop state event", popstateEvent);
+      navigation.addEventListener("navigate", (navigateEvent) => {
+        console.log("navigate event", navigateEvent);
+
         urlSignal.value = window.location.href;
         // TODO: we must update the UI accoringly
         // I guess UI should be listening to the url signal
@@ -116,6 +121,14 @@
           <div>
             <div>url : {urlSignal.value}</div>
 
+            <button
+              onClick={async () => {
+                await window.fetch("/__delayed__.js", { method: "POST" });
+              }}
+            >
+              let window "load" occur
+            </button>
+
             <details
               open={opened}
               onToggle={(toggleEvent) => {
@@ -139,10 +152,23 @@
       const NavControls = () => {
         const canGoBack = useCanGoBack();
         const canGoForward = useCanGoForward();
+        const documentIsLoading = useDocumentIsLoading();
+        const canStopNavigation = useCanStopNavigation();
 
         return (
           <fieldset>
             <legend>nav controls (or use browser controls)</legend>
+
+            <div>documentIsLoading: {documentIsLoading ? "yes" : "no"}</div>
+
+            <button
+              disabled={!canStopNavigation}
+              onClick={() => {
+                stopNavigation();
+              }}
+            >
+              Stop
+            </button>
             <button
               disabled={!canGoBack}
               onClick={() => {

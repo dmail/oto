@@ -1,7 +1,7 @@
 // https://github.com/WICG/navigation-api
 // https://developer.mozilla.org/en-US/docs/Web/API/Navigation
 
-import { signal } from "@preact/signals";
+import { computed, signal } from "@preact/signals";
 
 export const canGoBackSignal = signal(navigation.canGoBack);
 export const useCanGoBack = () => {
@@ -37,25 +37,45 @@ export const goTo = (url) => {
   navigation.navigate(url);
 };
 
-const documentReadySignal = signal(false);
-const isNavigatingSignal = signal(true);
-
+const documentIsLoadingSignal = signal(true);
 if (document.readyState === "complete") {
-  documentReadySignal.value = true;
+  documentIsLoadingSignal.value = false;
   // isNavigatingSignal.value = false;
 } else {
   document.addEventListener("readystatechange", () => {
     if (document.readyState === "complete") {
-      documentReadySignal.value = true;
+      documentIsLoadingSignal.value = false;
       // isNavigatingSignal.value = false
     }
   });
 }
+export const useDocumentIsLoading = () => {
+  return documentIsLoadingSignal.value;
+};
+
+const canStopNavigationSignal = computed(() => {
+  const documentIsLoading = documentIsLoadingSignal.value;
+  if (documentIsLoading) {
+    return true;
+  }
+  return false;
+});
+export const useCanStopNavigation = () => {
+  return canStopNavigationSignal.value;
+};
+
+const currentNavigationSignal = computed(() => {
+  const documentIsLoading = documentIsLoadingSignal.value();
+  if (documentIsLoading) {
+    return "loading";
+  }
+  return "complete";
+});
 
 let currentNavigateEvent;
 export const stopNavigation = () => {
-  const documentReady = documentReadySignal.peek();
-  if (!documentReady) {
+  const documentIsLoading = documentIsLoadingSignal.value;
+  if (documentIsLoading) {
     window.stop();
     return;
   }
