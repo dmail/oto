@@ -164,6 +164,18 @@ export const useRoute = (route) => {
 
   return [isLoading, isAborted, error, data];
 };
+export const useRouteIsLoading = (route) => {
+  return route.readyStateSignal.value === LOADING;
+};
+export const useRouteLoadIsAborted = (route) => {
+  return route.readyStateSignal.value === ABORTED;
+};
+export const useRouteLoadError = (route) => {
+  return route.readyStateSignal.value.error;
+};
+export const useRouteLoadData = (route) => {
+  return route.readyStateSignal.value.data;
+};
 
 const navigationReadyStateSignal = computed(() => {
   const documentIsLoading = documentIsLoadingSignal.value;

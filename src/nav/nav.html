@@ -11,34 +11,12 @@
     <img src="/__delayed__.js" />
 
     <script type="module" jsenv-type="module/jsx">
-      /*
-TODO: 
-
-- show a button to resolve pageA promise to see if it works
-
-- get a way to get route data if any (result of the load function)
-I think useRoute should be split into
- - useRouteIsLoading
- - useRouteLoadingIsAborted
- - useRouteLoadError
- - useRouteLoadedData
-- for route with dynamic params, a way to get the current param (but I bet getting it from url
-remains the better solution)
-
-- test with pageA and pageB being in the url pathname
- (requires to update jsenv)
-
-- test how cancellation is propagated 
-test with an api accepting abort signal
-whatever may reject a promise when an abort signal is triggered
-
-*/
-
       import { render } from "preact";
       import {
         useUrl,
         registerRoutes,
-        useRoute,
+        useRouteIsLoading,
+        useRouteLoadIsAborted,
         useCanGoBack,
         useCanGoForward,
         goBack,
@@ -197,9 +175,21 @@ whatever may reject a promise when an abort signal is triggered
 
       // eslint-disable-next-line no-unused-vars
       const PageA = () => {
-        const [isLoading, isAborted] = useRoute(pageA);
+        const isLoading = useRouteIsLoading(pageA);
+        const isAborted = useRouteLoadIsAborted(pageA);
         if (isLoading) {
-          return "page A loading...";
+          return (
+            <div>
+              page A loading...
+              <button
+                onClick={() => {
+                  resolveNavigationToPageA();
+                }}
+              >
+                resolve load
+              </button>
+            </div>
+          );
         }
         if (isAborted) {
           return `page A load aborted`;
@@ -209,7 +199,8 @@ whatever may reject a promise when an abort signal is triggered
 
       // eslint-disable-next-line no-unused-vars
       const PageB = () => {
-        const [isLoading, isAborted] = useRoute(pageB);
+        const isLoading = useRouteIsLoading(pageB);
+        const isAborted = useRouteLoadIsAborted(pageB);
         if (isLoading) {
           return "page B loading...";
         }
