@@ -59,18 +59,21 @@ let fallbackRoute;
 const createRoute = ({ test, buildUrl, load = () => {} }) => {
   const readyStateSignal = signal("idle");
 
-  const onStart = () => {
+  const onLeave = () => {
+    readyStateSignal.value = "idle";
+  };
+  const onEnter = () => {
     readyStateSignal.value = LOADING;
   };
   const onAbort = () => {
     readyStateSignal.value = ABORTED;
   };
-  const onError = (error) => {
+  const onLoadError = (error) => {
     readyStateSignal.value = {
       error,
     };
   };
-  const onEnd = (data) => {
+  const onLoadEnd = (data) => {
     readyStateSignal.value = {
       data,
     };
@@ -81,14 +84,16 @@ const createRoute = ({ test, buildUrl, load = () => {} }) => {
     test,
     load,
 
-    onStart,
+    onLeave,
+    onEnter,
     onAbort,
-    onError,
-    onEnd,
+    onLoadError,
+    onLoadEnd,
     readyStateSignal,
   };
 };
 
+const activeRouteSet = new Set();
 navigation.addEventListener("navigate", (event) => {
   if (!event.canIntercept) {
     return;
@@ -96,8 +101,11 @@ navigation.addEventListener("navigate", (event) => {
   if (event.hashChange || event.downloadRequest !== null) {
     return;
   }
+  currentNavigationSignal.value = { event };
+  const { signal } = event;
+
   const url = event.destination.url;
-  let matchingRoute;
+  const nextActiveRouteSet = new Set();
   for (const routeCandidate of routeSet) {
     const urlObject = new URL(url);
     const returnValue = routeCandidate.test({
@@ -107,29 +115,56 @@ navigation.addEventListener("navigate", (event) => {
       hash: urlObject.hash,
     });
     if (returnValue) {
-      matchingRoute = routeCandidate;
-      break;
+      nextActiveRouteSet.add(routeCandidate);
     }
   }
-  if (!matchingRoute && fallbackRoute) {
-    matchingRoute = fallbackRoute;
+  if (nextActiveRouteSet.size === 0) {
+    nextActiveRouteSet.add(fallbackRoute);
   }
-  if (!matchingRoute) {
-    return;
+  const routeToLeaveSet = new Set();
+  const routeToEnterSet = new Set();
+  for (const activeRoute of activeRouteSet) {
+    if (!nextActiveRouteSet.has(activeRoute)) {
+      routeToLeaveSet.add(activeRoute);
+    }
   }
-  currentNavigationSignal.value = { event };
-  const { signal } = event;
+  for (const nextActiveRoute of nextActiveRouteSet) {
+    if (!activeRouteSet.has(nextActiveRoute)) {
+      routeToEnterSet.add(nextActiveRoute);
+    }
+  }
+  nextActiveRouteSet.clear();
+  for (const routeToLeave of routeToLeaveSet) {
+    activeRouteSet.delete(routeToLeave);
+    routeToLeave.onLeave();
+  }
+
   signal.addEventListener("abort", () => {
-    matchingRoute.onAbort();
+    for (const activeRoute of activeRouteSet) {
+      activeRoute.onAbort();
+    }
     currentNavigationSignal.value = null;
   });
   const handler = async () => {
     try {
-      matchingRoute.onStart();
-      await matchingRoute.load({ signal });
-      matchingRoute.onEnd();
+      const promises = [];
+      for (const routeToEnter of routeToEnterSet) {
+        activeRouteSet.add(routeToEnter);
+        routeToEnter.onEnter();
+        const loadPromise = routeToEnter.load({ signal });
+        loadPromise.then(
+          () => {
+            routeToEnter.onLoadEnd();
+          },
+          (e) => {
+            routeToEnter.onLoadError(e);
+            throw e;
+          },
+        );
+        promises.push(loadPromise);
+      }
+      await Promise.all(promises);
     } finally {
-      matchingRoute.onError();
       currentNavigationSignal.value = null;
     }
   };

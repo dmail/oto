@@ -1,13 +1,15 @@
-- test with pageA and pageB being in the url pathname
- (requires to update jsenv)
+- fix 500 when opening non existing directory with jsenv
+- also fix 404 because url resolution fails to properly resolve when
+the main index.html file is server but the url pathname is different
+
+- hot reload broken when visiting nav/ + clicking on nav/nav.html
+
+- two scripts in 1 html file 1st is 404, 2nd is fine the reported error by jsenv is in the 2nd
 
 - test how cancellation is propagated 
 test with an api accepting abort signal
 whatever may reject a promise when an abort signal is triggered
 
-- hot reload broken when visiting nav/ + clicking on nav/nav.html
-
-- two scripts in 1 html file 1st is 404, 2nd is fine the reported error by jsenv is in the 2nd
 
 - le bouton back doit fermer la dialog pause comme le ferait un clic
 - le bouton pause ouvre les options de gestions du sons etc
