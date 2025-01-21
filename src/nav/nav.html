@@ -15,6 +15,8 @@
       import {
         useUrl,
         registerRoutes,
+        useRouteUrl,
+        useRouteIsActive,
         useRouteIsLoading,
         useRouteLoadIsAborted,
         useCanGoBack,
@@ -26,12 +28,15 @@
         useCanStopNavigation,
         stopNavigation,
         useUrlBooleanParam,
-        useUrlStringParam,
+        withUrlStringParam,
       } from "./nav.js";
 
       let resolveNavigationToPageA;
-      const { pageA, pageB } = registerRoutes({
+      const { pageA, pageB, foo, bar } = registerRoutes({
         pageA: {
+          buildUrl: (url) => {
+            return withUrlStringParam(url, "page", "A");
+          },
           test: ({ searchParams }) => {
             return searchParams.get("page") === "A";
           },
@@ -42,13 +47,36 @@
           },
         },
         pageB: {
+          buildUrl: (url) => {
+            return withUrlStringParam(url, "page", "B");
+          },
           test: ({ searchParams }) => {
             return searchParams.get("page") === "B";
           },
         },
+        foo: {
+          buildUrl: (url) => {
+            const urlObject = new URL(url);
+            urlObject.pathname = "/foo";
+            return urlObject.toString();
+          },
+          test: ({ pathname }) => {
+            return pathname.startsWith("/foo");
+          },
+        },
+        bar: {
+          buildUrl: (url) => {
+            const urlObject = new URL(url);
+            urlObject.pathname = "/bar";
+            return urlObject.toString();
+          },
+          test: ({ pathname }) => {
+            return pathname.startsWith("/bar");
+          },
+        },
         fallback: {
           load: () => {
-            console.log("load fallback");
+            // console.log("load fallback");
           },
         },
       });
@@ -58,7 +86,14 @@
         const url = useUrl();
         const [opened, openDetails, closeDetails] =
           useUrlBooleanParam("opened");
-        const [page, pageSetter] = useUrlStringParam("page");
+        const pageAUrl = useRouteUrl(pageA);
+        const pageBUrl = useRouteUrl(pageB);
+        const pageAIsActive = useRouteIsActive(pageA);
+        const pageBIsActive = useRouteIsActive(pageB);
+        const fooIsActive = useRouteIsActive(foo);
+        const barIsActive = useRouteIsActive(bar);
+        const fooUrl = useRouteUrl(foo);
+        const barUrl = useRouteUrl(bar);
 
         return (
           <div>
@@ -90,39 +125,47 @@
 
             <div>
               <div>
-                <button
-                  disabled={page === "A"}
-                  onClick={() => {
-                    pageSetter("A");
-                  }}
-                >
-                  A
-                </button>
-                <button
-                  disabled={page === "B"}
-                  onClick={() => {
-                    pageSetter("B");
-                  }}
-                >
-                  B
-                </button>
+                <a href={pageAUrl}>Go to page A</a>
+                <a href={pageBUrl}>Go to page B</a>
               </div>
             </div>
 
             <div>
               <div>PAGE CONTENT</div>
               <div style="border: 1px solid black; padding: 10px">
-                {page === "A" ? (
+                {pageAIsActive ? (
                   <PageA />
-                ) : page === "B" ? (
+                ) : pageBIsActive ? (
                   <PageB />
                 ) : (
                   "nothing"
                 )}
               </div>
             </div>
+
+            <div>
+              <div>
+                <a href={fooUrl}>Go to foo/</a>
+                <a href={barUrl}>Go to bar/</a>
+              </div>
+            </div>
+
+            <div>
+              <div>ENDPOINT</div>
+              {fooIsActive ? <Foo /> : barIsActive ? <Bar /> : "nothing"}
+            </div>
           </div>
         );
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const Foo = () => {
+        return "foo";
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const Bar = () => {
+        return "bar";
       };
 
       // eslint-disable-next-line no-unused-vars

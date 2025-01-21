@@ -56,7 +56,7 @@ const ABORTED = { id: "aborted" };
 const currentNavigationSignal = signal(null);
 const routeSet = new Set();
 let fallbackRoute;
-const createRoute = ({ test, load = () => {} }) => {
+const createRoute = ({ test, buildUrl, load = () => {} }) => {
   const readyStateSignal = signal("idle");
 
   const onStart = () => {
@@ -77,6 +77,7 @@ const createRoute = ({ test, load = () => {} }) => {
   };
 
   return {
+    buildUrl,
     test,
     load,
 
@@ -163,6 +164,14 @@ export const useRoute = (route) => {
   const data = readyState.data;
 
   return [isLoading, isAborted, error, data];
+};
+export const useRouteUrl = (route) => {
+  const url = urlSignal.value;
+  const routeUrl = route.buildUrl(url);
+  return routeUrl;
+};
+export const useRouteIsActive = (route) => {
+  return route.readyStateSignal.value !== "idle";
 };
 export const useRouteIsLoading = (route) => {
   return route.readyStateSignal.value === LOADING;
@@ -262,11 +271,14 @@ export const useUrlBooleanParam = (name) => {
   const urlBooleanParamSignal = signalForUrlBooleanParam(name);
   const urlBooleanParam = urlBooleanParamSignal.value;
   const enable = useCallback(() => {
-    const urlWithBooleanParam = withUrlBooleanParam(name);
+    const urlWithBooleanParam = withUrlBooleanParam(urlSignal.peek(), name);
     goTo(urlWithBooleanParam);
   }, [name]);
   const disable = useCallback(() => {
-    const urlWithoutBooleanParam = withoutUrlBooleanParam(name);
+    const urlWithoutBooleanParam = withoutUrlBooleanParam(
+      urlSignal.peek(),
+      name,
+    );
     goTo(urlWithoutBooleanParam);
   }, [name]);
   return [urlBooleanParam, enable, disable];
@@ -276,8 +288,8 @@ const signalForUrlBooleanParam = (name) => {
     return new URL(url).searchParams.has(name);
   });
 };
-const withUrlBooleanParam = (name) => {
-  return updateUrl((url) => {
+const withUrlBooleanParam = (url, name) => {
+  return updateUrl(url, () => {
     const urlObject = new URL(url);
     const { searchParams } = urlObject;
     if (searchParams.has(name)) {
@@ -287,8 +299,8 @@ const withUrlBooleanParam = (name) => {
     return urlObject.toString();
   });
 };
-const withoutUrlBooleanParam = (name) => {
-  return updateUrl((url) => {
+const withoutUrlBooleanParam = (url, name) => {
+  return updateUrl(url, () => {
     const urlObject = new URL(url);
     const { searchParams } = urlObject;
     if (!searchParams.has(name)) {
@@ -308,11 +320,18 @@ export const useUrlStringParam = (
   const set = useCallback(
     (value) => {
       if (value) {
-        const urlWithStringParam = withUrlStringParam(name, value);
+        const urlWithStringParam = withUrlStringParam(
+          urlSignal.peek(),
+          name,
+          value,
+        );
         goTo(urlWithStringParam);
         return;
       }
-      const urlWithoutStringParam = withoutUrlStringParam(name);
+      const urlWithoutStringParam = withoutUrlStringParam(
+        urlSignal.peek(),
+        name,
+      );
       goTo(urlWithoutStringParam);
     },
     [name],
@@ -324,16 +343,16 @@ const signalForUrlStringParam = (name) => {
     return new URL(url).searchParams.get(name);
   });
 };
-const withUrlStringParam = (name, value) => {
-  return updateUrl((url) => {
+export const withUrlStringParam = (url, name, value) => {
+  return updateUrl(url, () => {
     const urlObject = new URL(url);
     const { searchParams } = urlObject;
     searchParams.set(name, value);
     return urlObject.toString();
   });
 };
-const withoutUrlStringParam = (name) => {
-  return updateUrl((url) => {
+const withoutUrlStringParam = (url, name) => {
+  return updateUrl(url, () => {
     const urlObject = new URL(url);
     const { searchParams } = urlObject;
     if (!searchParams.has(name)) {
@@ -344,9 +363,8 @@ const withoutUrlStringParam = (name) => {
   });
 };
 
-const updateUrl = (urlTransformer) => {
-  const url = window.location.href;
-  const newUrl = urlTransformer(url);
+const updateUrl = (url, urlTransformer) => {
+  const newUrl = urlTransformer();
   if (!newUrl) {
     return url;
   }
