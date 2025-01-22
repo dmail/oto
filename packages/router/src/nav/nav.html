@@ -13,7 +13,7 @@
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
       import {
-        useUrl,
+        useDocumentUrl,
         registerRoutes,
         useRouteUrl,
         useRouteIsActive,
@@ -24,12 +24,12 @@
         goBack,
         goForward,
         reload,
-        useNavigationReadyState,
-        useCanStopNavigation,
-        stopNavigation,
+        useRouterReadyState,
+        useCanStopLoad,
+        stopLoad,
         useUrlBooleanParam,
         withUrlStringParam,
-      } from "./nav.js";
+      } from "router";
 
       let resolveNavigationToPageA;
       const { pageA, pageB, foo, bar } = registerRoutes({
@@ -83,7 +83,7 @@
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
-        const url = useUrl();
+        const documentUrl = useDocumentUrl();
         const [opened, openDetails, closeDetails] =
           useUrlBooleanParam("opened");
         const pageAUrl = useRouteUrl(pageA);
@@ -97,7 +97,7 @@
 
         return (
           <div>
-            <div>url: {url}</div>
+            <div>url: {documentUrl}</div>
 
             <button
               onClick={async () => {
@@ -172,19 +172,19 @@
       const NavControls = () => {
         const canGoBack = useCanGoBack();
         const canGoForward = useCanGoForward();
-        const navReadyState = useNavigationReadyState();
-        const canStopNavigation = useCanStopNavigation();
+        const routerReadyState = useRouterReadyState();
+        const canStopLoad = useCanStopLoad();
 
         return (
           <fieldset>
             <legend>nav controls (or use browser controls)</legend>
 
-            <div>nav state: {navReadyState}</div>
+            <div>router state: {routerReadyState}</div>
 
             <button
-              disabled={!canStopNavigation}
+              disabled={!canStopLoad}
               onClick={() => {
-                stopNavigation();
+                stopLoad();
               }}
             >
               Stop
