@@ -101,6 +101,15 @@ navigation.addEventListener("navigate", (event) => {
   if (event.hashChange || event.downloadRequest !== null) {
     return;
   }
+  if (
+    !event.userInitiated &&
+    event.navigationType === "reload" &&
+    event.isTrusted
+  ) {
+    // let window.location.reload() reload the whole document
+    // (used by jsenv hot reload)
+    return;
+  }
   currentNavigationSignal.value = { event };
   const { signal } = event;
 
