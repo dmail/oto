@@ -30,7 +30,7 @@ export const installNavigation = ({ applyRouting }) => {
     },
     { capture: true },
   );
-  window.addEventListener("popstate", async () => {
+  window.addEventListener("popstate", async (popstateEvent) => {
     if (abortNavigation) {
       abortNavigation();
     }
@@ -42,6 +42,7 @@ export const installNavigation = ({ applyRouting }) => {
     updateDocumentUrl(url);
     const routingPromise = applyRouting({
       url,
+      state: popstateEvent.state,
       signal: abortController.signal,
     });
     try {
@@ -55,12 +56,16 @@ export const installNavigation = ({ applyRouting }) => {
 };
 let abortNavigation;
 
-export const goTo = async (url) => {
+export const goTo = async (url, { state, replace } = {}) => {
   const currentUrl = documentUrlSignal.peek();
   if (url === currentUrl) {
     return;
   }
-  window.history.pushState(null, null, url);
+  if (replace) {
+    window.history.replaceState(state, null, url);
+  } else {
+    window.history.pushState(state, null, url);
+  }
 };
 export const stopLoad = () => {
   const documentIsLoading = documentIsLoadingSignal.value;

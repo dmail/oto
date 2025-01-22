@@ -52,13 +52,14 @@ export const registerFallbackRoute = (params) => {
 };
 
 const activeRouteSet = new Set();
-export const applyRouting = async ({ url, signal }) => {
+export const applyRouting = async ({ url, state, signal }) => {
   startDocumentNavigation();
   const nextActiveRouteSet = new Set();
   for (const routeCandidate of routeSet) {
     const urlObject = new URL(url);
     const returnValue = routeCandidate.test({
       url,
+      state,
       searchParams: urlObject.searchParams,
       pathname: urlObject.pathname,
       hash: urlObject.hash,

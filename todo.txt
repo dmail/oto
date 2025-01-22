@@ -1,18 +1,33 @@
+- le bouton pause ouvre les options de gestions du sons (et autre plus tard)
+
 - le bouton back doit fermer la dialog pause comme le ferait un clic
-- le bouton pause ouvre les options de gestions du sons etc
+
+- lorsqu'on bat le monstre on affiche un écran de selection
+  - on voit qu'on a battu le premier et on peut affronter un second
+  - on va faire cela avec des routes
+  - il faut que si on essaye de faire prev pour aller vers le combat
+  cette option ne soit plus disponible (donc replace dans navigate)
+
+- integration svg flore
+
+- mockup de tout le jeu en v1
+
+- écran de game over (choix retry/revenir a la carte du monde)
+
+- changer d'arme pour attaquer au poing (image + clic sur arme change)
+
+- possibilité de s'attaquer soi meme
+
+  - lorsqu'on se cible le perso a une goute sueur qui apparait
+  - lorsqu'on confirme vouloir s'attaquer une popup de confirmation s'affiche
+  - si on fait ça on affiche une anim de confusion sur l'ennemie + boite de dialogue qui dit
+    "Taurus est confus" "Tarus s'attaque lui-meme"
+    et cela le one-shot
+
+- animation mort du héros (il faut qu'il reste sur le terrain, un jour il y aura "vie")
+
+-- NICE TO HAVE ---
 
 - cancel une animation devrait la ramener vers son point de départ?
   - on pourrait passer animate=true pour utiliser le temps restant pour revenir au point de départ
   - est ce qu'il existe un truc comme ça avec web animation API?
-
-- écran de game over (choix retry/revenir a la carte du monde)
-- faire la carte du monde
-
-- changer d'arme pour attaquer au poing (image + clic sur arme change)
-- possibilité de s'attaquer soi meme
-- lorsqu'on se cible le perso a une goute sueur qui apparait
-- lorsqu'on confirme vouloir s'attaquer une popup de confirmation s'affiche
-- si on fait ça on affiche une anim de confusion sur l'ennemie + boite de dialogue qui dit
- "Taurus est confus" "Tarus s'attaque lui-meme"
- et cela le one-shot
-- animation mort du héros (il faut qu'il reste sur le terrain, un jour il y aura "vie")

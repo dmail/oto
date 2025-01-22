@@ -47,14 +47,19 @@ export const installNavigation = ({ applyRouting }) => {
     event.intercept({
       handler: async () => {
         const url = event.destination.url;
+        const state = event.state;
         const { signal } = event;
-        await applyRouting({ url, signal });
+        await applyRouting({ url, state, signal });
       },
     });
   });
   navigation.navigate(window.location.href, { history: "replace" });
 };
-export const goTo = (url) => {
+export const goTo = (url, { state, replace } = {}) => {
+  if (replace) {
+    navigation.navigate(url, { state, history: "replace" });
+    return;
+  }
   const currentUrl = documentUrlSignal.peek();
   if (url === currentUrl) {
     return;
@@ -70,7 +75,7 @@ export const goTo = (url) => {
     goForward();
     return;
   }
-  navigation.navigate(url);
+  navigation.navigate(url, { state });
 };
 export const stopLoad = () => {
   const documentIsLoading = documentIsLoadingSignal.value;
