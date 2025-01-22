@@ -1,8 +1,3 @@
-- test how cancellation is propagated 
-test with an api accepting abort signal
-whatever may reject a promise when an abort signal is triggered
-
-
 - le bouton back doit fermer la dialog pause comme le ferait un clic
 - le bouton pause ouvre les options de gestions du sons etc
 

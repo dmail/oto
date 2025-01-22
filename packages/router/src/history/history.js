@@ -8,11 +8,28 @@ updateCanGoForward(true);
 updateDocumentUrl(window.location.href);
 
 export const installNavigation = ({ applyRouting }) => {
-  // TODO
-  // - listen a.href
-  // - form submit
-  // - hashchange
-  // more??
+  window.addEventListener(
+    "click",
+    (e) => {
+      if (e.target.tagName === "A") {
+        const href = e.target.href;
+        if (href && href.startsWith(window.location.origin)) {
+          e.preventDefault();
+          window.history.pushState(null, null, e.target.href);
+        }
+      }
+    },
+    { capture: true },
+  );
+  window.addEventListener(
+    "submit",
+    () => {
+      // for the form submission it's a bit more tricky
+      // we need to have an example with navigation to actually
+      // implement it there too
+    },
+    { capture: true },
+  );
   window.addEventListener("popstate", async () => {
     if (abortNavigation) {
       abortNavigation();
