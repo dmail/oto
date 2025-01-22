@@ -52,7 +52,7 @@ export const registerFallbackRoute = (params) => {
 };
 
 const activeRouteSet = new Set();
-export const applyRouting = ({ url, signal }) => {
+export const applyRouting = async ({ url, signal }) => {
   startDocumentNavigation();
   const nextActiveRouteSet = new Set();
   for (const routeCandidate of routeSet) {
@@ -94,29 +94,28 @@ export const applyRouting = ({ url, signal }) => {
     }
     endDocumentNavigation();
   });
-  return async () => {
-    try {
-      const promises = [];
-      for (const routeToEnter of routeToEnterSet) {
-        activeRouteSet.add(routeToEnter);
-        routeToEnter.onEnter();
-        const loadPromise = routeToEnter.load({ signal });
-        loadPromise.then(
-          () => {
-            routeToEnter.onLoadEnd();
-          },
-          (e) => {
-            routeToEnter.onLoadError(e);
-            throw e;
-          },
-        );
-        promises.push(loadPromise);
-      }
-      await Promise.all(promises);
-    } finally {
-      endDocumentNavigation();
+
+  try {
+    const promises = [];
+    for (const routeToEnter of routeToEnterSet) {
+      activeRouteSet.add(routeToEnter);
+      routeToEnter.onEnter();
+      const loadPromise = routeToEnter.load({ signal });
+      loadPromise.then(
+        () => {
+          routeToEnter.onLoadEnd();
+        },
+        (e) => {
+          routeToEnter.onLoadError(e);
+          throw e;
+        },
+      );
+      promises.push(loadPromise);
     }
-  };
+    await Promise.all(promises);
+  } finally {
+    endDocumentNavigation();
+  }
 };
 
 export const injectRoute = (params) => {

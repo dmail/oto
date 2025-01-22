@@ -40,7 +40,10 @@
           test: ({ searchParams }) => {
             return searchParams.get("page") === "A";
           },
-          load: async () => {
+          load: async ({ signal }) => {
+            signal.addEventListener("abort", () => {
+              console.log("pageA load aborted");
+            });
             await new Promise((resolve) => {
               resolveNavigationToPageA = resolve;
             });
@@ -88,8 +91,6 @@
           useUrlBooleanParam("opened");
         const pageAUrl = useRouteUrl(pageA);
         const pageBUrl = useRouteUrl(pageB);
-        const pageAIsActive = useRouteIsActive(pageA);
-        const pageBIsActive = useRouteIsActive(pageB);
         const fooIsActive = useRouteIsActive(foo);
         const barIsActive = useRouteIsActive(bar);
         const fooUrl = useRouteUrl(foo);
@@ -131,15 +132,10 @@
             </div>
 
             <div>
-              <div>PAGE CONTENT</div>
+              <div>Pages</div>
               <div style="border: 1px solid black; padding: 10px">
-                {pageAIsActive ? (
-                  <PageA />
-                ) : pageBIsActive ? (
-                  <PageB />
-                ) : (
-                  "nothing"
-                )}
+                <PageA />
+                <PageB />
               </div>
             </div>
 
@@ -218,8 +214,12 @@
 
       // eslint-disable-next-line no-unused-vars
       const PageA = () => {
+        const isActive = useRouteIsActive(pageA);
         const isLoading = useRouteIsLoading(pageA);
         const isAborted = useRouteLoadIsAborted(pageA);
+        if (!isActive) {
+          return "pageA not active";
+        }
         if (isLoading) {
           return (
             <div>
@@ -242,8 +242,12 @@
 
       // eslint-disable-next-line no-unused-vars
       const PageB = () => {
+        const isActive = useRouteIsActive(pageB);
         const isLoading = useRouteIsLoading(pageB);
         const isAborted = useRouteLoadIsAborted(pageB);
+        if (!isActive) {
+          return "pageB not active";
+        }
         if (isLoading) {
           return "page B loading...";
         }

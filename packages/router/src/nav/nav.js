@@ -52,9 +52,7 @@ export const installNavigation = ({ applyRouting }) => {
       },
     });
   });
-  navigation.navigate(window.location.href, {
-    history: "replace",
-  });
+  navigation.navigate(window.location.href, { history: "replace" });
 };
 export const goTo = (url) => {
   const currentUrl = documentUrlSignal.peek();
