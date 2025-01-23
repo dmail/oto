@@ -16,6 +16,7 @@ export const animateElement = (
     iterations = 1,
     fill = "forwards",
     playbackRate = 1,
+    onstatechange = noop,
     onstart = noop,
     onprogress = noop,
     onpause = noop,
@@ -23,10 +24,26 @@ export const animateElement = (
     onremove = noop,
     easing,
     canPlayWhilePaused,
+    autoplay,
   },
 ) => {
   const fromStep = stepFromAnimationDescription(from);
   const toStep = stepFromAnimationDescription(to);
+
+  const goToState = (newState) => {
+    const currentState = animation.playState;
+    animation.playState = newState;
+    animation.onstatechange(newState, currentState);
+    if (newState === "running") {
+      animation.onstart();
+    } else if (newState === "paused") {
+      animation.onpause();
+    } else if (newState === "finished") {
+      animation.onfinish();
+    } else if (newState === "removed") {
+      animation.onremove();
+    }
+  };
 
   const steps = [];
   if (fromStep) {
@@ -70,6 +87,7 @@ export const animateElement = (
 
   const animation = {
     playState: "idle",
+    onstatechange,
     onstart,
     onprogress,
     onpause,
@@ -83,7 +101,7 @@ export const animateElement = (
       if (animation.playState === "paused") {
         onBeforePlay();
         webAnimation.play();
-        animation.playState = "running";
+        goToState("running");
         return;
       }
       stopObservingElementRemoved = onceElementRemoved(element, () => {
@@ -105,30 +123,27 @@ export const animateElement = (
           innerOnFinish();
           innerOnFinish = null;
         }
-        animation.onfinish();
+        goToState("finished");
       };
       onBeforePlay();
       webAnimation.play();
       if (animation.playState === "finished") {
         animation.finished = createFinishedPromise();
       }
-      animation.playState = "running";
-      animation.onstart();
+      goToState("running");
     },
     pause: () => {
       if (animation.playState === "paused") {
         return;
       }
       webAnimation.pause();
-      animation.playState = "paused";
-      animation.onpause();
+      goToState("paused");
     },
     finish: () => {
       if (animation.playState === "finished") {
         return;
       }
       webAnimation.finish();
-      animation.playState = "finished";
     },
     remove: () => {
       if (animation.playState === "removed") {
@@ -143,17 +158,17 @@ export const animateElement = (
         removeSignalEffect();
         removeSignalEffect = undefined;
       }
-      animation.playState = "removed";
+      goToState("removed");
     },
   };
-  if (canPlayWhilePaused) {
+  if (canPlayWhilePaused && autoplay) {
     animation.play();
   } else {
     removeSignalEffect = effect(() => {
       const animationsAllPaused = animationsAllPausedSignal.value;
       if (animationsAllPaused) {
         animation.pause();
-      } else {
+      } else if (autoplay) {
         animation.play();
       }
     });
