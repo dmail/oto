@@ -8,6 +8,7 @@ export const animateSequence = (
   animationExecutors,
   {
     onstatechange = () => {},
+    onbeforestart = () => {},
     onstart = () => {},
     onpause = () => {},
     onremove = () => {},
@@ -38,6 +39,7 @@ export const animateSequence = (
     playState: "idle",
     finished: null,
     onstatechange,
+    onbeforestart,
     onstart,
     onpause,
     onremove,
@@ -47,6 +49,7 @@ export const animateSequence = (
         return;
       }
       if (animationSequence.playState === "paused") {
+        animationSequence.onbeforestart();
         currentAnimation.play();
         goToState("running");
         return;
@@ -57,6 +60,7 @@ export const animateSequence = (
         resolveFinished = resolve;
         rejectFinished = reject;
       });
+      animationSequence.onbeforestart();
       startNext();
       goToState("running");
     },

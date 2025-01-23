@@ -59,7 +59,7 @@ export const animateDamageDisplay = (
     });
   }
   return animateSequence(steps, {
-    onstart: () => {
+    onbeforestart: () => {
       element.style.display = null;
     },
     onfinish: () => {

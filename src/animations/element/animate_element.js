@@ -1,4 +1,4 @@
-import { effect } from "@preact/signals";
+import { effect, signal } from "@preact/signals";
 import { animationsAllPausedSignal } from "../animation_signal.js";
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 import { EASING } from "../utils/easing.js";
@@ -27,6 +27,7 @@ export const animateElement = (
     autoplay = true,
   },
 ) => {
+  const playRequestedSignal = signal(autoplay);
   const fromStep = stepFromAnimationDescription(from);
   const toStep = stepFromAnimationDescription(to);
 
@@ -98,46 +99,13 @@ export const animateElement = (
       if (animation.playState === "running") {
         return;
       }
-      if (animation.playState === "paused") {
-        onBeforePlay();
-        webAnimation.play();
-        goToState("running");
-        return;
-      }
-      stopObservingElementRemoved = onceElementRemoved(element, () => {
-        animation.remove();
-      });
-      webAnimation.onfinish = () => {
-        if (toStep) {
-          try {
-            webAnimation.commitStyles();
-          } catch (e) {
-            console.error(
-              `Error during "commitStyles" on animation "${id}"`,
-              element.style.display,
-            );
-            console.error(e);
-          }
-        }
-        if (innerOnFinish) {
-          innerOnFinish();
-          innerOnFinish = null;
-        }
-        goToState("finished");
-      };
-      onBeforePlay();
-      webAnimation.play();
-      if (animation.playState === "finished") {
-        animation.finished = createFinishedPromise();
-      }
-      goToState("running");
+      playRequestedSignal.value = true;
     },
     pause: () => {
       if (animation.playState === "paused") {
         return;
       }
-      webAnimation.pause();
-      goToState("paused");
+      playRequestedSignal.value = false;
     },
     finish: () => {
       if (animation.playState === "finished") {
@@ -161,18 +129,59 @@ export const animateElement = (
       goToState("removed");
     },
   };
-  if (canPlayWhilePaused && autoplay) {
-    animation.play();
-  } else {
-    removeSignalEffect = effect(() => {
-      const animationsAllPaused = animationsAllPausedSignal.value;
-      if (animationsAllPaused) {
-        animation.pause();
-      } else if (autoplay) {
-        animation.play();
-      }
+
+  const doPlay = () => {
+    if (animation.playState === "paused") {
+      onBeforePlay();
+      webAnimation.play();
+      goToState("running");
+      return;
+    }
+    stopObservingElementRemoved = onceElementRemoved(element, () => {
+      animation.remove();
     });
-  }
+    webAnimation.onfinish = () => {
+      if (toStep) {
+        try {
+          webAnimation.commitStyles();
+        } catch (e) {
+          console.error(
+            `Error during "commitStyles" on animation "${id}"`,
+            element.style.display,
+          );
+          console.error(e);
+        }
+      }
+      if (innerOnFinish) {
+        innerOnFinish();
+        innerOnFinish = null;
+      }
+      goToState("finished");
+    };
+    onBeforePlay();
+    webAnimation.play();
+    if (animation.playState === "finished") {
+      animation.finished = createFinishedPromise();
+    }
+    goToState("running");
+  };
+
+  const doPause = () => {
+    webAnimation.pause();
+    goToState("paused");
+  };
+
+  removeSignalEffect = effect(() => {
+    const playRequested = playRequestedSignal.value;
+    const animationsAllPaused = animationsAllPausedSignal.value;
+    const shouldPlay =
+      playRequested && (canPlayWhilePaused || !animationsAllPaused);
+    if (shouldPlay) {
+      doPlay();
+    } else {
+      doPause();
+    }
+  });
   return animation;
 };
 
