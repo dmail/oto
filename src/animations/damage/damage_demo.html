@@ -16,18 +16,21 @@
       import { render } from "preact";
       import { signal, computed } from "@preact/signals";
       import { animateDamageDisplay } from "./damage.js";
+      import {
+        pauseAllAnimations,
+        playAllAnimations,
+        useAnimationsAllPaused,
+      } from "../animation_signal.js";
 
+      let hasAutopaused = false;
       const animation = animateDamageDisplay(
         document.querySelector("#animated_el"),
         {
-          from: {
-            x: 0,
-          },
-          to: {
-            x: 100,
-          },
           duration: 1000,
           autoplay: false,
+          onfinish: () => {
+            hasAutopaused = false;
+          },
         },
       );
       const stateSignal = animation.playStateSignal;
@@ -41,17 +44,27 @@
       const canPauseSignal = computed(() => {
         return stateSignal.value === "running";
       });
+      const autopauseMsSignal = signal(300);
+      const autopauseChecked = signal(false);
+
       const play = () => {
         animation.play();
+        if (!hasAutopaused && autopauseChecked.peek()) {
+          setTimeout(() => {
+            hasAutopaused = true;
+            pauseAllAnimations();
+          }, autopauseMsSignal.peek());
+        }
       };
       const pause = () => {
+        hasAutopaused = false;
         animation.pause();
       };
 
-      const pauseMiddleOfFirstStepSignal = signal(false);
-
       // eslint-disable-next-line no-unused-vars
       const App = () => {
+        const allPaused = useAnimationsAllPaused();
+
         return (
           <div>
             <div></div>
@@ -66,16 +79,30 @@
                 Pause
               </button>
 
+              <br />
+              <button disabled={allPaused} onClick={pauseAllAnimations}>
+                Pause all
+              </button>
+              <button disabled={!allPaused} onClick={playAllAnimations}>
+                Play all
+              </button>
               <label>
                 <input
                   type="checkbox"
-                  checked={pauseMiddleOfFirstStepSignal.value}
+                  checked={autopauseChecked.value}
                   onChange={(e) => {
-                    pauseMiddleOfFirstStepSignal.value = e.target.checked;
+                    autopauseChecked.value = e.target.checked;
                   }}
                 />
-                Pause middle of first step
+                Autopause
               </label>
+              <input
+                type="number"
+                value={autopauseMsSignal.value}
+                step="10"
+                min="10"
+                max="1000"
+              />
             </fieldset>
 
             <div>
