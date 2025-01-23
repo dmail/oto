@@ -2,7 +2,7 @@
 // because it might be overriden from outside
 // we should use a list of listeners
 
-import { signal, effect as signalsEffect } from "@preact/signals";
+import { computed, effect, signal } from "@preact/signals";
 import { animationsAllPausedSignal } from "../animation_signal.js";
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
@@ -18,17 +18,17 @@ export const animateSequence = (
     autoplay = true,
   } = {},
 ) => {
+  const cleanupCallbackSet = new Set();
   const playRequestedSignal = signal(autoplay);
-  const playStateSignal = signal("idle");
+  const stateSignal = signal("idle");
 
   let resolveFinished;
   let rejectFinished;
   let childIndex;
   let currentAnimation;
-  let removeSignalEffect;
   const goToState = (newState) => {
-    const currentState = playStateSignal.peek();
-    playStateSignal.value = newState;
+    const currentState = stateSignal.peek();
+    stateSignal.value = newState;
     animationSequence.onstatechange(newState, currentState);
     if (newState === "running") {
       animationSequence.onstart();
@@ -57,7 +57,7 @@ export const animateSequence = (
 
   let started = false;
   const animationSequence = {
-    playStateSignal,
+    stateSignal,
     finished: null,
     onstatechange,
     onbeforestart,
@@ -72,8 +72,8 @@ export const animateSequence = (
       playRequestedSignal.value = false;
     },
     finish: () => {
-      const playState = playStateSignal.peek();
-      if (playState === "finished") {
+      const state = stateSignal.peek();
+      if (state === "finished") {
         return;
       }
       if (currentAnimation) {
@@ -89,14 +89,14 @@ export const animateSequence = (
       resolveFinished();
     },
     remove: () => {
-      const playState = playStateSignal.peek();
-      if (playState === "idle") {
+      const state = stateSignal.peek();
+      if (state === "idle") {
         return;
       }
-      if (removeSignalEffect) {
-        removeSignalEffect();
-        removeSignalEffect = undefined;
+      for (const cleanupCallback of cleanupCallbackSet) {
+        cleanupCallback();
       }
+      cleanupCallbackSet.clear();
       currentAnimation.remove();
       started = false;
       goToState("removed");
@@ -120,8 +120,8 @@ export const animateSequence = (
       };
     };
     currentAnimation.onfinish = () => {
-      const playState = playStateSignal.peek();
-      if (playState === "running") {
+      const state = stateSignal.peek();
+      if (state === "running") {
         startNext();
       }
     };
@@ -131,8 +131,8 @@ export const animateSequence = (
   };
 
   const doPlay = () => {
-    const playState = playStateSignal.peek();
-    if (playState === "running" || playState === "removed") {
+    const state = stateSignal.peek();
+    if (state === "running" || state === "removed") {
       return;
     }
     if (!started) {
@@ -145,6 +145,7 @@ export const animateSequence = (
       animationSequence.onbeforestart();
       startNext();
       goToState("running");
+      started = true;
       return;
     }
     animationSequence.onbeforestart();
@@ -152,8 +153,8 @@ export const animateSequence = (
     goToState("running");
   };
   const doPause = () => {
-    const playState = playStateSignal.peek();
-    if (playState === "paused") {
+    const state = stateSignal.peek();
+    if (state === "paused") {
       return;
     }
     if (currentAnimation) {
@@ -161,19 +162,54 @@ export const animateSequence = (
     }
     goToState("paused");
   };
-
-  removeSignalEffect = signalsEffect(() => {
+  const shouldPlaySignal = computed(() => {
     const playRequested = playRequestedSignal.value;
+    const state = stateSignal.value;
     const animationsAllPaused = animationsAllPausedSignal.value;
-    const shouldPlay =
-      playRequested &&
-      (animationSequence.canPlayWhileGloballyPaused || !animationsAllPaused);
-    if (shouldPlay) {
-      doPlay();
-    } else {
-      doPause();
+    if (!playRequested) {
+      return false;
     }
+    if (state === "running") {
+      return false;
+    }
+    if (state === "removed") {
+      return false;
+    }
+    if (animationsAllPaused) {
+      return false;
+    }
+    return true;
   });
+  const shouldPauseSignal = computed(() => {
+    const playRequested = playRequestedSignal.value;
+    const state = stateSignal.value;
+    if (playRequested) {
+      return false;
+    }
+    if (state === "paused") {
+      return false;
+    }
+    if (state === "removed") {
+      return false;
+    }
+    return true;
+  });
+  cleanupCallbackSet.add(
+    effect(() => {
+      const shouldPlay = shouldPlaySignal.value;
+      if (shouldPlay) {
+        doPlay();
+      }
+    }),
+  );
+  cleanupCallbackSet.add(
+    effect(() => {
+      const shouldPause = shouldPauseSignal.value;
+      if (shouldPause) {
+        doPause();
+      }
+    }),
+  );
 
   return animationSequence;
 };

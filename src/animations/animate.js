@@ -1,4 +1,4 @@
-import { signal, effect as signalsEffect } from "@preact/signals";
+import { computed, signal, effect as signalsEffect } from "@preact/signals";
 import { animationsAllPausedSignal } from "./animation_signal.js";
 import { createAnimationAbortError } from "./utils/animation_abort_error.js";
 
@@ -35,13 +35,17 @@ export const animate = ({
           };
         };
 
+  const cleanupCallbackSet = new Set();
+  const playRequestedSignal = signal(autoplay);
+  // "idle", "running", "paused", "removed", "finished"
+  const stateSignal = signal("idle");
+
   let cancelNext;
   const delayController = createDelayController(delay);
   let resolveFinished;
   let rejectFinished;
   let previousStepMs;
   let msRemaining;
-  let removeSignalEffect;
   const createFinishedPromise = () => {
     return new Promise((resolve, reject) => {
       resolveFinished = resolve;
@@ -49,13 +53,9 @@ export const animate = ({
     });
   };
 
-  const playRequestedSignal = signal(autoplay);
-  // "idle", "running", "paused", "removed", "finished"
-  const playStateSignal = signal("idle");
-
   const goToState = (newState) => {
-    const currentState = playStateSignal.peek();
-    playStateSignal.value = newState;
+    const currentState = stateSignal.peek();
+    stateSignal.value = newState;
     animation.onstatechange(newState, currentState);
     if (newState === "running") {
       animation.onstart();
@@ -71,7 +71,7 @@ export const animate = ({
   let started = false;
 
   const animation = {
-    playStateSignal,
+    stateSignal,
     progressRatio: 0,
     ratio: 0,
     effect,
@@ -89,12 +89,8 @@ export const animate = ({
       playRequestedSignal.value = false;
     },
     finish: () => {
-      const playState = playStateSignal.peek();
-      if (
-        playState === "idle" ||
-        playState === "running" ||
-        playState === "paused"
-      ) {
+      const state = stateSignal.peek();
+      if (state === "idle" || state === "running" || state === "paused") {
         delayController.remove();
         if (cancelNext) {
           // cancelNext is undefined when "idle" or "paused"
@@ -109,12 +105,12 @@ export const animate = ({
       }
     },
     remove: () => {
-      const playState = playStateSignal.peek();
+      const state = stateSignal.peek();
       if (
-        playState === "idle" ||
-        playState === "running" ||
-        playState === "paused" ||
-        playState === "finished"
+        state === "idle" ||
+        state === "running" ||
+        state === "paused" ||
+        state === "finished"
       ) {
         delayController.remove();
         if (cancelNext) {
@@ -130,11 +126,11 @@ export const animate = ({
           rejectFinished(createAnimationAbortError());
           rejectFinished = undefined;
         }
-        if (removeSignalEffect) {
-          removeSignalEffect();
-          removeSignalEffect = undefined;
+        for (const cleanupCallback of cleanupCallbackSet) {
+          cleanupCallback();
         }
-
+        cleanupCallbackSet.clear();
+        started = false;
         goToState("removed");
       }
     },
@@ -178,8 +174,8 @@ export const animate = ({
   };
 
   const doPlay = () => {
-    const playState = playStateSignal.peek();
-    if (playState === "running" || playState === "removed") {
+    const state = stateSignal.peek();
+    if (state === "running" || state === "removed") {
       return;
     }
     if (!started) {
@@ -187,23 +183,25 @@ export const animate = ({
       animation.finished = createFinishedPromise();
       animation.progressRatio = 0;
       animation.ratio = 0;
+      started = true;
+      goToState("running");
       delayController.nowOrOnceDelayEllapsed(() => {
         previousStepMs = Date.now();
         animation.effect(animation.ratio, animation);
         cancelNext = requestNext(next);
       });
-      goToState("running");
+
       return;
     }
+    goToState("running");
     delayController.nowOrOnceDelayEllapsed(() => {
       previousStepMs = Date.now();
       cancelNext = requestNext(next);
     });
-    goToState("running");
   };
   const doPause = () => {
-    const playState = playStateSignal.peek();
-    if (playState === "running") {
+    const state = stateSignal.peek();
+    if (state === "running") {
       delayController.pause();
       if (cancelNext) {
         cancelNext();
@@ -213,23 +211,54 @@ export const animate = ({
       return;
     }
   };
-  removeSignalEffect = signalsEffect(() => {
+  const shouldPlaySignal = computed(() => {
     const playRequested = playRequestedSignal.value;
+    const state = stateSignal.value;
     const animationsAllPaused = animationsAllPausedSignal.value;
+    if (!playRequested) {
+      return false;
+    }
+    if (state === "running") {
+      return false;
+    }
+    if (state === "removed") {
+      return false;
+    }
+    if (animationsAllPaused && usage === "display") {
+      return false;
+    }
+    return true;
+  });
+  const shouldPauseSignal = computed(() => {
+    const playRequested = playRequestedSignal.value;
+    const state = stateSignal.value;
     if (playRequested) {
-      if (usage === "display") {
-        if (animationsAllPaused) {
-          doPause();
-        } else {
-          doPlay();
-        }
-      } else {
+      return false;
+    }
+    if (state === "paused") {
+      return false;
+    }
+    if (state === "removed") {
+      return false;
+    }
+    return true;
+  });
+  cleanupCallbackSet.add(
+    signalsEffect(() => {
+      const shouldPlay = shouldPlaySignal.value;
+      if (shouldPlay) {
         doPlay();
       }
-    } else {
-      doPause();
-    }
-  });
+    }),
+  );
+  cleanupCallbackSet.add(
+    signalsEffect(() => {
+      const shouldPause = shouldPauseSignal.value;
+      if (shouldPause) {
+        doPause();
+      }
+    }),
+  );
 
   return animation;
 };

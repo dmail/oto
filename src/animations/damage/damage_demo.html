@@ -33,7 +33,7 @@
           },
         },
       );
-      const stateSignal = animation.playStateSignal;
+      const stateSignal = animation.stateSignal;
       const canPlaySignal = computed(() => {
         return (
           stateSignal.value === "idle" ||
