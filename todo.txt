@@ -1,3 +1,8 @@
+- when browsing files we should be able to display root directory content somehow
+currently it's not possible because "/" shows the index.html
+
+- when client request with // it should not lead to 500 in the server
+
 - le bouton pause ouvre les options de gestions du sons (et autre plus tard)
 
 - le bouton back doit fermer la dialog pause comme le ferait un clic

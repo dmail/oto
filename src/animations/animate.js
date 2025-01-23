@@ -11,6 +11,7 @@ export const animate = ({
   easing,
   effect = noop,
   onprogress = noop,
+  onstatechange = noop,
   onstart = noop,
   onpause = noop,
   onremove = noop,
@@ -47,13 +48,29 @@ export const animate = ({
     });
   };
 
+  const goToState = (newState) => {
+    const currentState = animation.playState;
+    animation.playState = newState;
+    animation.onstatechange(newState, currentState);
+    if (newState === "running") {
+      animation.onstart();
+    } else if (newState === "paused") {
+      animation.onpause();
+    } else if (newState === "finished") {
+      animation.onfinish();
+    } else if (newState === "removed") {
+      animation.onremove();
+    }
+  };
+
   const animation = {
     playState: "idle", // "idle", "running", "paused", "removed", "finished"
     progressRatio: 0,
     ratio: 0,
     effect,
-    onstart,
     onprogress,
+    onstatechange,
+    onstart,
     onpause,
     onremove,
     onfinish,
@@ -62,8 +79,7 @@ export const animate = ({
       if (animation.playState === "paused") {
         delayController.nowOrOnceDelayEllapsed(() => {
           previousStepMs = Date.now();
-          animation.playState = "running";
-          animation.onstart();
+          goToState("running");
           cancelNext = requestNext(next);
         });
         return;
@@ -78,11 +94,10 @@ export const animate = ({
         }
         animation.progressRatio = 0;
         animation.ratio = 0;
-        animation.playState = "running";
+        goToState("running");
         delayController.nowOrOnceDelayEllapsed(() => {
           previousStepMs = Date.now();
           animation.effect(animation.ratio, animation);
-          animation.onstart();
           cancelNext = requestNext(next);
         });
         return;
@@ -95,8 +110,7 @@ export const animate = ({
           cancelNext();
           cancelNext = undefined;
         }
-        animation.playState = "paused";
-        animation.onpause();
+        goToState("paused");
         return;
       }
     },
@@ -113,10 +127,9 @@ export const animate = ({
           cancelNext = undefined;
         }
         setProgress(1);
-        animation.playState = "finished";
         resolveFinished();
         resolveFinished = undefined;
-        animation.onfinish();
+        goToState("finished");
       }
     },
     remove: () => {
@@ -135,7 +148,7 @@ export const animate = ({
         previousStepMs = null;
         animation.progressRatio = animation.ratio = 0;
         animation.effect(animation.ratio, animation);
-        animation.playState = "removed";
+
         if (rejectFinished) {
           rejectFinished(createAnimationAbortError());
           rejectFinished = undefined;
@@ -144,7 +157,7 @@ export const animate = ({
           removeSignalEffect();
           removeSignalEffect = undefined;
         }
-        animation.onremove();
+        goToState("removed");
       }
     },
   };
@@ -167,7 +180,7 @@ export const animate = ({
     ) {
       if (loop) {
         setProgress(1);
-        animation.playState = "finished";
+        goToState("idle");
         animation.play();
         return;
       }

@@ -62,7 +62,6 @@ export const animateElement = (
     const computedStyle = getComputedStyle(element);
     if (computedStyle.display === "none") {
       element.style.display = null;
-      element.offsetWidth;
       innerOnFinish = () => {
         element.style.display = "none";
       };

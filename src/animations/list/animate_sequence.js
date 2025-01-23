@@ -27,6 +27,7 @@ export const animateSequence = (
       if (animationSequence.playState === "paused") {
         animationSequence.playState = "running";
         currentAnimation.play();
+        animationSequence.onstart();
         return;
       }
       childAnimationIndex = -1;
@@ -37,6 +38,7 @@ export const animateSequence = (
         rejectFinished = reject;
       });
       startNext();
+      animationSequence.onstart();
     },
     pause: () => {
       if (animationSequence.playState === "paused") {

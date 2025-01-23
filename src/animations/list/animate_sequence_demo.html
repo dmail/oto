@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="data:," />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Animate sequence demo</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" jsenv-type="module/jsx">
+      import { render } from "preact";
+      import { signal } from "@preact/signals";
+      import { animate } from "../animate.js";
+      import { animateSequence } from "./animate_sequence.js";
+
+      const firstStepRatioSignal = signal(0);
+      const secondStepRatioSignal = signal(0);
+      const firstStepStateSignal = signal("idle");
+      const secondStepStateSignal = signal("idle");
+
+      const canStartSignal = signal(true);
+      const canPauseSignal = signal(false);
+
+      let animation;
+      const start = () => {
+        animation = animateSequence(
+          [
+            () => {
+              return animate({
+                effect: (ratio) => {
+                  firstStepRatioSignal.value = ratio;
+                },
+                duration: 1000,
+                onstatechange: (state) => {
+                  firstStepStateSignal.value = state;
+                },
+              });
+            },
+            () => {
+              return animate({
+                effect: (ratio) => {
+                  secondStepRatioSignal.value = ratio;
+                },
+                duration: 1000,
+                onstatechange: (state) => {
+                  secondStepStateSignal.value = state;
+                },
+              });
+            },
+          ],
+          {
+            onstart: () => {
+              canStartSignal.value = false;
+              canPauseSignal.value = true;
+            },
+            onpause: () => {
+              canStartSignal.value = true;
+              canPauseSignal.value = false;
+            },
+            onfinish: () => {
+              canStartSignal.value = true;
+              canPauseSignal.value = false;
+            },
+          },
+        );
+      };
+      const pause = () => {
+        animation.pause();
+        canPauseSignal.value = false;
+      };
+
+      // eslint-disable-next-line no-unused-vars
+      const App = () => {
+        return (
+          <div>
+            <div></div>
+
+            <fieldset>
+              <legend>Controls</legend>
+
+              <button disabled={!canStartSignal.value} onClick={start}>
+                Start
+              </button>
+              <button disabled={!canPauseSignal.value} onClick={pause}>
+                Pause
+              </button>
+            </fieldset>
+
+            <div>
+              <div>
+                Step A:
+                <div>state: {firstStepStateSignal.value}</div>
+                <div>ratio: {firstStepRatioSignal.value}</div>
+              </div>
+              Step B:
+              <div>state: {secondStepStateSignal.value}</div>
+              <div>ratio: {secondStepRatioSignal.value}</div>
+            </div>
+          </div>
+        );
+      };
+
+      render(<App />, document.querySelector("#root"));
+    </script>
+  </body>
+</html>
