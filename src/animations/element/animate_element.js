@@ -177,7 +177,7 @@ export const animateElement = (
   };
   const doPause = () => {
     const state = stateSignal.peek();
-    if (state === "paused" || state === "removed") {
+    if (state === "paused" || state === "removed" || state === "finished") {
       return;
     }
     webAnimation.pause();
@@ -185,32 +185,11 @@ export const animateElement = (
   };
   const shouldPlaySignal = computed(() => {
     const playRequested = playRequestedSignal.value;
-    const state = stateSignal.value;
     const animationsAllPaused = animationsAllPausedSignal.value;
     if (!playRequested) {
       return false;
     }
-    if (state === "running") {
-      return false;
-    }
-    if (state === "removed") {
-      return false;
-    }
     if (animationsAllPaused && !canPlayWhileGloballyPaused) {
-      return false;
-    }
-    return true;
-  });
-  const shouldPauseSignal = computed(() => {
-    const playRequested = playRequestedSignal.value;
-    const state = stateSignal.value;
-    if (playRequested) {
-      return false;
-    }
-    if (state === "paused") {
-      return false;
-    }
-    if (state === "removed") {
       return false;
     }
     return true;
@@ -223,6 +202,13 @@ export const animateElement = (
       }
     }),
   );
+  const shouldPauseSignal = computed(() => {
+    const playRequested = playRequestedSignal.value;
+    if (playRequested) {
+      return false;
+    }
+    return true;
+  });
   cleanupCallbackSet.add(
     effect(() => {
       const shouldPause = shouldPauseSignal.value;

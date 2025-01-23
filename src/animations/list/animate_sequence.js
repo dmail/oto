@@ -154,7 +154,7 @@ export const animateSequence = (
   };
   const doPause = () => {
     const state = stateSignal.peek();
-    if (state === "paused") {
+    if (state === "paused" || state === "removed" || state === "finished") {
       return;
     }
     if (currentAnimation) {
@@ -164,32 +164,11 @@ export const animateSequence = (
   };
   const shouldPlaySignal = computed(() => {
     const playRequested = playRequestedSignal.value;
-    const state = stateSignal.value;
     const animationsAllPaused = animationsAllPausedSignal.value;
     if (!playRequested) {
       return false;
     }
-    if (state === "running") {
-      return false;
-    }
-    if (state === "removed") {
-      return false;
-    }
     if (animationsAllPaused) {
-      return false;
-    }
-    return true;
-  });
-  const shouldPauseSignal = computed(() => {
-    const playRequested = playRequestedSignal.value;
-    const state = stateSignal.value;
-    if (playRequested) {
-      return false;
-    }
-    if (state === "paused") {
-      return false;
-    }
-    if (state === "removed") {
       return false;
     }
     return true;
@@ -202,6 +181,13 @@ export const animateSequence = (
       }
     }),
   );
+  const shouldPauseSignal = computed(() => {
+    const playRequested = playRequestedSignal.value;
+    if (playRequested) {
+      return false;
+    }
+    return true;
+  });
   cleanupCallbackSet.add(
     effect(() => {
       const shouldPause = shouldPauseSignal.value;
