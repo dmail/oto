@@ -49,6 +49,7 @@ export const animate = ({
     });
   };
 
+  const playRequestedSignal = signal(autoplay);
   // "idle", "running", "paused", "removed", "finished"
   const playStateSignal = signal("idle");
 
@@ -67,6 +68,8 @@ export const animate = ({
     }
   };
 
+  let started = false;
+
   const animation = {
     playStateSignal,
     progressRatio: 0,
@@ -80,42 +83,10 @@ export const animate = ({
     onfinish,
     finished: createFinishedPromise(),
     play: () => {
-      const playState = playStateSignal.peek();
-      if (playState === "paused") {
-        delayController.nowOrOnceDelayEllapsed(() => {
-          previousStepMs = Date.now();
-          goToState("running");
-          cancelNext = requestNext(next);
-        });
-        return;
-      }
-      if (playState === "idle" || playState === "finished") {
-        msRemaining = duration;
-        if (playState === "finished") {
-          animation.finished = createFinishedPromise();
-        }
-        animation.progressRatio = 0;
-        animation.ratio = 0;
-        goToState("running");
-        delayController.nowOrOnceDelayEllapsed(() => {
-          previousStepMs = Date.now();
-          animation.effect(animation.ratio, animation);
-          cancelNext = requestNext(next);
-        });
-        return;
-      }
+      playRequestedSignal.value = true;
     },
     pause: () => {
-      const playState = playStateSignal.peek();
-      if (playState === "running") {
-        delayController.pause();
-        if (cancelNext) {
-          cancelNext();
-          cancelNext = undefined;
-        }
-        goToState("paused");
-        return;
-      }
+      playRequestedSignal.value = false;
     },
     finish: () => {
       const playState = playStateSignal.peek();
@@ -131,6 +102,7 @@ export const animate = ({
           cancelNext = undefined;
         }
         setProgress(1);
+        started = false;
         resolveFinished();
         resolveFinished = undefined;
         goToState("finished");
@@ -153,7 +125,7 @@ export const animate = ({
         previousStepMs = null;
         animation.progressRatio = animation.ratio = 0;
         animation.effect(animation.ratio, animation);
-
+        started = false;
         if (rejectFinished) {
           rejectFinished(createAnimationAbortError());
           rejectFinished = undefined;
@@ -162,6 +134,7 @@ export const animate = ({
           removeSignalEffect();
           removeSignalEffect = undefined;
         }
+
         goToState("removed");
       }
     },
@@ -203,18 +176,61 @@ export const animate = ({
     );
     cancelNext = requestNext(next);
   };
-  if (usage === "display") {
-    removeSignalEffect = signalsEffect(() => {
-      const animationsAllPaused = animationsAllPausedSignal.value;
-      if (animationsAllPaused) {
-        animation.pause();
-      } else if (autoplay) {
-        animation.play();
-      }
+
+  const doPlay = () => {
+    const playState = playStateSignal.peek();
+    if (playState === "running" || playState === "removed") {
+      return;
+    }
+    if (!started) {
+      msRemaining = duration;
+      animation.finished = createFinishedPromise();
+      animation.progressRatio = 0;
+      animation.ratio = 0;
+      delayController.nowOrOnceDelayEllapsed(() => {
+        previousStepMs = Date.now();
+        animation.effect(animation.ratio, animation);
+        cancelNext = requestNext(next);
+      });
+      goToState("running");
+      return;
+    }
+    delayController.nowOrOnceDelayEllapsed(() => {
+      previousStepMs = Date.now();
+      cancelNext = requestNext(next);
     });
-  } else if (autoplay) {
-    animation.play();
-  }
+    goToState("running");
+  };
+  const doPause = () => {
+    const playState = playStateSignal.peek();
+    if (playState === "running") {
+      delayController.pause();
+      if (cancelNext) {
+        cancelNext();
+        cancelNext = undefined;
+      }
+      goToState("paused");
+      return;
+    }
+  };
+  removeSignalEffect = signalsEffect(() => {
+    const playRequested = playRequestedSignal.value;
+    const animationsAllPaused = animationsAllPausedSignal.value;
+    if (playRequested) {
+      if (usage === "display") {
+        if (animationsAllPaused) {
+          doPause();
+        } else {
+          doPlay();
+        }
+      } else {
+        doPlay();
+      }
+    } else {
+      doPause();
+    }
+  });
+
   return animation;
 };
 

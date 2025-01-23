@@ -23,7 +23,7 @@ export const animateElement = (
     onfinish = noop,
     onremove = noop,
     easing,
-    canPlayWhilePaused,
+    canPlayWhileGloballyPaused,
     autoplay = true,
   },
 ) => {
@@ -87,6 +87,7 @@ export const animateElement = (
   };
 
   const animation = {
+    canPlayWhileGloballyPaused,
     playState: "idle",
     onstatechange,
     onstart,
@@ -176,13 +177,15 @@ export const animateElement = (
     const playRequested = playRequestedSignal.value;
     const animationsAllPaused = animationsAllPausedSignal.value;
     const shouldPlay =
-      playRequested && (canPlayWhilePaused || !animationsAllPaused);
+      playRequested &&
+      (animation.canPlayWhileGloballyPaused || !animationsAllPaused);
     if (shouldPlay) {
       doPlay();
     } else {
       doPause();
     }
   });
+
   return animation;
 };
 

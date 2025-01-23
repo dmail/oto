@@ -2,7 +2,8 @@
 // because it might be overriden from outside
 // we should use a list of listeners
 
-import { signal } from "@preact/signals";
+import { signal, effect as signalsEffect } from "@preact/signals";
+import { animationsAllPausedSignal } from "../animation_signal.js";
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
 export const animateSequence = (
@@ -17,12 +18,14 @@ export const animateSequence = (
     autoplay = true,
   } = {},
 ) => {
+  const playRequestedSignal = signal(autoplay);
   const playStateSignal = signal("idle");
 
   let resolveFinished;
   let rejectFinished;
-  let childAnimationIndex;
+  let childIndex;
   let currentAnimation;
+  let removeSignalEffect;
   const goToState = (newState) => {
     const currentState = playStateSignal.peek();
     playStateSignal.value = newState;
@@ -38,6 +41,21 @@ export const animateSequence = (
     }
   };
 
+  const getNextAnimation = () => {
+    const isFirst = childIndex === 0;
+    const isLast = childIndex === animationExecutors.length - 1;
+    const animationExecutor = animationExecutors[childIndex];
+    const nextAnimation = animationExecutor({
+      index: childIndex,
+      isFirst,
+      isLast,
+    });
+    // nextAnimation.canPlayWhileGloballyPaused = true; // ensure subanimation cannot play/pause on its own
+    childIndex++;
+    return nextAnimation;
+  };
+
+  let started = false;
   const animationSequence = {
     playStateSignal,
     finished: null,
@@ -48,35 +66,10 @@ export const animateSequence = (
     onremove,
     onfinish,
     play: () => {
-      const playState = playStateSignal.peek();
-      if (playState === "running") {
-        return;
-      }
-      if (playState === "paused") {
-        animationSequence.onbeforestart();
-        currentAnimation.play();
-        goToState("running");
-        return;
-      }
-      childAnimationIndex = -1;
-      currentAnimation = null;
-      animationSequence.finished = new Promise((resolve, reject) => {
-        resolveFinished = resolve;
-        rejectFinished = reject;
-      });
-      animationSequence.onbeforestart();
-      startNext();
-      goToState("running");
+      playRequestedSignal.value = true;
     },
     pause: () => {
-      const playState = playStateSignal.peek();
-      if (playState === "paused") {
-        return;
-      }
-      if (currentAnimation) {
-        currentAnimation.pause();
-      }
-      goToState("paused");
+      playRequestedSignal.value = false;
     },
     finish: () => {
       const playState = playStateSignal.peek();
@@ -85,19 +78,13 @@ export const animateSequence = (
       }
       if (currentAnimation) {
         currentAnimation.finish();
-        const isFirst = childAnimationIndex === 0;
-        const isLast = childAnimationIndex === animationExecutors.length - 1;
-        while (childAnimationIndex < animationExecutors.length) {
-          const nextAnimation = animationExecutors[childAnimationIndex]({
-            index: childAnimationIndex,
-            isFirst,
-            isLast,
-          });
-          childAnimationIndex++;
+        while (childIndex < animationExecutors.length) {
+          const nextAnimation = getNextAnimation();
           nextAnimation.finish();
         }
         currentAnimation = null;
       }
+      started = false;
       goToState("finished");
       resolveFinished();
     },
@@ -106,25 +93,32 @@ export const animateSequence = (
       if (playState === "idle") {
         return;
       }
+      if (removeSignalEffect) {
+        removeSignalEffect();
+        removeSignalEffect = undefined;
+      }
       currentAnimation.remove();
+      started = false;
       goToState("removed");
       rejectFinished(createAnimationAbortError());
     },
   };
   const startNext = () => {
-    childAnimationIndex++;
-    if (childAnimationIndex >= animationExecutors.length) {
+    if (childIndex === animationExecutors.length) {
       currentAnimation = null;
       animationSequence.finish();
       return;
     }
-    const isFirst = childAnimationIndex === 0;
-    const isLast = childAnimationIndex === animationExecutors.length - 1;
-    currentAnimation = animationExecutors[childAnimationIndex]({
-      index: childAnimationIndex,
-      isFirst,
-      isLast,
-    });
+    currentAnimation = getNextAnimation();
+    currentAnimation.onpause = () => {
+      animationSequence.pause();
+      currentAnimation.onplay = () => {
+        currentAnimation.onplay = null;
+        if (playRequestedSignal.peek()) {
+          animationSequence.play();
+        }
+      };
+    };
     currentAnimation.onfinish = () => {
       const playState = playStateSignal.peek();
       if (playState === "running") {
@@ -135,8 +129,51 @@ export const animateSequence = (
       animationSequence.remove();
     };
   };
-  if (autoplay) {
-    animationSequence.play();
-  }
+
+  const doPlay = () => {
+    const playState = playStateSignal.peek();
+    if (playState === "running" || playState === "removed") {
+      return;
+    }
+    if (!started) {
+      childIndex = 0;
+      currentAnimation = null;
+      animationSequence.finished = new Promise((resolve, reject) => {
+        resolveFinished = resolve;
+        rejectFinished = reject;
+      });
+      animationSequence.onbeforestart();
+      startNext();
+      goToState("running");
+      return;
+    }
+    animationSequence.onbeforestart();
+    currentAnimation.play();
+    goToState("running");
+  };
+  const doPause = () => {
+    const playState = playStateSignal.peek();
+    if (playState === "paused") {
+      return;
+    }
+    if (currentAnimation) {
+      currentAnimation.pause();
+    }
+    goToState("paused");
+  };
+
+  removeSignalEffect = signalsEffect(() => {
+    const playRequested = playRequestedSignal.value;
+    const animationsAllPaused = animationsAllPausedSignal.value;
+    const shouldPlay =
+      playRequested &&
+      (animationSequence.canPlayWhileGloballyPaused || !animationsAllPaused);
+    if (shouldPlay) {
+      doPlay();
+    } else {
+      doPause();
+    }
+  });
+
   return animationSequence;
 };
