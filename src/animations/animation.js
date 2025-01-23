@@ -1,3 +1,4 @@
+import { animateColor } from "./color/animate_color.js";
 import { animateElement } from "./element/animate_element.js";
 import { animateParallel } from "./list/animate_parallel.js";
 import { animateSequence } from "./list/animate_sequence.js";
@@ -13,6 +14,7 @@ export { animateRecoilAfterHit } from "./recoil_after_hit.js";
 export const ANIMATION = {
   animateElement,
   animateNumber,
+  animateColor,
   sequence: animateSequence,
   parallel: animateParallel,
   EASING,

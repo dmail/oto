@@ -1,6 +1,5 @@
-import { animate } from "../animate.js";
+import { animateColor } from "../color/animate_color.js";
 import { animateSequence } from "../list/animate_sequence.js";
-import { applyRatioToDiff } from "../utils/apply_ratio_to_diff.js";
 import { EASING } from "../utils/easing.js";
 import { WELL_KNOWN_COLORS } from "../utils/well_known_colors.js";
 
@@ -15,16 +14,12 @@ export const glow = (
     y = 0,
     width = canvas.width,
     height = canvas.height,
-    onprogress,
     easing = EASING.EASE_OUT_EXPO,
   } = {},
 ) => {
   if (typeof fromColor === "string") fromColor = WELL_KNOWN_COLORS[fromColor];
   if (typeof toColor === "string") toColor = WELL_KNOWN_COLORS[toColor];
   const [rFrom, gFrom, bFrom] = fromColor;
-  let r = rFrom;
-  let g = gFrom;
-  let b = bFrom;
   const context = canvas.getContext("2d", { willReadFrequently: true });
   const imageData = context.getImageData(x, y, width, height);
   const allColors = imageData.data;
@@ -38,17 +33,11 @@ export const glow = (
     }
   }
 
+  let currentColor = fromColor;
   const glowStepDuration = duration / (iterations * 2);
-  const animateColor = (nextColor) => {
-    const rFrom = r;
-    const gFrom = g;
-    const bFrom = b;
-    const [rTo, gTo, bTo] = nextColor;
-    const colorAnimation = animate({
-      onprogress: () => {
-        r = applyRatioToDiff(rFrom, rTo, colorAnimation.ratio);
-        g = applyRatioToDiff(gFrom, gTo, colorAnimation.ratio);
-        b = applyRatioToDiff(bFrom, bTo, colorAnimation.ratio);
+  const animateColorTo = (toColor) => {
+    const colorAnimation = animateColor(currentColor, toColor, {
+      effect: ([r, g, b]) => {
         for (const pixelIndex of pixelIndexes) {
           allColors[pixelIndex] = r;
           allColors[pixelIndex + 1] = g;
@@ -56,10 +45,7 @@ export const glow = (
         }
         // context.clearRect(0, 0, width, height);
         context.putImageData(imageData, 0, 0);
-        glowAnimation.color = [r, g, b];
-        if (onprogress) {
-          onprogress();
-        }
+        currentColor = [r, g, b];
       },
       duration: glowStepDuration,
       easing,
@@ -71,8 +57,12 @@ export const glow = (
   let i = 0;
   while (i < iterations) {
     i++;
-    animationExecutors.push(() => animateColor(toColor));
-    animationExecutors.push(() => animateColor(fromColor));
+    animationExecutors.push(() => {
+      return animateColorTo(toColor);
+    });
+    animationExecutors.push(() => {
+      return animateColorTo(fromColor);
+    });
   }
   const glowAnimation = animateSequence(animationExecutors);
   return glowAnimation;
