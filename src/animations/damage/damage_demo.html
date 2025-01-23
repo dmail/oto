@@ -14,23 +14,19 @@
     <div id="root"></div>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
-      import { signal, computed } from "@preact/signals";
+      import { computed } from "@preact/signals";
       import { animateDamageDisplay } from "./damage.js";
       import {
-        pauseAllAnimations,
-        playAllAnimations,
-        useAnimationsAllPaused,
+        preventAnimationsFromPlaying,
+        allowAnimationsToPlay,
+        useAnimationsCanPlay,
       } from "../animation_signal.js";
 
-      let hasAutopaused = false;
       const animation = animateDamageDisplay(
         document.querySelector("#animated_el"),
         {
           duration: 1000,
           autoplay: false,
-          onfinish: () => {
-            hasAutopaused = false;
-          },
         },
       );
       const stateSignal = animation.stateSignal;
@@ -44,26 +40,17 @@
       const canPauseSignal = computed(() => {
         return stateSignal.value === "running";
       });
-      const autopauseMsSignal = signal(300);
-      const autopauseChecked = signal(false);
 
       const play = () => {
         animation.play();
-        if (!hasAutopaused && autopauseChecked.peek()) {
-          setTimeout(() => {
-            hasAutopaused = true;
-            pauseAllAnimations();
-          }, autopauseMsSignal.peek());
-        }
       };
       const pause = () => {
-        hasAutopaused = false;
         animation.pause();
       };
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
-        const allPaused = useAnimationsAllPaused();
+        const animationsCanPlay = useAnimationsCanPlay();
 
         return (
           <div>
@@ -81,34 +68,17 @@
               <label>
                 <input
                   type="checkbox"
-                  checked={allPaused}
+                  checked={!animationsCanPlay}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      pauseAllAnimations();
+                      preventAnimationsFromPlaying();
                     } else {
-                      playAllAnimations();
+                      allowAnimationsToPlay();
                     }
                   }}
                 />
-                Globally pause all
+                Prevent animations from playing
               </label>
-              <label>
-                <input
-                  type="checkbox"
-                  checked={autopauseChecked.value}
-                  onChange={(e) => {
-                    autopauseChecked.value = e.target.checked;
-                  }}
-                />
-                Autopause
-              </label>
-              <input
-                type="number"
-                value={autopauseMsSignal.value}
-                step="10"
-                min="10"
-                max="1000"
-              />
             </fieldset>
 
             <div>

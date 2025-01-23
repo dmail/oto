@@ -1,5 +1,5 @@
 import { computed, signal, effect as signalsEffect } from "@preact/signals";
-import { animationsAllPausedSignal } from "./animation_signal.js";
+import { animationsCanPlaySignal } from "./animation_signal.js";
 import { createAnimationAbortError } from "./utils/animation_abort_error.js";
 
 const noop = () => {};
@@ -214,7 +214,7 @@ export const animate = ({
   const shouldPlaySignal = computed(() => {
     const playRequested = playRequestedSignal.value;
     const state = stateSignal.value;
-    const animationsAllPaused = animationsAllPausedSignal.value;
+    const animationsCanPlay = animationsCanPlaySignal.value;
     if (!playRequested) {
       return false;
     }
@@ -224,7 +224,7 @@ export const animate = ({
     if (state === "removed") {
       return false;
     }
-    if (animationsAllPaused && usage === "display") {
+    if (!animationsCanPlay && usage === "display") {
       return false;
     }
     return true;

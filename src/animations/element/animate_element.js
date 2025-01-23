@@ -1,5 +1,5 @@
 import { computed, effect, signal } from "@preact/signals";
-import { animationsAllPausedSignal } from "../animation_signal.js";
+import { animationsCanPlaySignal } from "../animation_signal.js";
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 import { EASING } from "../utils/easing.js";
 
@@ -185,11 +185,11 @@ export const animateElement = (
   };
   const shouldPlaySignal = computed(() => {
     const playRequested = playRequestedSignal.value;
-    const animationsAllPaused = animationsAllPausedSignal.value;
+    const animationsCanPlay = animationsCanPlaySignal.value;
     if (!playRequested) {
       return false;
     }
-    if (animationsAllPaused && !canPlayWhileGloballyPaused) {
+    if (!animationsCanPlay && !canPlayWhileGloballyPaused) {
       return false;
     }
     return true;

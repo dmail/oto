@@ -1,18 +1,25 @@
 import { computed, signal } from "@preact/signals";
 import { gamePausedSignal } from "/game_pause/game_pause.js";
 
-const animationsAllPausedRequestedSignal = signal(false);
-export const animationsAllPausedSignal = computed(() => {
+const animationsPlayGloballyPreventedSignal = signal(false);
+export const animationsCanPlaySignal = computed(() => {
   const gamePaused = gamePausedSignal.value;
-  const animationsAllPausedRequested = animationsAllPausedRequestedSignal.value;
-  return gamePaused || animationsAllPausedRequested;
+  const animationsPlayGloballyPrevented =
+    animationsPlayGloballyPreventedSignal.value;
+  if (gamePaused) {
+    return false;
+  }
+  if (animationsPlayGloballyPrevented) {
+    return false;
+  }
+  return true;
 });
-export const useAnimationsAllPaused = () => {
-  return animationsAllPausedSignal.value;
+export const useAnimationsCanPlay = () => {
+  return animationsCanPlaySignal.value;
 };
-export const pauseAllAnimations = () => {
-  animationsAllPausedRequestedSignal.value = true;
+export const preventAnimationsFromPlaying = () => {
+  animationsPlayGloballyPreventedSignal.value = true;
 };
-export const playAllAnimations = () => {
-  animationsAllPausedRequestedSignal.value = false;
+export const allowAnimationsToPlay = () => {
+  animationsPlayGloballyPreventedSignal.value = false;
 };

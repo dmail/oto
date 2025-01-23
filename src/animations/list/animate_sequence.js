@@ -3,7 +3,7 @@
 // we should use a list of listeners
 
 import { computed, effect, signal } from "@preact/signals";
-import { animationsAllPausedSignal } from "../animation_signal.js";
+import { animationsCanPlaySignal } from "../animation_signal.js";
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
 export const animateSequence = (
@@ -165,11 +165,11 @@ export const animateSequence = (
   };
   const shouldPlaySignal = computed(() => {
     const playRequested = playRequestedSignal.value;
-    const animationsAllPaused = animationsAllPausedSignal.value;
+    const animationsCanPlay = animationsCanPlaySignal.value;
     if (!playRequested) {
       return false;
     }
-    if (animationsAllPaused) {
+    if (!animationsCanPlay) {
       return false;
     }
     return true;
