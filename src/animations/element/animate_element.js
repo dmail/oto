@@ -72,7 +72,7 @@ export const animateElement = (
         return;
       }
       if (animation.playState === "paused") {
-        if (fromDisplay) {
+        if (fromDisplay !== undefined) {
           element.style.display = fromDisplay;
         }
         webAnimation.play();
@@ -83,18 +83,18 @@ export const animateElement = (
         animation.remove();
       });
       webAnimation.onfinish = () => {
-        if (toDisplay && toDisplay !== "none") {
+        if (toDisplay !== undefined && toDisplay !== "none") {
           element.style.display = toDisplay;
         }
         if (toStep) {
           webAnimation.commitStyles();
         }
-        if (toDisplay && toDisplay === "none") {
+        if (toDisplay === "none") {
           element.style.display = "none";
         }
         animation.onfinish();
       };
-      if (fromDisplay) {
+      if (fromDisplay !== undefined) {
         element.style.display = fromDisplay;
       }
       webAnimation.play();

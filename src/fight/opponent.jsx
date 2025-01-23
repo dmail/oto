@@ -32,7 +32,6 @@ export const Opponent = forwardRef(
     const imgRef = useRef();
     const digitsElementRef = useRef();
     const weaponElementRef = useRef();
-    const [weaponIsVisible, weaponIsVisibleSetter] = useState(false);
     const [enemyDamage, enemyDamageSetter] = useState(null);
 
     useImperativeHandle(ref, () => {
@@ -54,25 +53,24 @@ export const Opponent = forwardRef(
           }).finished;
         },
         playWeaponAnimation: async () => {
-          weaponIsVisibleSetter(true);
           await ANIMATION.animateElement(weaponElementRef.current, {
             id: "weapon_animation",
             from: {
               x: 25,
+              display: "",
             },
             to: {
               x: -15,
+              display: "none",
             },
             duration: 200,
           }).finished;
-          weaponIsVisibleSetter(false);
         },
         displayDamage: async (value) => {
           enemyDamageSetter(value);
           await animateDamageDisplay(digitsElementRef.current, {
             duration: 300,
           }).finished;
-          enemyDamageSetter(null);
         },
       };
     });
@@ -127,13 +125,17 @@ export const Opponent = forwardRef(
           <Box
             name="weapon_box"
             absolute
-            hidden={!weaponIsVisible}
             ratio="1/1"
             height="50%"
             x="center"
             y="center"
           >
-            <SwordAImg ref={weaponElementRef} />
+            <SwordAImg
+              style={{
+                display: "none",
+              }}
+              ref={weaponElementRef}
+            />
           </Box>
           <Box
             ref={digitsElementRef}
