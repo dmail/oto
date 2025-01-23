@@ -28,18 +28,12 @@
         useCanStopLoad,
         stopLoad,
         useUrlBooleanParam,
-        withUrlStringParam,
       } from "router";
 
       let resolveNavigationToPageA;
       const { pageA, pageB, foo, bar } = registerRoutes({
         pageA: {
-          buildUrl: (url) => {
-            return withUrlStringParam(url, "page", "A");
-          },
-          test: ({ searchParams }) => {
-            return searchParams.get("page") === "A";
-          },
+          urlTemplate: "?page=A",
           load: async ({ signal }) => {
             signal.addEventListener("abort", () => {
               console.log("pageA load aborted");
@@ -50,30 +44,13 @@
           },
         },
         pageB: {
-          buildUrl: (url) => {
-            return withUrlStringParam(url, "page", "B");
-          },
-          test: ({ searchParams }) => {
-            return searchParams.get("page") === "B";
-          },
+          urlTemplate: "?page=B",
         },
         foo: {
-          buildUrl: (url) => {
-            url.pathname = "/foo";
-            return url;
-          },
-          test: ({ pathname }) => {
-            return pathname.startsWith("/foo");
-          },
+          urlTemplate: "/foo",
         },
         bar: {
-          buildUrl: (url) => {
-            url.pathname = "/bar";
-            return url;
-          },
-          test: ({ pathname }) => {
-            return pathname.startsWith("/bar");
-          },
+          urlTemplate: "/bar",
         },
         fallback: {
           load: () => {

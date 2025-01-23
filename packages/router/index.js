@@ -1,7 +1,7 @@
 export { useCanGoBack, useCanGoForward } from "./src/can_go_back_forward.js";
 export { useDocumentUrl } from "./src/document_url.js";
 export {
-  injectRoute,
+  registerRoutes,
   useRouteIsActive,
   useRouteIsLoading,
   useRouteLoadData,
@@ -9,14 +9,7 @@ export {
   useRouteLoadIsAborted,
   useRouteUrl,
 } from "./src/route.js";
-export {
-  goBack,
-  goForward,
-  goTo,
-  registerRoutes,
-  reload,
-  stopLoad,
-} from "./src/router.js";
+export { goBack, goForward, goTo, reload, stopLoad } from "./src/router.js";
 export {
   useCanStopLoad,
   useRouterIsBusy,

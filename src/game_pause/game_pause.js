@@ -1,16 +1,17 @@
-import { computed, signal } from "@preact/signals";
+import { computed } from "@preact/signals";
+import { pausedRoute } from "/routes.js";
 import { documentHiddenSignal } from "/utils/document_visibility.js";
 
-const gamePauseRequestedSignal = signal(true);
+const gamePausedRouteIsActiveSignal = pausedRoute.isActiveSignal;
 export const pauseGame = () => {
-  gamePauseRequestedSignal.value = true;
+  pausedRoute.enter();
 };
 export const playGame = () => {
-  gamePauseRequestedSignal.value = false;
+  pausedRoute.leave();
 };
 export const gamePausedSignal = computed(() => {
   const documentHidden = documentHiddenSignal.value;
-  const gamePauseRequested = gamePauseRequestedSignal.value;
-  return documentHidden || gamePauseRequested;
+  const gamePausedRouteIsActive = gamePausedRouteIsActiveSignal.value;
+  return documentHidden || gamePausedRouteIsActive;
 });
 export const useGamePaused = () => gamePausedSignal.value;
