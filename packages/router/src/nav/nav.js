@@ -44,11 +44,11 @@ export const installNavigation = ({ applyRouting }) => {
       // (used by jsenv hot reload)
       return;
     }
+    const url = event.destination.url;
+    const state = event.state;
+    const { signal } = event;
     event.intercept({
       handler: async () => {
-        const url = event.destination.url;
-        const state = event.state;
-        const { signal } = event;
         await applyRouting({ url, state, signal });
       },
     });

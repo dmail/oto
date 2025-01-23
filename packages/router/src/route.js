@@ -7,12 +7,21 @@ import { documentUrlSignal } from "./document_url.js";
 import { normalizeUrl } from "./normalize_url.js";
 import { goTo, installNavigation } from "./router.js";
 
+let debug = true;
+const IDLE = { id: "idle" };
 const LOADING = { id: "loading" };
 const ABORTED = { id: "aborted" };
 
+const buildUrlFromDocument = (build) => {
+  const documentUrl = documentUrlSignal.value;
+  const documentUrlObject = new URL(documentUrl);
+  const newDocumentUrl = build(documentUrlObject);
+  return normalizeUrl(newDocumentUrl);
+};
+
 const routeSet = new Set();
 let fallbackRoute;
-const createRoute = ({ urlTemplate, load = () => {} }) => {
+const createRoute = (name, { urlTemplate, load = () => {} }) => {
   const documentRootUrl = new URL("/", window.location.origin);
   const routeUrlInstance = new URL(urlTemplate, documentRootUrl);
 
@@ -24,9 +33,9 @@ const createRoute = ({ urlTemplate, load = () => {} }) => {
   if (routeUrlInstance.searchParams.toString() !== "") {
     routeSearchParams = routeUrlInstance.searchParams;
   }
-  const test = ({ pathnane, searchParams }) => {
+  const test = ({ pathname, searchParams }) => {
     if (urlTemplate) {
-      if (routePathname && !pathnane.startsWith(routePathname)) {
+      if (routePathname && !pathname.startsWith(routePathname)) {
         return false;
       }
       for (const [
@@ -70,18 +79,15 @@ const createRoute = ({ urlTemplate, load = () => {} }) => {
   };
 
   const urlSignal = computed(() => {
-    const documentUrl = documentUrlSignal.value;
-    const documentUrlObject = new URL(documentUrl);
-    const routeUrl = addToUrl(documentUrlObject);
-    return normalizeUrl(routeUrl);
+    return buildUrlFromDocument(addToUrl);
   });
-  const readyStateSignal = signal("idle");
+  const readyStateSignal = signal(IDLE);
   const isActiveSignal = computed(() => {
-    return readyStateSignal.value !== "idle";
+    return readyStateSignal.value !== IDLE;
   });
 
   const onLeave = () => {
-    readyStateSignal.value = "idle";
+    readyStateSignal.value = IDLE;
   };
   const onEnter = () => {
     readyStateSignal.value = LOADING;
@@ -100,13 +106,16 @@ const createRoute = ({ urlTemplate, load = () => {} }) => {
     };
   };
   const enter = () => {
-    goTo(addToUrl(documentUrlSignal.value));
+    const documentUrlWithRoute = buildUrlFromDocument(addToUrl);
+    goTo(documentUrlWithRoute);
   };
   const leave = () => {
-    goTo(removeFromUrl(documentUrlSignal.value));
+    const documentUrlWithoutRoute = buildUrlFromDocument(removeFromUrl);
+    goTo(documentUrlWithoutRoute);
   };
 
   return {
+    name,
     urlSignal,
     test,
     load,
@@ -125,7 +134,7 @@ const createRoute = ({ urlTemplate, load = () => {} }) => {
 export const registerRoutes = ({ fallback, ...rest }) => {
   const routes = {};
   for (const key of Object.keys(rest)) {
-    const route = createRoute(rest[key]);
+    const route = createRoute(key, rest[key]);
     routeSet.add(route);
     routes[key] = route;
   }
@@ -136,6 +145,12 @@ export const registerRoutes = ({ fallback, ...rest }) => {
   return routes;
 };
 
+/*
+ * TODO:
+ * - each route should have its own signal
+ *   because when navigating to a new url the route might still be relevant
+ *   in that case we don't want to abort it
+ */
 const activeRouteSet = new Set();
 export const applyRouting = async ({ url, state, signal }) => {
   startDocumentNavigation();
@@ -170,6 +185,9 @@ export const applyRouting = async ({ url, state, signal }) => {
   }
   nextActiveRouteSet.clear();
   for (const routeToLeave of routeToLeaveSet) {
+    if (debug) {
+      console.log(`"${routeToLeave.name}": leaving route`);
+    }
     activeRouteSet.delete(routeToLeave);
     routeToLeave.onLeave();
   }
@@ -184,12 +202,18 @@ export const applyRouting = async ({ url, state, signal }) => {
   try {
     const promises = [];
     for (const routeToEnter of routeToEnterSet) {
+      if (debug) {
+        console.log(`"${routeToEnter.name}": entering route`);
+      }
       activeRouteSet.add(routeToEnter);
       routeToEnter.onEnter();
       const loadPromise = routeToEnter.load({ signal });
       loadPromise.then(
         () => {
           routeToEnter.onLoadEnd();
+          if (debug) {
+            console.log(`"${routeToEnter.name}": route load end`);
+          }
         },
         (e) => {
           routeToEnter.onLoadError(e);
@@ -209,7 +233,7 @@ export const useRouteUrl = (route) => {
   return routeUrl;
 };
 export const useRouteIsActive = (route) => {
-  return route.readyStateSignal.value !== "idle";
+  return route.readyStateSignal.value !== IDLE;
 };
 export const useRouteIsLoading = (route) => {
   return route.readyStateSignal.value === LOADING;
