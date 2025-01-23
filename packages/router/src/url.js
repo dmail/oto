@@ -1,6 +1,7 @@
 import { computed } from "@preact/signals";
 import { useCallback } from "preact/hooks";
 import { documentUrlSignal } from "./document_url.js";
+import { normalizeUrl } from "./normalize_url.js";
 import { goTo } from "./router.js";
 
 const urlParamSignalMap = new Map();
@@ -125,14 +126,4 @@ const updateUrl = (url, urlTransformer) => {
   const newUrlString = String(newUrl);
   const newUrlNormalized = normalizeUrl(newUrlString);
   return newUrlNormalized;
-};
-const normalizeUrl = (url) => {
-  if (url.includes("?")) {
-    // disable on data urls (would mess up base64 encoding)
-    if (url.startsWith("data:")) {
-      return url;
-    }
-    return url.replace(/[=](?=&|$)/g, "");
-  }
-  return url;
 };

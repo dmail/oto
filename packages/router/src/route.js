@@ -1,9 +1,10 @@
-import { signal } from "@preact/signals";
+import { computed, signal } from "@preact/signals";
 import {
   endDocumentNavigation,
   startDocumentNavigation,
 } from "./document_navigating.js";
 import { documentUrlSignal } from "./document_url.js";
+import { normalizeUrl } from "./normalize_url.js";
 
 const LOADING = { id: "loading" };
 const ABORTED = { id: "aborted" };
@@ -11,6 +12,12 @@ const ABORTED = { id: "aborted" };
 const routeSet = new Set();
 let fallbackRoute;
 const createRoute = ({ test, buildUrl, load = () => {} }) => {
+  const urlSignal = computed(() => {
+    const documentUrl = documentUrlSignal.value;
+    const documentUrlObject = new URL(documentUrl);
+    const routeUrl = buildUrl(documentUrlObject);
+    return normalizeUrl(routeUrl);
+  });
   const readyStateSignal = signal("idle");
 
   const onLeave = () => {
@@ -34,7 +41,7 @@ const createRoute = ({ test, buildUrl, load = () => {} }) => {
   };
 
   return {
-    buildUrl,
+    urlSignal,
     test,
     load,
 
@@ -126,8 +133,7 @@ export const injectRoute = (params) => {
 };
 
 export const useRouteUrl = (route) => {
-  const url = documentUrlSignal.value;
-  const routeUrl = route.buildUrl(url);
+  const routeUrl = route.urlSignal.value;
   return routeUrl;
 };
 export const useRouteIsActive = (route) => {

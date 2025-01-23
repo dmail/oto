@@ -3,6 +3,7 @@ import { render } from "preact";
 import { useEffect, useErrorBoundary } from "preact/hooks";
 import { goblinFontUrl } from "./components/text/font_urls.js";
 import { Game } from "./game/game.jsx";
+import "./routes.js";
 
 const GameWithErrorBoundary = () => {
   const [error] = useErrorBoundary();

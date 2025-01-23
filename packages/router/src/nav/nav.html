@@ -59,9 +59,8 @@
         },
         foo: {
           buildUrl: (url) => {
-            const urlObject = new URL(url);
-            urlObject.pathname = "/foo";
-            return urlObject.toString();
+            url.pathname = "/foo";
+            return url;
           },
           test: ({ pathname }) => {
             return pathname.startsWith("/foo");
@@ -69,9 +68,8 @@
         },
         bar: {
           buildUrl: (url) => {
-            const urlObject = new URL(url);
-            urlObject.pathname = "/bar";
-            return urlObject.toString();
+            url.pathname = "/bar";
+            return url;
           },
           test: ({ pathname }) => {
             return pathname.startsWith("/bar");
