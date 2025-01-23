@@ -141,6 +141,10 @@ export const animateElement = (
       animation.remove();
     });
     webAnimation.onfinish = () => {
+      // play is no longer requested once it finishes
+      // the play method must be called again
+      playRequestedSignal.value = false;
+
       if (toStep) {
         try {
           webAnimation.commitStyles();
