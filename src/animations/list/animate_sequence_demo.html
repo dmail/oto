@@ -10,64 +10,78 @@
     <div id="root"></div>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
-      import { signal } from "@preact/signals";
+      import { signal, computed } from "@preact/signals";
       import { animate } from "../animate.js";
       import { animateSequence } from "./animate_sequence.js";
 
+      const stateSignal = signal(undefined);
+      const canPlaySignal = computed(() => {
+        return (
+          stateSignal.value === "idle" ||
+          stateSignal.value === "finished" ||
+          stateSignal.value === "paused"
+        );
+      });
+      const canPauseSignal = computed(() => {
+        return stateSignal.value === "running";
+      });
       const firstStepRatioSignal = signal(0);
       const secondStepRatioSignal = signal(0);
+      const thirdStepRatioSignal = signal(0);
       const firstStepStateSignal = signal("idle");
       const secondStepStateSignal = signal("idle");
+      const thirdStepStateSignal = signal("idle");
 
-      const canStartSignal = signal(true);
-      const canPauseSignal = signal(false);
-
-      let animation;
-      const start = () => {
-        animation = animateSequence(
-          [
-            () => {
-              return animate({
-                effect: (ratio) => {
-                  firstStepRatioSignal.value = ratio;
-                },
-                duration: 1000,
-                onstatechange: (state) => {
-                  firstStepStateSignal.value = state;
-                },
-              });
-            },
-            () => {
-              return animate({
-                effect: (ratio) => {
-                  secondStepRatioSignal.value = ratio;
-                },
-                duration: 1000,
-                onstatechange: (state) => {
-                  secondStepStateSignal.value = state;
-                },
-              });
-            },
-          ],
-          {
-            onstart: () => {
-              canStartSignal.value = false;
-              canPauseSignal.value = true;
-            },
-            onpause: () => {
-              canStartSignal.value = true;
-              canPauseSignal.value = false;
-            },
-            onfinish: () => {
-              canStartSignal.value = true;
-              canPauseSignal.value = false;
-            },
+      const animation = animateSequence(
+        [
+          () => {
+            return animate({
+              effect: (ratio) => {
+                firstStepRatioSignal.value = ratio;
+              },
+              duration: 1000,
+              onstatechange: (state) => {
+                firstStepStateSignal.value = state;
+              },
+            });
           },
-        );
+          () => {
+            return animate({
+              effect: (ratio) => {
+                secondStepRatioSignal.value = ratio;
+              },
+              duration: 1000,
+              onstatechange: (state) => {
+                secondStepStateSignal.value = state;
+              },
+            });
+          },
+          () => {
+            return animate({
+              effect: (ratio) => {
+                thirdStepRatioSignal.value = ratio;
+              },
+              duration: 1000,
+              onstatechange: (state) => {
+                thirdStepStateSignal.value = state;
+              },
+            });
+          },
+        ],
+        {
+          autoplay: false,
+          onstatechange: (state) => {
+            stateSignal.value = state;
+          },
+        },
+      );
+      stateSignal.value = animation.playState;
+
+      const play = () => {
+        animation.play();
       };
       const pause = () => {
         animation.pause();
-        canPauseSignal.value = false;
       };
 
       // eslint-disable-next-line no-unused-vars
@@ -79,8 +93,8 @@
             <fieldset>
               <legend>Controls</legend>
 
-              <button disabled={!canStartSignal.value} onClick={start}>
-                Start
+              <button disabled={!canPlaySignal.value} onClick={play}>
+                Play
               </button>
               <button disabled={!canPauseSignal.value} onClick={pause}>
                 Pause
@@ -93,9 +107,16 @@
                 <div>state: {firstStepStateSignal.value}</div>
                 <div>ratio: {firstStepRatioSignal.value}</div>
               </div>
-              Step B:
-              <div>state: {secondStepStateSignal.value}</div>
-              <div>ratio: {secondStepRatioSignal.value}</div>
+              <div>
+                Step B:
+                <div>state: {secondStepStateSignal.value}</div>
+                <div>ratio: {secondStepRatioSignal.value}</div>
+              </div>
+              <div>
+                Step C:
+                <div>state: {thirdStepStateSignal.value}</div>
+                <div>ratio: {thirdStepRatioSignal.value}</div>
+              </div>
             </div>
           </div>
         );

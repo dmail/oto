@@ -1,21 +1,43 @@
+// TODO: we should not use onfinish
+// because it might be overriden from outside
+// we should use a list of listeners
+
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
 export const animateSequence = (
   animationExecutors,
   {
+    onstatechange = () => {},
     onstart = () => {},
     onpause = () => {},
     onremove = () => {},
     onfinish = () => {},
+    autoplay,
   } = {},
 ) => {
   let resolveFinished;
   let rejectFinished;
   let childAnimationIndex;
   let currentAnimation;
+  const goToState = (newState) => {
+    const currentState = animationSequence.playState;
+    animationSequence.playState = newState;
+    animationSequence.onstatechange(newState, currentState);
+    if (newState === "running") {
+      animationSequence.onstart();
+    } else if (newState === "paused") {
+      animationSequence.onpause();
+    } else if (newState === "finished") {
+      animationSequence.onfinish();
+    } else if (newState === "removed") {
+      animationSequence.onremove();
+    }
+  };
+
   const animationSequence = {
     playState: "idle",
     finished: null,
+    onstatechange,
     onstart,
     onpause,
     onremove,
@@ -25,20 +47,18 @@ export const animateSequence = (
         return;
       }
       if (animationSequence.playState === "paused") {
-        animationSequence.playState = "running";
         currentAnimation.play();
-        animationSequence.onstart();
+        goToState("running");
         return;
       }
       childAnimationIndex = -1;
       currentAnimation = null;
-      animationSequence.playState = "running";
       animationSequence.finished = new Promise((resolve, reject) => {
         resolveFinished = resolve;
         rejectFinished = reject;
       });
       startNext();
-      animationSequence.onstart();
+      goToState("running");
     },
     pause: () => {
       if (animationSequence.playState === "paused") {
@@ -47,8 +67,7 @@ export const animateSequence = (
       if (currentAnimation) {
         currentAnimation.pause();
       }
-      animationSequence.playState = "paused";
-      animationSequence.onpause();
+      goToState("paused");
     },
     finish: () => {
       if (animationSequence.playState === "finished") {
@@ -69,18 +88,16 @@ export const animateSequence = (
         }
         currentAnimation = null;
       }
-      animationSequence.playState = "finished";
+      goToState("finished");
       resolveFinished();
-      animationSequence.onfinish();
     },
     remove: () => {
       if (animationSequence.playState === "idle") {
         return;
       }
       currentAnimation.remove();
+      goToState("removed");
       rejectFinished(createAnimationAbortError());
-      animationSequence.onremove();
-      animationSequence.playState = "idle";
     },
   };
   const startNext = () => {
@@ -106,6 +123,8 @@ export const animateSequence = (
       animationSequence.remove();
     };
   };
-  animationSequence.play();
+  if (autoplay) {
+    animationSequence.play();
+  }
   return animationSequence;
 };
