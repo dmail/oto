@@ -129,7 +129,6 @@ export const animateElement = (
       goToState("removed");
     },
   };
-
   const doPlay = () => {
     if (animation.playState === "paused") {
       onBeforePlay();
@@ -169,12 +168,10 @@ export const animateElement = (
     }
     goToState("running");
   };
-
   const doPause = () => {
     webAnimation.pause();
     goToState("paused");
   };
-
   removeSignalEffect = effect(() => {
     const playRequested = playRequestedSignal.value;
     const animationsAllPaused = animationsAllPausedSignal.value;

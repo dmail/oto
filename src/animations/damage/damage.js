@@ -4,7 +4,13 @@ import { EASING } from "../utils/easing.js";
 
 export const animateDamageDisplay = (
   element,
-  { id = "damage_display", toY = -0.4, duration, playbackRate = 0.5 },
+  {
+    id = "damage_display",
+    toY = -0.4,
+    duration,
+    playbackRate = 0.5,
+    autoplay = true,
+  },
 ) => {
   let from = 0;
   const interval = (to) => {
@@ -58,12 +64,21 @@ export const animateDamageDisplay = (
       });
     });
   }
+
+  const computedStyle = getComputedStyle(element);
+  const shouldDisplay = computedStyle.display === "none";
+
   return animateSequence(steps, {
     onbeforestart: () => {
-      element.style.display = null;
+      if (shouldDisplay) {
+        element.style.display = null;
+      }
     },
     onfinish: () => {
-      element.style.display = "none";
+      if (shouldDisplay) {
+        element.style.display = "none";
+      }
     },
+    autoplay,
   });
 };

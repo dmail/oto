@@ -2,6 +2,7 @@
 // because it might be overriden from outside
 // we should use a list of listeners
 
+import { signal } from "@preact/signals";
 import { createAnimationAbortError } from "../utils/animation_abort_error.js";
 
 export const animateSequence = (
@@ -16,13 +17,15 @@ export const animateSequence = (
     autoplay = true,
   } = {},
 ) => {
+  const playStateSignal = signal("idle");
+
   let resolveFinished;
   let rejectFinished;
   let childAnimationIndex;
   let currentAnimation;
   const goToState = (newState) => {
-    const currentState = animationSequence.playState;
-    animationSequence.playState = newState;
+    const currentState = playStateSignal.peek();
+    playStateSignal.value = newState;
     animationSequence.onstatechange(newState, currentState);
     if (newState === "running") {
       animationSequence.onstart();
@@ -36,7 +39,7 @@ export const animateSequence = (
   };
 
   const animationSequence = {
-    playState: "idle",
+    playStateSignal,
     finished: null,
     onstatechange,
     onbeforestart,
@@ -45,10 +48,11 @@ export const animateSequence = (
     onremove,
     onfinish,
     play: () => {
-      if (animationSequence.playState === "running") {
+      const playState = playStateSignal.peek();
+      if (playState === "running") {
         return;
       }
-      if (animationSequence.playState === "paused") {
+      if (playState === "paused") {
         animationSequence.onbeforestart();
         currentAnimation.play();
         goToState("running");
@@ -65,7 +69,8 @@ export const animateSequence = (
       goToState("running");
     },
     pause: () => {
-      if (animationSequence.playState === "paused") {
+      const playState = playStateSignal.peek();
+      if (playState === "paused") {
         return;
       }
       if (currentAnimation) {
@@ -74,7 +79,8 @@ export const animateSequence = (
       goToState("paused");
     },
     finish: () => {
-      if (animationSequence.playState === "finished") {
+      const playState = playStateSignal.peek();
+      if (playState === "finished") {
         return;
       }
       if (currentAnimation) {
@@ -96,7 +102,8 @@ export const animateSequence = (
       resolveFinished();
     },
     remove: () => {
-      if (animationSequence.playState === "idle") {
+      const playState = playStateSignal.peek();
+      if (playState === "idle") {
         return;
       }
       currentAnimation.remove();
@@ -119,7 +126,8 @@ export const animateSequence = (
       isLast,
     });
     currentAnimation.onfinish = () => {
-      if (animationSequence.playState === "running") {
+      const playState = playStateSignal.peek();
+      if (playState === "running") {
         startNext();
       }
     };

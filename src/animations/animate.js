@@ -1,4 +1,4 @@
-import { effect as signalsEffect } from "@preact/signals";
+import { signal, effect as signalsEffect } from "@preact/signals";
 import { animationsAllPausedSignal } from "./animation_signal.js";
 import { createAnimationAbortError } from "./utils/animation_abort_error.js";
 
@@ -49,9 +49,12 @@ export const animate = ({
     });
   };
 
+  // "idle", "running", "paused", "removed", "finished"
+  const playStateSignal = signal("idle");
+
   const goToState = (newState) => {
-    const currentState = animation.playState;
-    animation.playState = newState;
+    const currentState = playStateSignal.peek();
+    playStateSignal.value = newState;
     animation.onstatechange(newState, currentState);
     if (newState === "running") {
       animation.onstart();
@@ -65,7 +68,7 @@ export const animate = ({
   };
 
   const animation = {
-    playState: "idle", // "idle", "running", "paused", "removed", "finished"
+    playStateSignal,
     progressRatio: 0,
     ratio: 0,
     effect,
@@ -77,7 +80,8 @@ export const animate = ({
     onfinish,
     finished: createFinishedPromise(),
     play: () => {
-      if (animation.playState === "paused") {
+      const playState = playStateSignal.peek();
+      if (playState === "paused") {
         delayController.nowOrOnceDelayEllapsed(() => {
           previousStepMs = Date.now();
           goToState("running");
@@ -85,12 +89,9 @@ export const animate = ({
         });
         return;
       }
-      if (
-        animation.playState === "idle" ||
-        animation.playState === "finished"
-      ) {
+      if (playState === "idle" || playState === "finished") {
         msRemaining = duration;
-        if (animation.playState === "finished") {
+        if (playState === "finished") {
           animation.finished = createFinishedPromise();
         }
         animation.progressRatio = 0;
@@ -105,7 +106,8 @@ export const animate = ({
       }
     },
     pause: () => {
-      if (animation.playState === "running") {
+      const playState = playStateSignal.peek();
+      if (playState === "running") {
         delayController.pause();
         if (cancelNext) {
           cancelNext();
@@ -116,10 +118,11 @@ export const animate = ({
       }
     },
     finish: () => {
+      const playState = playStateSignal.peek();
       if (
-        animation.playState === "idle" ||
-        animation.playState === "running" ||
-        animation.playState === "paused"
+        playState === "idle" ||
+        playState === "running" ||
+        playState === "paused"
       ) {
         delayController.remove();
         if (cancelNext) {
@@ -134,11 +137,12 @@ export const animate = ({
       }
     },
     remove: () => {
+      const playState = playStateSignal.peek();
       if (
-        animation.playState === "idle" ||
-        animation.playState === "running" ||
-        animation.playState === "paused" ||
-        animation.playState === "finished"
+        playState === "idle" ||
+        playState === "running" ||
+        playState === "paused" ||
+        playState === "finished"
       ) {
         delayController.remove();
         if (cancelNext) {

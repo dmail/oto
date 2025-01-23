@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="data:," />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Damage demo</title>
+  </head>
+  <body>
+    <div
+      id="animated_el"
+      style="width: 200px; height: 50px; background: green"
+    ></div>
+    <div id="root"></div>
+    <script type="module" jsenv-type="module/jsx">
+      import { render } from "preact";
+      import { signal, computed } from "@preact/signals";
+      import { animateDamageDisplay } from "./damage.js";
+
+      const animation = animateDamageDisplay(
+        document.querySelector("#animated_el"),
+        {
+          from: {
+            x: 0,
+          },
+          to: {
+            x: 100,
+          },
+          duration: 1000,
+          autoplay: false,
+        },
+      );
+      const stateSignal = animation.playStateSignal;
+      const canPlaySignal = computed(() => {
+        return (
+          stateSignal.value === "idle" ||
+          stateSignal.value === "finished" ||
+          stateSignal.value === "paused"
+        );
+      });
+      const canPauseSignal = computed(() => {
+        return stateSignal.value === "running";
+      });
+      const play = () => {
+        animation.play();
+      };
+      const pause = () => {
+        animation.pause();
+      };
+
+      const pauseMiddleOfFirstStepSignal = signal(false);
+
+      // eslint-disable-next-line no-unused-vars
+      const App = () => {
+        return (
+          <div>
+            <div></div>
+
+            <fieldset>
+              <legend>Controls</legend>
+
+              <button disabled={!canPlaySignal.value} onClick={play}>
+                Play
+              </button>
+              <button disabled={!canPauseSignal.value} onClick={pause}>
+                Pause
+              </button>
+
+              <label>
+                <input
+                  type="checkbox"
+                  checked={pauseMiddleOfFirstStepSignal.value}
+                  onChange={(e) => {
+                    pauseMiddleOfFirstStepSignal.value = e.target.checked;
+                  }}
+                />
+                Pause middle of first step
+              </label>
+            </fieldset>
+
+            <div>
+              <div>state: {stateSignal.value}</div>
+            </div>
+          </div>
+        );
+      };
+
+      render(<App />, document.querySelector("#root"));
+    </script>
+  </body>
+</html>

@@ -1,7 +1,19 @@
+- on dirait que si on met en pause le damage display 
+pendant la step 0, si ensuite on reprends l'anim alors
+ça marche pas
+
+premiere chose c'est de reproduire en isolé
+donc je vais faire damage_display_demo.html
+
+dans lequel je met en pause pendant la premiere étape
+avec aussi des boutton pause/play qui vont controller animationsAllPausedSignal
+
+--- JSENV ---
 - when browsing files we should be able to display root directory content somehow
 currently it's not possible because "/" shows the index.html
-
 - when client request with // it should not lead to 500 in the server
+
+--- GAME ---
 
 - le bouton pause ouvre les options de gestions du sons (et autre plus tard)
 
