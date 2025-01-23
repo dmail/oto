@@ -18,6 +18,7 @@ export const animate = ({
   onfinish = noop,
   loop = false,
   usage = "display",
+  autoplay = true,
 }) => {
   const requestNext =
     usage === "audio"
@@ -28,9 +29,9 @@ export const animate = ({
           };
         }
       : (callback) => {
-          requestAnimationFrame(callback);
+          const frame = requestAnimationFrame(callback);
           return () => {
-            cancelAnimationFrame(callback);
+            cancelAnimationFrame(frame);
           };
         };
 
@@ -203,11 +204,11 @@ export const animate = ({
       const animationsAllPaused = animationsAllPausedSignal.value;
       if (animationsAllPaused) {
         animation.pause();
-      } else {
+      } else if (autoplay) {
         animation.play();
       }
     });
-  } else {
+  } else if (autoplay) {
     animation.play();
   }
   return animation;
