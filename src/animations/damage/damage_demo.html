@@ -71,21 +71,27 @@
 
             <fieldset>
               <legend>Controls</legend>
-
               <button disabled={!canPlaySignal.value} onClick={play}>
                 Play
               </button>
               <button disabled={!canPauseSignal.value} onClick={pause}>
                 Pause
               </button>
-
               <br />
-              <button disabled={allPaused} onClick={pauseAllAnimations}>
-                Pause all
-              </button>
-              <button disabled={!allPaused} onClick={playAllAnimations}>
-                Play all
-              </button>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={allPaused}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      pauseAllAnimations();
+                    } else {
+                      playAllAnimations();
+                    }
+                  }}
+                />
+                Globally pause all
+              </label>
               <label>
                 <input
                   type="checkbox"

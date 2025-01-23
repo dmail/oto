@@ -87,6 +87,7 @@ export const animateSequence = (
       started = false;
       goToState("finished");
       resolveFinished();
+      playRequestedSignal.value = false;
     },
     remove: () => {
       const state = stateSignal.peek();
@@ -144,8 +145,8 @@ export const animateSequence = (
       });
       animationSequence.onbeforestart();
       startNext();
-      goToState("running");
       started = true;
+      goToState("running");
       return;
     }
     animationSequence.onbeforestart();
