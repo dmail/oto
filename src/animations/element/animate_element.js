@@ -27,8 +27,6 @@ export const animateElement = (
 ) => {
   const fromStep = stepFromAnimationDescription(from);
   const toStep = stepFromAnimationDescription(to);
-  const fromDisplay = from?.display;
-  const toDisplay = to.display;
 
   const steps = [];
   if (fromStep) {
@@ -60,6 +58,17 @@ export const animateElement = (
     });
   };
   let innerOnFinish;
+  const onBeforePlay = () => {
+    const computedStyle = getComputedStyle(element);
+    if (computedStyle.display === "none") {
+      element.style.display = null;
+      element.offsetWidth;
+      innerOnFinish = () => {
+        element.style.display = "none";
+      };
+    }
+  };
+
   const animation = {
     playState: "idle",
     onstart,
@@ -73,9 +82,7 @@ export const animateElement = (
         return;
       }
       if (animation.playState === "paused") {
-        if (fromDisplay !== undefined) {
-          element.style.display = fromDisplay;
-        }
+        onBeforePlay();
         webAnimation.play();
         animation.playState = "running";
         return;
@@ -84,14 +91,16 @@ export const animateElement = (
         animation.remove();
       });
       webAnimation.onfinish = () => {
-        if (toDisplay !== undefined && toDisplay !== "none") {
-          element.style.display = toDisplay;
-        }
         if (toStep) {
-          webAnimation.commitStyles();
-        }
-        if (toDisplay === "none") {
-          element.style.display = "none";
+          try {
+            webAnimation.commitStyles();
+          } catch (e) {
+            console.error(
+              `Error during "commitStyles" on animation "${id}"`,
+              element.style.display,
+            );
+            console.error(e);
+          }
         }
         if (innerOnFinish) {
           innerOnFinish();
@@ -99,16 +108,7 @@ export const animateElement = (
         }
         animation.onfinish();
       };
-      if (fromDisplay !== undefined) {
-        element.style.display = fromDisplay;
-      }
-      const computedStyle = getComputedStyle(element);
-      if (computedStyle.display === "none") {
-        element.style.display = "";
-        innerOnFinish = () => {
-          element.style.display = "none";
-        };
-      }
+      onBeforePlay();
       webAnimation.play();
       if (animation.playState === "finished") {
         animation.finished = createFinishedPromise();

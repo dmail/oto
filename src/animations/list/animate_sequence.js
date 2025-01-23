@@ -58,6 +58,7 @@ export const animateSequence = (
         const isLast = childAnimationIndex === animationExecutors.length - 1;
         while (childAnimationIndex < animationExecutors.length) {
           const nextAnimation = animationExecutors[childAnimationIndex]({
+            index: childAnimationIndex,
             isFirst,
             isLast,
           });
@@ -90,6 +91,7 @@ export const animateSequence = (
     const isFirst = childAnimationIndex === 0;
     const isLast = childAnimationIndex === animationExecutors.length - 1;
     currentAnimation = animationExecutors[childAnimationIndex]({
+      index: childAnimationIndex,
       isFirst,
       isLast,
     });

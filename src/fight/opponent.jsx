@@ -62,6 +62,7 @@ export const Opponent = forwardRef(
             to: {
               x: -15,
             },
+            duration: 200,
           }).finished;
         },
         displayDamage: async (value) => {

@@ -4,7 +4,7 @@ import { EASING } from "../utils/easing.js";
 
 export const animateDamageDisplay = (
   element,
-  { toY = -0.4, duration, playbackRate = 0.5 },
+  { id = "damage_display", toY = -0.4, duration, playbackRate = 0.5 },
 ) => {
   let from = 0;
   const interval = (to) => {
@@ -39,16 +39,18 @@ export const animateDamageDisplay = (
   ];
   const steps = [];
   for (const { y, duration, playbackRate } of verticalMoves) {
-    steps.push(() => {
+    steps.push(({ index }) => {
       return animateElement(element, {
+        id: `${id}_${index}`,
         to: { y },
         duration: duration / 2,
         easing: EASING.EASE,
         playbackRate,
       });
     });
-    steps.push(() => {
+    steps.push(({ index }) => {
       return animateElement(element, {
+        id: `${id}_${index}`,
         to: { y: 0 },
         duration: duration / 2,
         easing: EASING.EASE,
@@ -58,7 +60,7 @@ export const animateDamageDisplay = (
   }
   return animateSequence(steps, {
     onstart: () => {
-      element.style.display = "";
+      element.style.display = null;
     },
     onfinish: () => {
       element.style.display = "none";
