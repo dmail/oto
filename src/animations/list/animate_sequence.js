@@ -54,8 +54,13 @@ export const animateSequence = (
       }
       if (currentAnimation) {
         currentAnimation.finish();
+        const isFirst = childAnimationIndex === 0;
+        const isLast = childAnimationIndex === animationExecutors.length - 1;
         while (childAnimationIndex < animationExecutors.length) {
-          const nextAnimation = animationExecutors[childAnimationIndex]();
+          const nextAnimation = animationExecutors[childAnimationIndex]({
+            isFirst,
+            isLast,
+          });
           childAnimationIndex++;
           nextAnimation.finish();
         }
@@ -82,7 +87,12 @@ export const animateSequence = (
       animationSequence.finish();
       return;
     }
-    currentAnimation = animationExecutors[childAnimationIndex]();
+    const isFirst = childAnimationIndex === 0;
+    const isLast = childAnimationIndex === animationExecutors.length - 1;
+    currentAnimation = animationExecutors[childAnimationIndex]({
+      isFirst,
+      isLast,
+    });
     currentAnimation.onfinish = () => {
       if (animationSequence.playState === "running") {
         startNext();

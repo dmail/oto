@@ -1,6 +1,24 @@
-import { playGame } from "./game_pause.js";
+import { useKeyEffect } from "hooks/use_key_effect.js";
+import { pauseGame, playGame, useGamePaused } from "./game_pause.js";
 
 export const PauseDialog = ({ visible }) => {
+  const gamePaused = useGamePaused();
+
+  useKeyEffect({
+    Escape: {
+      enabled: !gamePaused,
+      callback: () => {
+        pauseGame();
+      },
+    },
+    Enter: {
+      enabled: gamePaused,
+      callback: () => {
+        playGame();
+      },
+    },
+  });
+
   return (
     <div
       name="pause_dialog"

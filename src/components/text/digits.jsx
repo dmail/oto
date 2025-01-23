@@ -1,8 +1,10 @@
+import { forwardRef } from "preact/compat";
 import { Text } from "./text.jsx";
 
-export const Digits = ({ children, ...props }) => {
+export const Digits = forwardRef(({ children, ...props }, ref) => {
   return (
     <Text
+      ref={ref}
       color="white"
       fontFamily="goblin"
       // weight="bold"
@@ -15,4 +17,4 @@ export const Digits = ({ children, ...props }) => {
       {children}
     </Text>
   );
-};
+});

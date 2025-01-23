@@ -56,5 +56,12 @@ export const animateDamageDisplay = (
       });
     });
   }
-  return animateSequence(steps);
+  return animateSequence(steps, {
+    onstart: () => {
+      element.style.display = "";
+    },
+    onfinish: () => {
+      element.style.display = "none";
+    },
+  });
 };

@@ -58,13 +58,10 @@ export const Opponent = forwardRef(
             id: "weapon_animation",
             from: {
               x: 25,
-              display: "",
             },
             to: {
               x: -15,
-              display: "none",
             },
-            duration: 200,
           }).finished;
         },
         displayDamage: async (value) => {

@@ -45,7 +45,6 @@ export const Ally = forwardRef((props, ref) => {
           duration: 300,
           toY: -1.2,
         }).finished;
-        damageSetter(null);
       },
     };
   });

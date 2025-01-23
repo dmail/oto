@@ -59,6 +59,7 @@ export const animateElement = (
       throw createAnimationAbortError();
     });
   };
+  let innerOnFinish;
   const animation = {
     playState: "idle",
     onstart,
@@ -92,10 +93,21 @@ export const animateElement = (
         if (toDisplay === "none") {
           element.style.display = "none";
         }
+        if (innerOnFinish) {
+          innerOnFinish();
+          innerOnFinish = null;
+        }
         animation.onfinish();
       };
       if (fromDisplay !== undefined) {
         element.style.display = fromDisplay;
+      }
+      const computedStyle = getComputedStyle(element);
+      if (computedStyle.display === "none") {
+        element.style.display = "";
+        innerOnFinish = () => {
+          element.style.display = "none";
+        };
       }
       webAnimation.play();
       if (animation.playState === "finished") {
