@@ -26,6 +26,7 @@ export const Opponent = forwardRef(
       imageHeight,
       imageTransparentColor,
       onSelect,
+      onFirstDisplay,
     },
     ref,
   ) => {
@@ -121,6 +122,7 @@ export const Opponent = forwardRef(
             width={imageWidth}
             height={imageHeight}
             hidden={isDead}
+            onFirstDisplay={onFirstDisplay}
           />
           <Box
             name="weapon_box"

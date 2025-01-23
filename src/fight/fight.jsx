@@ -1,5 +1,4 @@
 import { computed, signal } from "@preact/signals";
-import { useImageLoader } from "hooks/use_image_loader.js";
 import { useKeyEffect } from "hooks/use_key_effect.js";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { Ally } from "./ally.jsx";
@@ -122,7 +121,11 @@ export const Fight = ({ onFightEnd }) => {
   }
   const oponentRef = useRef();
 
-  const [opponentImageLoaded] = useImageLoader(opponentImage.url);
+  const [opponentImageDisplayed, opponentImageDisplayedSetter] =
+    useState(false);
+  const onOpponentFirstDisplay = useCallback(() => {
+    opponentImageDisplayedSetter(true);
+  }, []);
 
   const heroRef = useRef();
   const heroAttack = heroAttackSignal.value;
@@ -247,7 +250,7 @@ export const Fight = ({ onFightEnd }) => {
     if (gamePaused) {
       return;
     }
-    if (!opponentImageLoaded) {
+    if (!opponentImageDisplayed) {
       return;
     }
     if (firstTurnRef.current) {
@@ -258,7 +261,7 @@ export const Fight = ({ onFightEnd }) => {
       return;
     }
     performOpponentTurn();
-  }, [gamePaused, opponentImageLoaded, opponentSpeed, heroSpeed]);
+  }, [gamePaused, opponentImageDisplayed, opponentSpeed, heroSpeed]);
 
   return (
     <>
@@ -280,6 +283,7 @@ export const Fight = ({ onFightEnd }) => {
             imageY={opponentImage.y}
             imageWidth={opponentImage.width}
             imageHeight={opponentImage.height}
+            onFirstDisplay={onOpponentFirstDisplay}
             onSelect={() => {
               performHeroTurn();
             }}

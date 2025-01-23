@@ -1,10 +1,11 @@
-import { useLayoutEffect } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 
 export const useDrawImage = (
   canvas,
   source,
-  { x = 0, y = 0, width, height, opacity = 1, onDraw, debug } = {},
+  { x = 0, y = 0, width, height, opacity = 1, onFirstDraw, onDraw, debug } = {},
 ) => {
+  const firstDrawRef = useRef(true);
   const draw = () => {
     if (!canvas) return;
     if (typeof source === "function") source = source();
@@ -43,6 +44,12 @@ export const useDrawImage = (
     );
     if (onDraw) {
       onDraw();
+    }
+    if (firstDrawRef.current) {
+      firstDrawRef.current = false;
+      if (onFirstDraw) {
+        onFirstDraw();
+      }
     }
   };
 

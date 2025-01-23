@@ -10,7 +10,7 @@ import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useMemo, useRef } from "preact/hooks";
 
 export const Img = forwardRef(
-  ({ name, source, width, height, ...props }, ref) => {
+  ({ name, source, width, height, onFirstDisplay, ...props }, ref) => {
     const innerRef = useRef();
     useImperativeHandle(ref, () => innerRef.current);
 
@@ -18,7 +18,9 @@ export const Img = forwardRef(
       width,
       height,
     });
-    useDrawImage(innerRef.current, imageAsCanvas);
+    useDrawImage(innerRef.current, imageAsCanvas, {
+      onFirstDraw: onFirstDisplay,
+    });
 
     return (
       <canvas
@@ -101,6 +103,7 @@ export const useImageCanvas = (sourceArg, { name, width, height } = {}) => {
     () => createShouldReplace(sourceTransparentColor),
     sourceTransparentColor.map((color) => `${color[0]}${color[1]}${color[2]}`),
   );
+
   return useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = width;
