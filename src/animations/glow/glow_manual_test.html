@@ -57,7 +57,7 @@
             duration: 1500,
             iterations: 2,
             fps: 10,
-            onprogress: () => {
+            effect: () => {
               document.querySelector("#steps").innerHTML +=
                 `${animation.color.join(",")}<br />`;
             },

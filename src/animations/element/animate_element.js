@@ -24,7 +24,7 @@ export const animateElement = (
     onremove = noop,
     easing,
     canPlayWhilePaused,
-    autoplay,
+    autoplay = true,
   },
 ) => {
   const fromStep = stepFromAnimationDescription(from);

@@ -12,7 +12,7 @@ export const animateSequence = (
     onpause = () => {},
     onremove = () => {},
     onfinish = () => {},
-    autoplay,
+    autoplay = true,
   } = {},
 ) => {
   let resolveFinished;
