@@ -13,7 +13,7 @@ export const animateRatio = ({
   ...params
 }) => {
   const ratioAnimationCreator = () => {
-    let doneCallback;
+    let finishedCallback;
     const requestNext = isAudio
       ? requestAudioAnimationCallback
       : requestVisualAnimationCallback;
@@ -50,7 +50,8 @@ export const animateRatio = ({
           return;
         }
         setProgressRatio(1);
-        doneCallback();
+        finishedCallback();
+        finishedCallback = undefined;
         return;
       }
       if (msEllapsedSincePreviousStep < stepMinDuration) {
@@ -69,7 +70,7 @@ export const animateRatio = ({
         ? null
         : visualAnimationsPlaybackPreventedSignal,
       start: ({ finished }) => {
-        doneCallback = finished;
+        finishedCallback = finished;
         progressRatio = 0;
         ratio = 0;
         msRemaining = duration;
@@ -104,7 +105,7 @@ export const animateRatio = ({
         previousStepMs = undefined;
         progressRatio = undefined;
         ratio = undefined;
-        doneCallback = undefined;
+        finishedCallback = undefined;
       },
       remove: () => {
         // nothing to cleanup?
