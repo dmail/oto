@@ -4,7 +4,10 @@
 
 import { createPlaybackController } from "./playback_controller.js";
 
-export const createPlaybackSequenceController = (childCallbacks, params) => {
+export const createPlaybackSequenceController = (
+  childCallbacks,
+  { type = "sequence", onbeforestart = () => {}, ...params } = {},
+) => {
   const sequenceCreator = () => {
     let childIndex;
     let currentPlaybackController;
@@ -24,6 +27,7 @@ export const createPlaybackSequenceController = (childCallbacks, params) => {
     };
 
     return {
+      type,
       start: ({ finished, playbackController }) => {
         childIndex = 0;
         const startNext = () => {
@@ -49,6 +53,7 @@ export const createPlaybackSequenceController = (childCallbacks, params) => {
             playbackController.remove();
           };
         };
+        onbeforestart();
         startNext();
       },
       pause: () => {

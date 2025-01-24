@@ -4,7 +4,7 @@ import { PLAYBACK } from "/playback/playback.js";
 
 export const animateDamageDisplay = (
   element,
-  { id = "damage_display", toY = -0.4, duration, playbackRate = 0.5 },
+  { id = "damage_display", toY = -0.4, duration, playbackRate = 0.5, ...rest },
 ) => {
   let from = 0;
   const interval = (to) => {
@@ -73,5 +73,6 @@ export const animateDamageDisplay = (
         element.style.display = "none";
       }
     },
+    ...rest,
   });
 };
