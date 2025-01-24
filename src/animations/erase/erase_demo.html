@@ -3,15 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sprite erase</title>
+    <title>Sprite erase demo</title>
   </head>
   <body>
     <div id="root" style="position: relative"></div>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
-
       import { useRef } from "preact/hooks";
-      import { useSprite } from "hooks/use_sprite.js";
+      import { useImageCanvas } from "/components/img/img.jsx";
       import { useDrawImage } from "hooks/use_draw_image.js";
       import { erase } from "./erase.js";
 
@@ -20,15 +19,19 @@
       // eslint-disable-next-line no-unused-vars
       const App = () => {
         const canvasRef = useRef();
-        const sprite = useSprite({
-          url: spriteUrl,
-          x: 75,
-          y: 10,
-          width: 80,
-          height: 80,
-          transparentColor: [0, 128, 128],
-        });
-        const redraw = useDrawImage(canvasRef.current, sprite);
+        const imageCanvas = useImageCanvas(
+          {
+            url: spriteUrl,
+            x: 75,
+            y: 10,
+            transparentColor: [0, 128, 128],
+          },
+          {
+            width: 80,
+            height: 80,
+          },
+        );
+        const redraw = useDrawImage(canvasRef.current, imageCanvas);
 
         return (
           <div>

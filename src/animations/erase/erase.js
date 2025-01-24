@@ -41,6 +41,7 @@ export const erase = (
     let stepIndex = i;
     executors.push(() => {
       return animateRatio({
+        effect: () => {},
         onstart: () => {
           for (const nonTransparentPixel of nonTransparentPixelSet) {
             const everyNthPixel = iterations - stepIndex;
