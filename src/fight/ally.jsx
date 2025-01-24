@@ -1,10 +1,8 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
-import {
-  animateDamageDisplay,
-  animateRecoilAfterHit,
-  ANIMATION,
-} from "/animations/animation.js";
+import { animateDamageDisplay } from "/animations/damage/damage.js";
+import { animateElement } from "/animations/element/animate_element.js";
+import { animateRecoilAfterHit } from "/animations/recoil_after_hit.js";
 import { Box } from "/components/box/box.jsx";
 import { Benjamin } from "/components/character/benjamin.jsx";
 import { Digits } from "/components/text/digits.jsx";
@@ -17,7 +15,7 @@ export const Ally = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => {
     return {
       moveToAct: async () => {
-        await ANIMATION.animateElement(elementRef.current, {
+        await animateElement(elementRef.current, {
           id: "ally_move_to_act",
           to: {
             y: -20,
@@ -26,7 +24,7 @@ export const Ally = forwardRef((props, ref) => {
         }).finished;
       },
       moveBackToPosition: async () => {
-        await ANIMATION.animateElement(elementRef.current, {
+        await animateElement(elementRef.current, {
           id: "ally_move_back_to_position",
           to: {
             y: 0,

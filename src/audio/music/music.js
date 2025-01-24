@@ -1,16 +1,17 @@
 import { computed, effect, signal } from "@preact/signals";
-import { ANIMATION } from "/animations/animation.js";
+import { animateNumber } from "/animations/number/animate_number.js";
+import { EASING } from "/animations/utils/easing.js";
 import { documentHiddenSignal } from "/utils/document_visibility.js";
 import { userActivationSignal } from "/utils/user_activation.js";
 
 let playOneAtATime = true;
 const fadeInDefaults = {
   duration: 600,
-  easing: ANIMATION.EASING.EASE_IN_EXPO,
+  easing: EASING.EASE_IN_EXPO,
 };
 const fadeOutDefaults = {
   duration: 1500,
-  easing: ANIMATION.EASING.EASE_OUT_EXPO,
+  easing: EASING.EASE_OUT_EXPO,
 };
 
 const NO_OP = () => {};
@@ -44,20 +45,17 @@ export const setMusicGlobalVolume = (value, { animate = true } = {}) => {
     from,
     to,
     duration: 500,
-    easing:
-      to > from
-        ? ANIMATION.EASING.EASE_IN_EXPO
-        : ANIMATION.EASING.EASE_OUT_EXPO,
+    easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
   });
 };
 let removeGlobalVolumeAnimation = NO_OP;
 const animateMusicGlobalVolume = (props) => {
   removeGlobalVolumeAnimation();
-  const globalVolumeAnimation = ANIMATION.animateNumber({
+  const globalVolumeAnimation = animateNumber({
+    ...props,
     // when doc is hidden the browser won't let the animation run
     // and onfinish() won't be called -> audio won't pause
-    usage: "audio",
-    ...props,
+    isAudio: true,
     effect: (volumeValue) => {
       musicGlobalVolumeAnimatedSignal.value = volumeValue;
     },
@@ -153,10 +151,10 @@ export const music = ({
       ...rest
     }) => {
       removeVolumeAnimation();
-      const volumeAnimation = ANIMATION.animateNumber({
+      const volumeAnimation = animateNumber({
         // when doc is hidden the browser won't let the animation run
         // and onfinish() won't be called -> audio won't pause
-        usage: "audio",
+        isAudio: true,
         ...rest,
         from,
         to,
@@ -200,10 +198,7 @@ export const music = ({
         from,
         to,
         duration,
-        easing:
-          to > from
-            ? ANIMATION.EASING.EASE_IN_EXPO
-            : ANIMATION.EASING.EASE_OUT_EXPO,
+        easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
         onstart: () => {
           volumeCurrentSignal.value = to;
         },

@@ -1,12 +1,10 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef, useState } from "preact/hooks";
 import { SwordAImg } from "./sword_a.jsx";
-import {
-  animateDamageDisplay,
-  ANIMATION,
-  erase,
-  glow,
-} from "/animations/animation.js";
+import { animateDamageDisplay } from "/animations/damage/damage.js";
+import { animateElement } from "/animations/element/animate_element.js";
+import { erase } from "/animations/erase/erase.js";
+import { glow } from "/animations/glow/glow.js";
 import { Box } from "/components/box/box.jsx";
 import { Img } from "/components/img/img.jsx";
 import { Message } from "/components/message/message.jsx";
@@ -54,7 +52,7 @@ export const Opponent = forwardRef(
           }).finished;
         },
         playWeaponAnimation: async () => {
-          await ANIMATION.animateElement(weaponElementRef.current, {
+          await animateElement(weaponElementRef.current, {
             id: "weapon_animation",
             from: {
               x: 25,
