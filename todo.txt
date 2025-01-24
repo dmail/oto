@@ -17,21 +17,20 @@ by the way loop could be an interations = Infinity
 --- JSENV ---
 - when browsing files we should be able to display root directory content somehow
 currently it's not possible because "/" shows the index.html
-- when client request with // it should not lead to 500 in the server
+
+- when client request with "http://localhost//" (double slash) it should not lead to 500 in the server (@jsenv/server)
 
 --- GAME ---
 
 - le bouton pause ouvre les options de gestions du sons (et autre plus tard)
 
-- le bouton back doit fermer la dialog pause comme le ferait un clic
+- integration svg flore
 
 - lorsqu'on bat le monstre on affiche un écran de selection
   - on voit qu'on a battu le premier et on peut affronter un second
   - on va faire cela avec des routes
   - il faut que si on essaye de faire prev pour aller vers le combat
   cette option ne soit plus disponible (donc replace dans navigate)
-
-- integration svg flore
 
 - mockup de tout le jeu en v1
 
