@@ -179,7 +179,6 @@ export const music = ({
 
     effect(() => {
       const volumeCurrent = volumeCurrentSignal.value;
-      // console.log({ name, volume: volumeCurrent });
       audio.volume = volumeCurrent;
     });
     const setVolume = (
@@ -317,7 +316,6 @@ export const music = ({
         userActivation !== "inactive" &&
         !musicsAllPaused &&
         !pauseRequestedByActiveMusic;
-
       if (shouldPlay) {
         handleShouldBePlaying();
       } else {

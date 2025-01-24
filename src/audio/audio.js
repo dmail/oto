@@ -54,8 +54,8 @@ export const setVolumePreferences = ({ music, sound }) => {
 effect(() => {
   const gamePaused = gamePausedSignal.value;
   if (gamePaused) {
-    setMusicGlobalVolume(musicVolumeBase * 0.2);
+    setMusicGlobalVolume(musicVolumeBase * 0.2, { duration: 3000 });
   } else {
-    setMusicGlobalVolume(musicVolumeBase);
+    setMusicGlobalVolume(musicVolumeBase, { duration: 3000 });
   }
 });
