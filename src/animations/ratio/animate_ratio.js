@@ -42,7 +42,7 @@ export const animateRatio = ({
       ) {
         if (loop) {
           setProgressRatio(1);
-          msRemaining = duration;
+          msRemaining = content.duration;
           progressRatio = 0;
           ratio = 0;
           previousStepMs = stepMs;
@@ -60,12 +60,15 @@ export const animateRatio = ({
       }
       previousStepMs = stepMs;
       msRemaining = msRemainingAfterThisStep;
-      setProgressRatio(progressRatio + msEllapsedSincePreviousStep / duration);
+      setProgressRatio(
+        progressRatio + msEllapsedSincePreviousStep / content.duration,
+      );
       cancelNext = requestNext(next);
     };
 
-    return {
+    const content = {
       type,
+      duration,
       playbackPreventedSignal: isAudio
         ? null
         : visualAnimationsPlaybackPreventedSignal,
@@ -73,7 +76,7 @@ export const animateRatio = ({
         finishedCallback = finished;
         progressRatio = 0;
         ratio = 0;
-        msRemaining = duration;
+        msRemaining = content.duration;
         previousStepMs = Date.now();
         effect(0);
         cancelNext = requestNext(next);
@@ -111,6 +114,7 @@ export const animateRatio = ({
         // nothing to cleanup?
       },
     };
+    return content;
   };
 
   return createPlaybackController(ratioAnimationCreator, {
