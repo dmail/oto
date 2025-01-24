@@ -56,9 +56,12 @@ export const createPlaybackController = (
       playRequestedSignal.value = true;
     },
     pause: () => {
-      playRequestedSignal.value = false;
-      resumeMethod = content.pause?.();
-      goToState("paused");
+      const state = stateSignal.peek();
+      if (state === "running" || state === "finished") {
+        playRequestedSignal.value = false;
+        resumeMethod = content.pause?.();
+        goToState("paused");
+      }
     },
     remove: () => {
       const state = stateSignal.peek();
@@ -113,6 +116,7 @@ export const createPlaybackController = (
           resolveFinished();
           resolveFinished = undefined;
           goToState("finished");
+          playRequestedSignal.value = false;
         });
         goToState("running");
         return;

@@ -14,7 +14,6 @@
       import { animateRatio } from "./animate_ratio.js";
 
       const ratioSignal = signal(0);
-      const stateSignal = signal(undefined);
       const canPlaySignal = computed(() => {
         return (
           stateSignal.value === "idle" ||
@@ -32,7 +31,7 @@
         duration: 1000,
         autoplay: false,
       });
-      stateSignal.value = ratioAnimationController.stateSignal;
+      const stateSignal = ratioAnimationController.stateSignal;
       const play = () => {
         ratioAnimationController.play();
       };

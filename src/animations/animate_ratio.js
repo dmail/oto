@@ -83,6 +83,7 @@ export const animateRatio = ({
           cancelNext = undefined;
         }
         return () => {
+          previousStepMs = Date.now();
           cancelNext = requestNext(next);
         };
       },
