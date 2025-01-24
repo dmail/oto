@@ -1,6 +1,6 @@
 import { animateElement } from "./element/animate_element.js";
-import { animateSequence } from "./list/animate_sequence.js";
 import { EASING } from "./utils/easing.js";
+import { PLAYBACK } from "/playback/playback.js";
 
 export const animateRecoilAfterHit = (element, { duration } = {}) => {
   let from = 0;
@@ -35,5 +35,5 @@ export const animateRecoilAfterHit = (element, { duration } = {}) => {
       });
     });
   }
-  return animateSequence(steps);
+  return PLAYBACK.sequence(steps);
 };

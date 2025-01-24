@@ -1,16 +1,10 @@
 import { animateElement } from "../element/animate_element.js";
-import { animateSequence } from "../list/animate_sequence.js";
 import { EASING } from "../utils/easing.js";
+import { PLAYBACK } from "/playback/playback.js";
 
 export const animateDamageDisplay = (
   element,
-  {
-    id = "damage_display",
-    toY = -0.4,
-    duration,
-    playbackRate = 0.5,
-    autoplay = true,
-  },
+  { id = "damage_display", toY = -0.4, duration, playbackRate = 0.5 },
 ) => {
   let from = 0;
   const interval = (to) => {
@@ -68,7 +62,7 @@ export const animateDamageDisplay = (
   const computedStyle = getComputedStyle(element);
   const shouldDisplay = computedStyle.display === "none";
 
-  return animateSequence(steps, {
+  return PLAYBACK.sequence(steps, {
     onbeforestart: () => {
       if (shouldDisplay) {
         element.style.display = null;
@@ -79,6 +73,5 @@ export const animateDamageDisplay = (
         element.style.display = "none";
       }
     },
-    autoplay,
   });
 };

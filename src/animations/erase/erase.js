@@ -1,5 +1,5 @@
-import { animate } from "../animate.js";
-import { animateSequence } from "../list/animate_sequence.js";
+import { animateRatio } from "../ratio/animate_ratio.js";
+import { PLAYBACK } from "/playback/playback.js";
 
 export const erase = (
   canvas,
@@ -40,7 +40,7 @@ export const erase = (
   while (i < iterations) {
     let stepIndex = i;
     executors.push(() => {
-      return animate({
+      return animateRatio({
         onstart: () => {
           for (const nonTransparentPixel of nonTransparentPixelSet) {
             const everyNthPixel = iterations - stepIndex;
@@ -57,5 +57,5 @@ export const erase = (
     });
     i++;
   }
-  return animateSequence(executors);
+  return PLAYBACK.sequence(executors);
 };

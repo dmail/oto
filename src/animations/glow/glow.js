@@ -1,7 +1,7 @@
 import { animateColor } from "../color/animate_color.js";
-import { animateSequence } from "../list/animate_sequence.js";
 import { EASING } from "../utils/easing.js";
 import { WELL_KNOWN_COLORS } from "../utils/well_known_colors.js";
+import { PLAYBACK } from "/playback/playback.js";
 
 export const glow = (
   canvas,
@@ -64,6 +64,6 @@ export const glow = (
       return animateColorTo(fromColor);
     });
   }
-  const glowAnimation = animateSequence(animationExecutors);
+  const glowAnimation = PLAYBACK.sequence(animationExecutors);
   return glowAnimation;
 };
