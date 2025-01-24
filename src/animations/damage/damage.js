@@ -59,19 +59,18 @@ export const animateDamageDisplay = (
     });
   }
 
-  const computedStyle = getComputedStyle(element);
-  const shouldDisplay = computedStyle.display === "none";
+  let shouldDisplay;
 
   return PLAYBACK.sequence(steps, {
     onbeforestart: () => {
+      const computedStyle = getComputedStyle(element);
+      shouldDisplay = computedStyle.display === "none";
       if (shouldDisplay) {
         element.style.display = null;
       }
     },
     onfinish: () => {
-      if (shouldDisplay) {
-        element.style.display = "none";
-      }
+      element.style.display = "none";
     },
     ...rest,
   });

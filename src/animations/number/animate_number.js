@@ -11,8 +11,8 @@ export const animateNumber = (
   } = {},
 ) => {
   const numberAnimation = animateRatio({
-    ...props,
     type: "number_animation",
+    ...props,
     effect: (ratio) => {
       const value = applyRatioToDiff(from, to, ratio);
       if (effect) {

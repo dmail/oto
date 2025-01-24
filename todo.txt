@@ -1,6 +1,9 @@
 - consider removing commitStyles, instead we'll explicitely set the from
 everything should still work
 
+use_frame is a sort of animation looping forever (it could be represented using a playback controller)
+by the way loop could be an interations = Infinity
+
 --- JSENV ---
 - when browsing files we should be able to display root directory content somehow
 currently it's not possible because "/" shows the index.html

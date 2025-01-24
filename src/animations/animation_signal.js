@@ -14,12 +14,3 @@ export const animationsCanPlaySignal = computed(() => {
   }
   return true;
 });
-export const useAnimationsCanPlay = () => {
-  return animationsCanPlaySignal.value;
-};
-export const preventAnimationsFromPlaying = () => {
-  animationsPlayGloballyPreventedSignal.value = true;
-};
-export const allowAnimationsToPlay = () => {
-  animationsPlayGloballyPreventedSignal.value = false;
-};
