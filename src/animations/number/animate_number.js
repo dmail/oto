@@ -1,20 +1,22 @@
-import { animate } from "../animate.js";
+import { animateRatio } from "../ratio/animate_ratio.js";
 import { applyRatioToDiff } from "../utils/apply_ratio_to_diff.js";
 
-export const animateNumber = ({
+export const animateNumber = (
   from,
   to,
-  // step = 0.0000001,// TODO
-  effect,
-  ...props
-}) => {
-  const numberAnimation = animate({
+  {
+    // step = 0.0000001, // TODO
+    effect,
+    ...props
+  },
+) => {
+  const numberAnimation = animateRatio({
     ...props,
-    effect: (ratio, anim) => {
+    type: "number_animation",
+    effect: (ratio) => {
       const value = applyRatioToDiff(from, to, ratio);
-      anim.value = value;
       if (effect) {
-        effect(value, anim);
+        effect(value);
       }
     },
   });

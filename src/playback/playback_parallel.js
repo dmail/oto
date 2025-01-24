@@ -1,6 +1,4 @@
-import { createAnimationAbortError } from "../utils/animation_abort_error.js";
-
-export const animateParallel = (
+export const createParallelPlaybackController = (
   animations,
   { onremove = () => {}, onfinish = () => {} } = {},
 ) => {

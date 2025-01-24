@@ -2,9 +2,9 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./preact_logo.svg" />
+    <link rel="icon" href="data:," />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Animate number test</title>
+    <title>Animate number demo</title>
   </head>
   <body>
     <div id="root" style="position: relative">
@@ -39,51 +39,49 @@
         update();
       };
 
-      let animation;
+      let numberAnimationController;
       const playButton = document.querySelector('[name="play"]');
       playButton.onclick = () => {
-        if (!animation) {
-          animation = animateNumber({
-            from,
-            to,
+        if (!numberAnimationController) {
+          numberAnimationController = animateNumber(from, to, {
             duration: 1000,
             fps: 10,
-            onprogress: () => {
+            effect: (value) => {
               document.querySelector("#output").innerHTML +=
-                `${Math.round(animation.value)}<br />`;
+                `${Math.round(value)}<br />`;
             },
           });
-          animation.onfinish = () => {
+          numberAnimationController.onfinish = () => {
             update();
           };
         } else {
-          animation.play();
+          numberAnimationController.play();
         }
         update();
       };
       const pauseButton = document.querySelector('[name="pause"]');
       pauseButton.onclick = () => {
-        animation.pause();
+        numberAnimationController.pause();
         update();
       };
 
       const update = () => {
-        if (!animation) {
+        if (!numberAnimationController) {
           playButton.disabled = false;
           pauseButton.disabled = true;
           return;
         }
-        if (animation.playState === "running") {
+        if (numberAnimationController.stateSignal.value === "running") {
           playButton.disabled = true;
           pauseButton.disabled = false;
           return;
         }
-        if (animation.playState === "paused") {
+        if (numberAnimationController.stateSignal.value === "paused") {
           playButton.disabled = false;
           pauseButton.disabled = true;
           return;
         }
-        if (animation.playState === "finished") {
+        if (numberAnimationController.stateSignal.value === "finished") {
           playButton.disabled = false;
           pauseButton.disabled = true;
           return;
