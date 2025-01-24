@@ -8,7 +8,7 @@ export const animateNumber = (
     // step = 0.0000001, // TODO
     effect,
     ...props
-  },
+  } = {},
 ) => {
   const numberAnimation = animateRatio({
     ...props,

@@ -1,6 +1,6 @@
 import { forwardRef } from "preact/compat";
 import { useLayoutEffect } from "preact/hooks";
-import { useFrame } from "/animations/animation.js";
+import { useFrame } from "/animations/hooks/use_frame.js";
 import { Img } from "/components/img/img.jsx";
 
 const characterSpritesheetUrl = new URL(

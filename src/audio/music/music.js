@@ -41,17 +41,15 @@ export const setMusicGlobalVolume = (value, { animate = true } = {}) => {
   const from = musicGlobalCurrentVolumeSignal.peek();
   const to = value;
   musicGlobalVolumeSignal.value = value;
-  animateMusicGlobalVolume({
-    from,
-    to,
+  animateMusicGlobalVolume(from, to, {
     duration: 500,
     easing: to > from ? EASING.EASE_IN_EXPO : EASING.EASE_OUT_EXPO,
   });
 };
 let removeGlobalVolumeAnimation = NO_OP;
-const animateMusicGlobalVolume = (props) => {
+const animateMusicGlobalVolume = (from, to, props) => {
   removeGlobalVolumeAnimation();
-  const globalVolumeAnimation = animateNumber({
+  const globalVolumeAnimation = animateNumber(from, to, {
     ...props,
     // when doc is hidden the browser won't let the animation run
     // and onfinish() won't be called -> audio won't pause
@@ -151,13 +149,11 @@ export const music = ({
       ...rest
     }) => {
       removeVolumeAnimation();
-      const volumeAnimation = animateNumber({
+      const volumeAnimation = animateNumber(from, to, {
         // when doc is hidden the browser won't let the animation run
         // and onfinish() won't be called -> audio won't pause
         isAudio: true,
         ...rest,
-        from,
-        to,
         effect: (volumeValue) => {
           volumeAnimatedSignal.value = volumeValue;
         },

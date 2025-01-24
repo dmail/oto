@@ -1,6 +1,6 @@
 import { forwardRef } from "preact/compat";
 import { useImperativeHandle, useRef } from "preact/hooks";
-import { ANIMATION } from "/animations/animation.js";
+import { animateElement } from "/animations/element/animate_element.js";
 
 export const Curtain = forwardRef((props, ref) => {
   const innerRef = useRef();
@@ -10,27 +10,21 @@ export const Curtain = forwardRef((props, ref) => {
       show: ({ color = "white", opacity = 0.5 } = {}) => {
         const canvas = innerRef.current;
         drawCurtain(canvas, { color, opacity });
-        ANIMATION.animateElement(canvas, {
-          to: { display: "block", opacity },
-          duration: 0,
-        });
+        canvas.style.display = "block";
       },
       hide: () => {
-        ANIMATION.animateElement(innerRef.current, {
-          to: { display: "none" },
-          duration: 0,
-        });
+        const canvas = innerRef.current;
+        canvas.style.display = "none";
       },
       fadeIn: async ({ color = "black", toOpacity = 1 } = {}) => {
         const canvas = innerRef.current;
         drawCurtain(canvas, { color, opacity: 1 });
-        await ANIMATION.animateElement(canvas, {
-          from: { display: "block" },
+        await animateElement(canvas, {
           to: { opacity: toOpacity },
         });
       },
       fadeOut: async ({ toOpacity = 0 } = {}) => {
-        await ANIMATION.animateElement(innerRef.current, {
+        await animateElement(innerRef.current, {
           to: { opacity: toOpacity },
         });
       },
