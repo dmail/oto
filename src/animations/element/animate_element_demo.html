@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" href="data:," />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Animate demo</title>
+    <title>Animate element demo</title>
   </head>
   <body>
     <div
@@ -14,10 +14,26 @@
     <div id="root"></div>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
-      import { signal, computed } from "@preact/signals";
+      import { computed } from "@preact/signals";
       import { animateElement } from "./animate_element.js";
 
-      const stateSignal = signal(undefined);
+      const elementAnimationController = animateElement(
+        document.querySelector("#animated_el"),
+        {
+          from: {
+            x: 0,
+          },
+          to: {
+            x: 100,
+          },
+          duration: 1000,
+          onstatechange: (state) => {
+            stateSignal.value = state;
+          },
+          autoplay: false,
+        },
+      );
+      const stateSignal = elementAnimationController.stateSignal;
       const canPlaySignal = computed(() => {
         return (
           stateSignal.value === "idle" ||
@@ -28,25 +44,12 @@
       const canPauseSignal = computed(() => {
         return stateSignal.value === "running";
       });
-      const animation = animateElement(document.querySelector("#animated_el"), {
-        from: {
-          x: 0,
-        },
-        to: {
-          x: 100,
-        },
-        duration: 1000,
-        onstatechange: (state) => {
-          stateSignal.value = state;
-        },
-        autoplay: false,
-      });
-      stateSignal.value = animation.playState;
+
       const play = () => {
-        animation.play();
+        elementAnimationController.play();
       };
       const pause = () => {
-        animation.pause();
+        elementAnimationController.pause();
       };
 
       // eslint-disable-next-line no-unused-vars

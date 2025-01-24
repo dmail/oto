@@ -112,11 +112,14 @@ export const createPlaybackController = (
         if (state === "finished") {
           playbackController.finished = createFinishedPromise();
         }
-        content.start(() => {
-          resolveFinished();
-          resolveFinished = undefined;
-          goToState("finished");
-          playRequestedSignal.value = false;
+        content.start({
+          playbackController,
+          finished: () => {
+            resolveFinished();
+            resolveFinished = undefined;
+            goToState("finished");
+            playRequestedSignal.value = false;
+          },
         });
         goToState("running");
         return;
