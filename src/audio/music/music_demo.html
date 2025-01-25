@@ -23,6 +23,13 @@
         useReasonsToBePaused,
       } from "./music.js";
       import { useVolume, useMuted, usePlaybackState } from "../audio_hooks.js";
+      // eslint-disable-next-line no-unused-vars
+      import { Checkbox } from "/components/form/checkbox.jsx";
+      import {
+        useDocumentHidden,
+        simulateDocumentHidden,
+        simulateDocumentVisible,
+      } from "/utils/document_visibility.js";
 
       const musicA = music({
         name: "a",
@@ -94,44 +101,47 @@
       };
 
       // eslint-disable-next-line no-unused-vars
-      const MuteUnMuteAllButton = () => {
+      const MuteAllCheckbox = () => {
         const musicsAllMuted = useMusicsAllMuted();
 
         return (
-          <button
-            onClick={() => {
-              if (musicsAllMuted) {
-                unmuteAllMusics();
-              } else {
+          <Checkbox
+            checked={musicsAllMuted}
+            onChange={(checked) => {
+              if (checked) {
                 muteAllMusics();
+              } else {
+                unmuteAllMusics();
               }
             }}
           >
-            {musicsAllMuted ? "unmute all" : "mute all"}
-          </button>
+            Prevent music sound
+          </Checkbox>
         );
       };
 
       // eslint-disable-next-line no-unused-vars
-      const PlayPauseAllButton = () => {
+      const PreventPlaybackCheckbox = () => {
         const musicsAllPaused = useMusicsAllPaused();
         return (
-          <button
-            onClick={() => {
-              if (musicsAllPaused) {
-                playAllMusics();
-              } else {
+          <Checkbox
+            checked={musicsAllPaused}
+            onChange={(checked) => {
+              if (checked) {
                 pauseAllMusics();
+              } else {
+                playAllMusics();
               }
             }}
           >
-            {musicsAllPaused ? "play all" : "pause all"}
-          </button>
+            Prevent playback
+          </Checkbox>
         );
       };
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
+        const documentHidden = useDocumentHidden();
         const globalVolume = useMusicGlobalVolume();
 
         return (
@@ -139,8 +149,9 @@
             <h1>Music Manager</h1>
 
             <div style="display:flex; flex-direction: column; margin: 10px;">
-              <h3>Global controls</h3>
-              <div>
+              <fieldset>
+                <legend>Global controls</legend>
+
                 <div>
                   Global volume:
                   <progress
@@ -185,8 +196,25 @@
                   </button>
                 </div>
 
-                <MuteUnMuteAllButton />
-                <PlayPauseAllButton />
+                <br />
+                <MuteAllCheckbox />
+                <br />
+                <PreventPlaybackCheckbox />
+                <br />
+                <Checkbox
+                  checked={documentHidden}
+                  onChange={(checked) => {
+                    if (checked) {
+                      simulateDocumentHidden();
+                    } else {
+                      simulateDocumentVisible();
+                    }
+                  }}
+                >
+                  Simulate document hidden
+                </Checkbox>
+                <br />
+                <br />
 
                 <button
                   onClick={() => {
@@ -207,7 +235,7 @@
                 >
                   repro fast leave back to page
                 </button>
-              </div>
+              </fieldset>
             </div>
 
             <div style="display: flex; gap: 10px">
