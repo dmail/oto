@@ -2,8 +2,9 @@ import { effect, signal } from "@preact/signals";
 
 const noop = () => {};
 export const createPlaybackController = (
-  contentCreator,
+  content,
   {
+    playbackPreventedSignal = signal(false),
     onstatechange = noop,
     onstart = noop,
     onpause = noop,
@@ -22,12 +23,9 @@ export const createPlaybackController = (
       rejectFinished = reject;
     });
   };
-  let content = contentCreator();
   const cleanupCallbackSet = new Set();
   const playRequestedSignal = signal(autoplay);
   let resumeMethod;
-  const playbackPreventedSignal =
-    content.playbackPreventedSignal || signal(false);
   const goToState = (newState) => {
     const currentState = stateSignal.peek();
     stateSignal.value = newState;
@@ -137,6 +135,18 @@ export const createPlaybackController = (
   );
 
   return playbackController;
+};
+
+export const exposePlaybackControllerProps = (playbackController) => {
+  return {
+    play: playbackController.play,
+    pause: playbackController.pause,
+    finish: playbackController.finish,
+    remove: playbackController.remove,
+    get finished() {
+      return playbackController.finished;
+    },
+  };
 };
 
 const createPlaybackAbortError = () => {

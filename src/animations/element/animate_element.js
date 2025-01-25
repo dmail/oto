@@ -1,5 +1,8 @@
 import { EASING } from "../utils/easing.js";
-import { createPlaybackController } from "/playback/playback_controller.js";
+import {
+  createPlaybackController,
+  exposePlaybackControllerProps,
+} from "/playback/playback_controller.js";
 import { visualContentPlaybackIsPreventedSignal } from "/playback/visual_content_playback.js";
 
 export const animateElement = (
@@ -17,93 +20,95 @@ export const animateElement = (
     ...params
   },
 ) => {
-  const elementAnimationCreator = () => {
-    const fromStep = stepFromAnimationDescription(from);
-    const toStep = stepFromAnimationDescription(to);
-    const steps = [];
-    if (fromStep) {
-      steps.push(fromStep);
-    }
-    if (toStep) {
-      steps.push(toStep);
-    }
+  const elementAnimation = {};
+  const elementAnimationContent = {
+    type: "element_animation",
+    start: ({ finished, playbackController }) => {
+      const fromStep = stepFromAnimationDescription(from);
+      const toStep = stepFromAnimationDescription(to);
+      const steps = [];
+      if (fromStep) {
+        steps.push(fromStep);
+      }
+      if (toStep) {
+        steps.push(toStep);
+      }
 
-    return {
-      type: "element_animation",
-      playbackPreventedSignal: visualContentPlaybackIsPreventedSignal,
-      start: ({ finished, playbackController }) => {
-        if (easing) {
-          element.style.animationTimingFunction =
-            createAnimationTimingFunction(easing);
-        } else {
-          element.style.animationTimingFunction = "";
+      if (easing) {
+        element.style.animationTimingFunction =
+          createAnimationTimingFunction(easing);
+      } else {
+        element.style.animationTimingFunction = "";
+      }
+      let keyFrames = new KeyframeEffect(element, steps, {
+        id,
+        duration,
+        delay,
+        fill,
+        iterations,
+      });
+      let webAnimation = new Animation(keyFrames, document.timeline);
+      webAnimation.playbackRate = playbackRate;
+
+      let stopObservingElementRemoved = onceElementRemoved(element, () => {
+        playbackController.remove();
+      });
+      const computedStyle = getComputedStyle(element);
+      const shouldDisplay = computedStyle.display === "none";
+      if (shouldDisplay) {
+        element.style.display = null;
+      }
+      webAnimation.onfinish = () => {
+        if (toStep) {
+          try {
+            webAnimation.commitStyles();
+          } catch (e) {
+            console.error(
+              `Error during "commitStyles" on animation "${id}"`,
+              element.style.display,
+            );
+            console.error(e);
+          }
         }
-        let keyFrames = new KeyframeEffect(element, steps, {
-          id,
-          duration,
-          delay,
-          fill,
-          iterations,
-        });
-        let webAnimation = new Animation(keyFrames, document.timeline);
-        webAnimation.playbackRate = playbackRate;
-
-        let stopObservingElementRemoved = onceElementRemoved(element, () => {
-          playbackController.remove();
-        });
-        const computedStyle = getComputedStyle(element);
-        const shouldDisplay = computedStyle.display === "none";
         if (shouldDisplay) {
-          element.style.display = null;
+          element.style.display = "none";
         }
-        webAnimation.onfinish = () => {
-          if (toStep) {
-            try {
-              webAnimation.commitStyles();
-            } catch (e) {
-              console.error(
-                `Error during "commitStyles" on animation "${id}"`,
-                element.style.display,
-              );
-              console.error(e);
-            }
+        finished();
+      };
+      webAnimation.play();
+      return {
+        pause: () => {
+          webAnimation.pause();
+          return () => {
+            webAnimation.play();
+          };
+        },
+        finish: () => {
+          webAnimation.finish();
+        },
+        stop: () => {
+          if (stopObservingElementRemoved) {
+            stopObservingElementRemoved();
+            stopObservingElementRemoved = undefined;
           }
-          if (shouldDisplay) {
-            element.style.display = "none";
-          }
-          finished();
-        };
-        webAnimation.play();
-        return {
-          pause: () => {
-            webAnimation.pause();
-            return () => {
-              webAnimation.play();
-            };
-          },
-          finish: () => {
-            webAnimation.finish();
-          },
-          stop: () => {
-            if (stopObservingElementRemoved) {
-              stopObservingElementRemoved();
-              stopObservingElementRemoved = undefined;
-            }
-          },
-          remove: () => {
-            webAnimation.cancel();
-            keyFrames = undefined;
-            webAnimation = undefined;
-          },
-        };
-      },
-    };
+        },
+        remove: () => {
+          webAnimation.cancel();
+          keyFrames = undefined;
+          webAnimation = undefined;
+        },
+      };
+    },
   };
-
-  return createPlaybackController(elementAnimationCreator, {
-    id,
+  const playbackController = createPlaybackController(elementAnimationContent, {
+    playbackPreventedSignal: visualContentPlaybackIsPreventedSignal,
     ...params,
   });
+  Object.assign(
+    elementAnimation,
+    exposePlaybackControllerProps(playbackController),
+  );
+  return elementAnimation;
 };
 
 export const stepFromAnimationDescription = (animationDescription) => {
