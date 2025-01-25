@@ -117,7 +117,7 @@ export const animateRatio = ({
   };
   const playbackController = createPlaybackController(ratioAnimationContent, {
     playbackPreventedSignal: isAudio
-      ? null
+      ? undefined
       : visualContentPlaybackIsPreventedSignal,
     ...params,
   });

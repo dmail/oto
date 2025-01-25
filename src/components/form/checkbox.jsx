@@ -1,4 +1,4 @@
-export const Checkbox = ({ children, checked, onChange }) => {
+export const Checkbox = ({ children, checked, onCheck, onUnCheck }) => {
   return (
     <label>
       <input
@@ -6,9 +6,9 @@ export const Checkbox = ({ children, checked, onChange }) => {
         checked={checked}
         onChange={(e) => {
           if (e.target.checked) {
-            onChange(true);
+            onCheck();
           } else {
-            onChange(false);
+            onUnCheck();
           }
         }}
       />

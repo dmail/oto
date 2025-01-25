@@ -31,6 +31,9 @@ Music volume stays at zero
         playAllMusics,
         pauseAllMusics,
         useReasonsToBePaused,
+        useMultipleMusicPlaybackIsPrevented,
+        preventMultipleMusicPlayback,
+        allowMultipleMusicPlayback,
       } from "./music.js";
       import {
         useMusicGlobalVolume,
@@ -121,13 +124,8 @@ Music volume stays at zero
         return (
           <Checkbox
             checked={musicsAllMuted}
-            onChange={(checked) => {
-              if (checked) {
-                muteAllMusics();
-              } else {
-                unmuteAllMusics();
-              }
-            }}
+            onCheck={muteAllMusics}
+            onUncheck={unmuteAllMusics}
           >
             Prevent music sound
           </Checkbox>
@@ -140,13 +138,8 @@ Music volume stays at zero
         return (
           <Checkbox
             checked={musicsAllPaused}
-            onChange={(checked) => {
-              if (checked) {
-                pauseAllMusics();
-              } else {
-                playAllMusics();
-              }
-            }}
+            onCheck={pauseAllMusics}
+            onUnCheck={playAllMusics}
           >
             Prevent playback
           </Checkbox>
@@ -157,6 +150,8 @@ Music volume stays at zero
       const App = () => {
         const documentHidden = useDocumentHidden();
         const globalVolume = useMusicGlobalVolume();
+        const multipleMusicPlaybackIsPrevented =
+          useMultipleMusicPlaybackIsPrevented();
 
         return (
           <div>
@@ -211,19 +206,22 @@ Music volume stays at zero
                 </div>
 
                 <br />
+                <Checkbox
+                  checked={multipleMusicPlaybackIsPrevented}
+                  onCheck={preventMultipleMusicPlayback}
+                  onUnCheck={allowMultipleMusicPlayback}
+                >
+                  Prevent multiple music playback
+                </Checkbox>
+                <br />
                 <MuteAllCheckbox />
                 <br />
                 <PreventPlaybackCheckbox />
                 <br />
                 <Checkbox
                   checked={documentHidden}
-                  onChange={(checked) => {
-                    if (checked) {
-                      simulateDocumentHidden();
-                    } else {
-                      simulateDocumentVisible();
-                    }
-                  }}
+                  onCheck={simulateDocumentHidden}
+                  onUnCheck={simulateDocumentVisible}
                 >
                   Simulate document hidden
                 </Checkbox>

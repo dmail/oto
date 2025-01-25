@@ -5,7 +5,18 @@ import { EASING } from "/animations/utils/easing.js";
 import { documentHiddenSignal } from "/utils/document_visibility.js";
 import { userActivationSignal } from "/utils/user_activation.js";
 
-let playOneAtATime = true;
+export const playOneAtATimeSignal = signal(true);
+export const useMultipleMusicPlaybackIsPrevented = () => {
+  return playOneAtATimeSignal.value;
+};
+export const preventMultipleMusicPlayback = () => {
+  playOneAtATimeSignal.value = true;
+};
+
+export const allowMultipleMusicPlayback = () => {
+  playOneAtATimeSignal.value = false;
+};
+
 const fadeInDefaults = {
   duration: 600,
   easing: EASING.EASE_IN_EXPO,
@@ -206,7 +217,7 @@ export const music = ({
       });
     };
     const handleShouldBePlaying = async () => {
-      if (playOneAtATime && playRequestedSignal.value) {
+      if (playOneAtATimeSignal.peek() && playRequestedSignal.value) {
         if (activeMusic && activeMusic !== musicObject) {
           const musicToReplace = activeMusic;
           musicToReplace.pauseRequestedByActiveMusicSignal.value = true;
@@ -271,7 +282,7 @@ export const music = ({
     };
     const pause = () => {
       playRequestedSignal.value = false;
-      if (playOneAtATime) {
+      if (playOneAtATimeSignal.peek()) {
         if (musicObject === activeMusic) {
           activeMusic = null;
           if (previousActiveMusic) {
