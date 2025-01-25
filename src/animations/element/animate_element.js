@@ -27,29 +27,28 @@ export const animateElement = (
     if (toStep) {
       steps.push(toStep);
     }
-    if (easing) {
-      element.style.animationTimingFunction =
-        createAnimationTimingFunction(easing);
-    } else {
-      element.style.animationTimingFunction = "";
-    }
-
-    let keyFrames = new KeyframeEffect(element, steps, {
-      id,
-      duration,
-      delay,
-      fill,
-      iterations,
-    });
-    let webAnimation = new Animation(keyFrames, document.timeline);
-    webAnimation.playbackRate = playbackRate;
-    let stopObservingElementRemoved;
 
     return {
       type: "element_animation",
       playbackPreventedSignal: visualContentPlaybackIsPreventedSignal,
       start: ({ finished, playbackController }) => {
-        stopObservingElementRemoved = onceElementRemoved(element, () => {
+        if (easing) {
+          element.style.animationTimingFunction =
+            createAnimationTimingFunction(easing);
+        } else {
+          element.style.animationTimingFunction = "";
+        }
+        let keyFrames = new KeyframeEffect(element, steps, {
+          id,
+          duration,
+          delay,
+          fill,
+          iterations,
+        });
+        let webAnimation = new Animation(keyFrames, document.timeline);
+        webAnimation.playbackRate = playbackRate;
+
+        let stopObservingElementRemoved = onceElementRemoved(element, () => {
           playbackController.remove();
         });
         const computedStyle = getComputedStyle(element);
@@ -75,26 +74,28 @@ export const animateElement = (
           finished();
         };
         webAnimation.play();
-      },
-      pause: () => {
-        webAnimation.pause();
-        return () => {
-          webAnimation.play();
+        return {
+          pause: () => {
+            webAnimation.pause();
+            return () => {
+              webAnimation.play();
+            };
+          },
+          finish: () => {
+            webAnimation.finish();
+          },
+          stop: () => {
+            if (stopObservingElementRemoved) {
+              stopObservingElementRemoved();
+              stopObservingElementRemoved = undefined;
+            }
+          },
+          remove: () => {
+            webAnimation.cancel();
+            keyFrames = undefined;
+            webAnimation = undefined;
+          },
         };
-      },
-      finish: () => {
-        webAnimation.finish();
-      },
-      stop: () => {
-        if (stopObservingElementRemoved) {
-          stopObservingElementRemoved();
-          stopObservingElementRemoved = undefined;
-        }
-      },
-      remove: () => {
-        webAnimation.cancel();
-        keyFrames = undefined;
-        webAnimation = undefined;
       },
     };
   };

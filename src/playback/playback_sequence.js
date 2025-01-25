@@ -10,8 +10,6 @@ export const createPlaybackSequenceController = (
 ) => {
   const sequenceCreator = () => {
     let childIndex;
-    let currentPlaybackController;
-
     const getNextPlaybackController = () => {
       const isFirst = childIndex === 0;
       const isLast = childIndex === childCallbacks.length - 1;
@@ -29,6 +27,7 @@ export const createPlaybackSequenceController = (
     return {
       type,
       start: ({ finished, playbackController }) => {
+        let currentPlaybackController;
         childIndex = 0;
         const startNext = () => {
           if (childIndex === childCallbacks.length) {
@@ -55,37 +54,39 @@ export const createPlaybackSequenceController = (
         };
         onbeforestart();
         startNext();
-      },
-      pause: () => {
-        if (currentPlaybackController) {
-          currentPlaybackController.pause();
-          return () => {
-            currentPlaybackController.play();
-          };
-        }
-        return () => {};
-      },
-      finish: () => {
-        if (currentPlaybackController) {
-          currentPlaybackController.finish();
-          while (childIndex < childCallbacks.length) {
-            const nextPlaybackController = getNextPlaybackController();
-            nextPlaybackController.finish();
-          }
-          currentPlaybackController = null;
-        }
-      },
-      stop: () => {
-        if (currentPlaybackController) {
-          currentPlaybackController.stop();
-          currentPlaybackController = undefined;
-        }
-      },
-      remove: () => {
-        if (currentPlaybackController) {
-          currentPlaybackController.remove();
-          currentPlaybackController = undefined;
-        }
+        return {
+          pause: () => {
+            if (currentPlaybackController) {
+              currentPlaybackController.pause();
+              return () => {
+                currentPlaybackController.play();
+              };
+            }
+            return () => {};
+          },
+          finish: () => {
+            if (currentPlaybackController) {
+              currentPlaybackController.finish();
+              while (childIndex < childCallbacks.length) {
+                const nextPlaybackController = getNextPlaybackController();
+                nextPlaybackController.finish();
+              }
+              currentPlaybackController = null;
+            }
+          },
+          stop: () => {
+            if (currentPlaybackController) {
+              currentPlaybackController.stop();
+              currentPlaybackController = undefined;
+            }
+          },
+          remove: () => {
+            if (currentPlaybackController) {
+              currentPlaybackController.remove();
+              currentPlaybackController = undefined;
+            }
+          },
+        };
       },
     };
   };
