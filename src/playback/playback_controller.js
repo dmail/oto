@@ -42,6 +42,8 @@ export const createPlaybackController = (
       playbackController.onremove();
     }
   };
+  let contentPlaying = null;
+
   const playbackController = {
     stateSignal,
     onstatechange,
@@ -59,7 +61,7 @@ export const createPlaybackController = (
       const state = stateSignal.peek();
       if (state === "running" || state === "finished") {
         playRequestedSignal.value = false;
-        resumeMethod = content.pause?.();
+        resumeMethod = contentPlaying.pause?.();
         goToState("paused");
       }
     },
@@ -69,8 +71,8 @@ export const createPlaybackController = (
         return;
       }
       if (state === "running" || state === "paused" || state === "finished") {
-        content.stop?.();
-        content.remove?.();
+        contentPlaying.stop?.();
+        contentPlaying.remove?.();
       }
       resumeMethod = undefined;
       if (rejectFinished) {
@@ -83,12 +85,13 @@ export const createPlaybackController = (
       playbackController.finished = undefined;
       cleanupCallbackSet.clear();
       content = undefined;
+      contentPlaying = undefined;
       goToState("removed");
     },
     finish: () => {
       const state = stateSignal.peek();
       if (state === "running" || state === "paused") {
-        content.finish?.();
+        contentPlaying.finish?.();
         return;
       }
     },
@@ -112,7 +115,7 @@ export const createPlaybackController = (
         if (state === "finished") {
           playbackController.finished = createFinishedPromise();
         }
-        content.start({
+        contentPlaying = content.start({
           playbackController,
           finished: () => {
             resolveFinished();

@@ -13,7 +13,6 @@ export const animateRatio = ({
   ...params
 }) => {
   const ratioAnimationCreator = () => {
-    let finishedCallback;
     const requestNext = isAudio
       ? requestAudioAnimationCallback
       : requestVisualAnimationCallback;
@@ -29,42 +28,6 @@ export const animateRatio = ({
       onprogress(progressRatio);
     };
     const stepMinDuration = fps ? 1000 / fps : 0;
-    const next = () => {
-      const stepMs = Date.now();
-      const msEllapsedSincePreviousStep = stepMs - previousStepMs;
-      const msRemainingAfterThisStep =
-        msRemaining - msEllapsedSincePreviousStep;
-      if (
-        // we reach the end, round progress to 1
-        msRemainingAfterThisStep <= 0 ||
-        // we are very close from the end, round progress to 1
-        msRemainingAfterThisStep <= 16.6
-      ) {
-        if (loop) {
-          setProgressRatio(1);
-          msRemaining = content.duration;
-          progressRatio = 0;
-          ratio = 0;
-          previousStepMs = stepMs;
-          cancelNext = requestNext(next);
-          return;
-        }
-        setProgressRatio(1);
-        finishedCallback();
-        finishedCallback = undefined;
-        return;
-      }
-      if (msEllapsedSincePreviousStep < stepMinDuration) {
-        cancelNext = requestNext(next);
-        return;
-      }
-      previousStepMs = stepMs;
-      msRemaining = msRemainingAfterThisStep;
-      setProgressRatio(
-        progressRatio + msEllapsedSincePreviousStep / content.duration,
-      );
-      cancelNext = requestNext(next);
-    };
 
     const content = {
       type,
@@ -73,45 +36,81 @@ export const animateRatio = ({
         ? null
         : visualContentPlaybackIsPreventedSignal,
       start: ({ finished }) => {
-        finishedCallback = finished;
+        const next = () => {
+          const stepMs = Date.now();
+          const msEllapsedSincePreviousStep = stepMs - previousStepMs;
+          const msRemainingAfterThisStep =
+            msRemaining - msEllapsedSincePreviousStep;
+          if (
+            // we reach the end, round progress to 1
+            msRemainingAfterThisStep <= 0 ||
+            // we are very close from the end, round progress to 1
+            msRemainingAfterThisStep <= 16.6
+          ) {
+            if (loop) {
+              setProgressRatio(1);
+              msRemaining = content.duration;
+              progressRatio = 0;
+              ratio = 0;
+              previousStepMs = stepMs;
+              cancelNext = requestNext(next);
+              return;
+            }
+            setProgressRatio(1);
+            finished();
+            return;
+          }
+          if (msEllapsedSincePreviousStep < stepMinDuration) {
+            cancelNext = requestNext(next);
+            return;
+          }
+          previousStepMs = stepMs;
+          msRemaining = msRemainingAfterThisStep;
+          setProgressRatio(
+            progressRatio + msEllapsedSincePreviousStep / content.duration,
+          );
+          cancelNext = requestNext(next);
+        };
+
         progressRatio = 0;
         ratio = 0;
         msRemaining = content.duration;
         previousStepMs = Date.now();
         effect(0);
         cancelNext = requestNext(next);
-      },
-      pause: () => {
-        if (cancelNext) {
-          cancelNext();
-          cancelNext = undefined;
-        }
-        return () => {
-          previousStepMs = Date.now();
-          cancelNext = requestNext(next);
+
+        return {
+          pause: () => {
+            cancelNext();
+            cancelNext = undefined;
+            return () => {
+              previousStepMs = Date.now();
+              cancelNext = requestNext(next);
+            };
+          },
+          finish: () => {
+            if (cancelNext) {
+              // cancelNext is undefined when "idle" or "paused"
+              cancelNext();
+              cancelNext = undefined;
+            }
+            setProgressRatio(1);
+            finished();
+          },
+          stop: () => {
+            if (cancelNext) {
+              // cancelNext is undefined when "idle", "paused" or "finished"
+              cancelNext();
+              cancelNext = undefined;
+            }
+            previousStepMs = undefined;
+            progressRatio = undefined;
+            ratio = undefined;
+          },
+          remove: () => {
+            // nothing to cleanup?
+          },
         };
-      },
-      finish: () => {
-        if (cancelNext) {
-          // cancelNext is undefined when "idle" or "paused"
-          cancelNext();
-          cancelNext = undefined;
-        }
-        setProgressRatio(1);
-      },
-      stop: () => {
-        if (cancelNext) {
-          // cancelNext is undefined when "idle", "paused" or "finished"
-          cancelNext();
-          cancelNext = undefined;
-        }
-        previousStepMs = undefined;
-        progressRatio = undefined;
-        ratio = undefined;
-        finishedCallback = undefined;
-      },
-      remove: () => {
-        // nothing to cleanup?
       },
     };
     return content;
