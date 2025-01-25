@@ -1,5 +1,5 @@
-import { visualAnimationsPlaybackPreventedSignal } from "../visual_animations.js";
 import { createPlaybackController } from "/playback/playback_controller.js";
+import { visualContentPlaybackIsPreventedSignal } from "/playback/visual_content_playback.js";
 
 export const animateRatio = ({
   type = "ratio_animation",
@@ -71,7 +71,7 @@ export const animateRatio = ({
       duration,
       playbackPreventedSignal: isAudio
         ? null
-        : visualAnimationsPlaybackPreventedSignal,
+        : visualContentPlaybackIsPreventedSignal,
       start: ({ finished }) => {
         finishedCallback = finished;
         progressRatio = 0;

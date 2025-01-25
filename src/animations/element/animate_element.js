@@ -1,6 +1,6 @@
 import { EASING } from "../utils/easing.js";
-import { visualAnimationsPlaybackPreventedSignal } from "../visual_animations.js";
 import { createPlaybackController } from "/playback/playback_controller.js";
+import { visualContentPlaybackIsPreventedSignal } from "/playback/visual_content_playback.js";
 
 export const animateElement = (
   element,
@@ -47,7 +47,7 @@ export const animateElement = (
 
     return {
       type: "element_animation",
-      playbackPreventedSignal: visualAnimationsPlaybackPreventedSignal,
+      playbackPreventedSignal: visualContentPlaybackIsPreventedSignal,
       start: ({ finished, playbackController }) => {
         stopObservingElementRemoved = onceElementRemoved(element, () => {
           playbackController.remove();

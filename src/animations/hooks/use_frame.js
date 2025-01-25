@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-import { useVisualAnimationsPlaybackIsPrevented } from "/animations/visual_animations.js";
+import { useVisualContentPlaybackIsPrevented } from "/playback/visual_content_playback.js";
 
 export const useFrame = (frames, { msBetweenFrames = 350, loop } = {}) => {
   const intervalRef = useRef();
   const frameIndexRef = useRef(0);
   const playStateRef = useRef("idle");
-  const visualAnimationsPlaybackIsPrevented =
-    useVisualAnimationsPlaybackIsPrevented();
+  const visualContentPlaybackIsPrevented =
+    useVisualContentPlaybackIsPrevented();
   const [frame, frameSetter] = useState(frames[0]);
   const play = useCallback(() => {
     if (playStateRef.current === "running") {
@@ -40,12 +40,12 @@ export const useFrame = (frames, { msBetweenFrames = 350, loop } = {}) => {
   }, []);
 
   useEffect(() => {
-    if (visualAnimationsPlaybackIsPrevented) {
+    if (visualContentPlaybackIsPrevented) {
       pause();
     } else {
       play();
     }
-  }, [visualAnimationsPlaybackIsPrevented]);
+  }, [visualContentPlaybackIsPrevented]);
 
   return [frame, play, pause];
 };

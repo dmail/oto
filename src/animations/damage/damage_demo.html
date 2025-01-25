@@ -17,10 +17,10 @@
       import { computed } from "@preact/signals";
       import { animateDamageDisplay } from "./damage.js";
       import {
-        useVisualAnimationsPlaybackIsPrevented,
-        preventVisualAnimationsPlayback,
-        allowVisualAnimationsPlayback,
-      } from "../visual_animations.js";
+        useVisualContentPlaybackIsPrevented,
+        preventVisualContentPlayback,
+        allowVisualContentPlayback,
+      } from "/playback/visual_content_playback.js";
 
       const animation = animateDamageDisplay(
         document.querySelector("#animated_el"),
@@ -50,8 +50,8 @@
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
-        const visualAnimationsPrevented =
-          useVisualAnimationsPlaybackIsPrevented();
+        const visualContentPlaybackIsPrevented =
+          useVisualContentPlaybackIsPrevented();
 
         return (
           <div>
@@ -69,12 +69,12 @@
               <label>
                 <input
                   type="checkbox"
-                  checked={visualAnimationsPrevented}
+                  checked={visualContentPlaybackIsPrevented}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      preventVisualAnimationsPlayback();
+                      preventVisualContentPlayback();
                     } else {
-                      allowVisualAnimationsPlayback();
+                      allowVisualContentPlayback();
                     }
                   }}
                 />
