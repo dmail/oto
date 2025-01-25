@@ -1,21 +1,14 @@
 import { computed, effect, signal } from "@preact/signals";
-import { musicGlobalCurrentVolumeSignal } from "./music_global_volume.js";
+import {
+  musicGlobalCurrentVolumeSignal,
+  musicsAllMutedSignal,
+  musicsAllPausedSignal,
+  playOneAtATimeSignal,
+} from "./music_global_controls.js";
 import { animateNumber } from "/animations/number/animate_number.js";
 import { EASING } from "/animations/utils/easing.js";
 import { documentHiddenSignal } from "/utils/document_visibility.js";
 import { userActivationSignal } from "/utils/user_activation.js";
-
-export const playOneAtATimeSignal = signal(true);
-export const useMultipleMusicPlaybackIsPrevented = () => {
-  return playOneAtATimeSignal.value;
-};
-export const preventMultipleMusicPlayback = () => {
-  playOneAtATimeSignal.value = true;
-};
-
-export const allowMultipleMusicPlayback = () => {
-  playOneAtATimeSignal.value = false;
-};
 
 const fadeInDefaults = {
   duration: 600,
@@ -28,30 +21,6 @@ const fadeOutDefaults = {
 
 const NO_OP = () => {};
 const musicSet = new Set();
-
-// muted/unmuted
-const musicsAllMutedSignal = signal(false);
-export const useMusicsAllMuted = () => {
-  return musicsAllMutedSignal.value;
-};
-export const muteAllMusics = () => {
-  musicsAllMutedSignal.value = true;
-};
-export const unmuteAllMusics = () => {
-  musicsAllMutedSignal.value = false;
-};
-
-// playing/paused
-const musicsAllPausedSignal = signal(false);
-export const useMusicsAllPaused = () => {
-  return musicsAllPausedSignal.value;
-};
-export const pauseAllMusics = () => {
-  musicsAllPausedSignal.value = true;
-};
-export const playAllMusics = () => {
-  musicsAllPausedSignal.value = false;
-};
 
 let activeMusic = null;
 let previousActiveMusic = null;

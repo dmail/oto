@@ -22,23 +22,20 @@ Music volume stays at zero
     <div id="root" style="position: relative"></div>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
+      import { music, useReasonsToBePaused } from "./music.js";
       import {
-        music,
+        useMusicGlobalVolume,
+        setMusicGlobalVolume,
         useMusicsAllMuted,
         muteAllMusics,
         unmuteAllMusics,
         useMusicsAllPaused,
         playAllMusics,
         pauseAllMusics,
-        useReasonsToBePaused,
         useMultipleMusicPlaybackIsPrevented,
         preventMultipleMusicPlayback,
         allowMultipleMusicPlayback,
-      } from "./music.js";
-      import {
-        useMusicGlobalVolume,
-        setMusicGlobalVolume,
-      } from "./music_global_volume.js";
+      } from "./music_global_controls.js";
       import { useVolume, useMuted, usePlaybackState } from "../audio_hooks.js";
       // eslint-disable-next-line no-unused-vars
       import { Checkbox } from "/components/form/checkbox.jsx";
@@ -52,11 +49,11 @@ Music volume stays at zero
         name: "a",
         url: import.meta.resolve("./sky.mp3"),
       });
-      const musicB = music({
-        name: "b",
-        url: import.meta.resolve("./sky.mp3"),
-        volume: 0.5,
-      });
+      // const musicB = music({
+      //   name: "b",
+      //   url: import.meta.resolve("./sky.mp3"),
+      //   volume: 0.5,
+      // });
 
       // eslint-disable-next-line no-unused-vars
       const Music = ({ music }) => {
@@ -252,7 +249,6 @@ Music volume stays at zero
 
             <div style="display: flex; gap: 10px">
               <Music music={musicA} />
-              <Music music={musicB} />
             </div>
           </div>
         );

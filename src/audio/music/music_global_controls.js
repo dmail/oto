@@ -64,7 +64,6 @@ const animateMusicGlobalVolume = (from, to, props) => {
   };
   return globalVolumeAnimation;
 };
-
 effect(() => {
   const musicVolumeBase = musicVolumePreferenceSignal.value;
   const gamePaused = gamePausedSignal.value;
@@ -74,3 +73,39 @@ effect(() => {
     setMusicGlobalVolume(musicVolumeBase, { duration: 3000 });
   }
 });
+
+// mute all musics
+export const musicsAllMutedSignal = signal(false);
+export const useMusicsAllMuted = () => {
+  return musicsAllMutedSignal.value;
+};
+export const muteAllMusics = () => {
+  musicsAllMutedSignal.value = true;
+};
+export const unmuteAllMusics = () => {
+  musicsAllMutedSignal.value = false;
+};
+
+// pause all musics
+export const musicsAllPausedSignal = signal(false);
+export const useMusicsAllPaused = () => {
+  return musicsAllPausedSignal.value;
+};
+export const pauseAllMusics = () => {
+  musicsAllPausedSignal.value = true;
+};
+export const playAllMusics = () => {
+  musicsAllPausedSignal.value = false;
+};
+
+// single playback
+export const playOneAtATimeSignal = signal(true);
+export const useMultipleMusicPlaybackIsPrevented = () => {
+  return playOneAtATimeSignal.value;
+};
+export const preventMultipleMusicPlayback = () => {
+  playOneAtATimeSignal.value = true;
+};
+export const allowMultipleMusicPlayback = () => {
+  playOneAtATimeSignal.value = false;
+};
