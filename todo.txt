@@ -1,13 +1,3 @@
-- dans le music manager faire un test pour le comportement suivant (qui ne marche pas apparement)
-
-- on met une musique
-- on set une anim global volume a 0.2
-- puis on demande a pause la musique (ce qui enclenche un fadeout then pause)
-qui semble conflict avec le global volume
-
-- ptet on devrait pas pause le jeu lorsque le document est hidden aussi
-- quand bien meme faut fix le cas
-
 - consider removing commitStyles, instead we'll explicitely set the from
 everything should still work
 

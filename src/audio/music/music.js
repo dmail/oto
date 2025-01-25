@@ -132,7 +132,7 @@ export const music = ({
         volumeSignal.value = value;
         return;
       }
-      const from = volumeCurrentSignal.value;
+      const from = volumeCurrentSignal.peek();
       const to = value;
       animateVolume({
         from,
