@@ -7,11 +7,15 @@ export const animateNumber = (
   to,
   {
     // step = 0.0000001, // TODO
+    duration,
+    easing,
+    isAudio,
     effect,
     onstart,
     onpause,
     onremove,
     onfinish,
+    autoplay,
   } = {},
 ) => {
   const valueSignal = signal(from);
@@ -20,6 +24,9 @@ export const animateNumber = (
     props: {
       valueSignal,
     },
+    duration,
+    easing,
+    isAudio,
     onstart,
     onpause,
     onremove,
@@ -31,6 +38,7 @@ export const animateNumber = (
         effect(value);
       }
     },
+    autoplay,
   });
   return numberAnimation;
 };

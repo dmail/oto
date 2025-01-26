@@ -101,7 +101,7 @@ export const music = ({
         ...rest,
         effect: (volumeValue) => {
           if (debug) {
-            console.log("set animated volume to", to);
+            console.log("set animated volume to", volumeValue);
           }
           volumeAnimatedSignal.value = volumeValue;
         },
