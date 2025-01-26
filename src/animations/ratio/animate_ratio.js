@@ -10,10 +10,15 @@ export const animateRatio = ({
   duration = 300,
   fps,
   easing,
+  props,
   loop = false,
   isAudio = false,
   onprogress = () => {},
-  ...params
+  autoplay = true,
+  onstart,
+  onpause,
+  onremove,
+  onfinish,
 }) => {
   const ratioAnimation = {
     duration,
@@ -119,12 +124,19 @@ export const animateRatio = ({
     playbackPreventedSignal: isAudio
       ? undefined
       : visualContentPlaybackIsPreventedSignal,
-    ...params,
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
   });
   Object.assign(
     ratioAnimation,
     exposePlaybackControllerProps(playbackController),
+    props,
   );
+  if (autoplay) {
+    ratioAnimation.play();
+  }
   return ratioAnimation;
 };
 const requestAudioAnimationCallback = (callback) => {

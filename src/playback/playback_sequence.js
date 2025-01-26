@@ -1,7 +1,3 @@
-// TODO: we should not use onfinish
-// because it might be overriden from outside
-// we should use a list of listeners
-
 import {
   createPlaybackController,
   exposePlaybackControllerProps,
@@ -9,9 +5,16 @@ import {
 
 export const createPlaybackSequenceController = (
   childCallbacks,
-  { type = "sequence", onbeforestart = () => {}, ...params } = {},
+  {
+    type = "sequence",
+    onbeforestart = () => {},
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
+  } = {},
 ) => {
-  const sequenceController = {};
+  const sequenceFacade = {};
   const sequenceContent = {
     type,
     start: ({ finished, playbackController }) => {
@@ -39,21 +42,21 @@ export const createPlaybackSequenceController = (
           return;
         }
         currentPlaybackController = getNextPlaybackController();
-        currentPlaybackController.onpause = () => {
+        overrideEventCallback(currentPlaybackController, "onpause", () => {
           playbackController.pause();
-        };
-        currentPlaybackController.onplay = () => {
+        });
+        overrideEventCallback(currentPlaybackController, "onplay", () => {
           playbackController.play();
-        };
-        currentPlaybackController.onfinish = () => {
+        });
+        overrideEventCallback(currentPlaybackController, "onfinish", () => {
           const state = playbackController.stateSignal.peek();
           if (state === "running") {
             startNext();
           }
-        };
-        currentPlaybackController.onremove = () => {
+        });
+        overrideEventCallback(currentPlaybackController, "onremove", () => {
           playbackController.remove();
-        };
+        });
       };
       onbeforestart();
       startNext();
@@ -93,11 +96,27 @@ export const createPlaybackSequenceController = (
     },
   };
   const playbackController = createPlaybackController(sequenceContent, {
-    ...params,
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
   });
   Object.assign(
-    sequenceController,
+    sequenceFacade,
     exposePlaybackControllerProps(playbackController),
   );
-  return sequenceController;
+  return sequenceFacade;
+};
+
+const overrideEventCallback = (object, property, callback) => {
+  const oldValue = object[property];
+  object[property] = (...args) => {
+    if (oldValue) {
+      oldValue(...args);
+    }
+    callback(...args);
+  };
+  return () => {
+    object[property] = oldValue;
+  };
 };

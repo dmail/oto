@@ -5,12 +5,10 @@ export const createPlaybackController = (
   content,
   {
     playbackPreventedSignal = signal(false),
-    onstatechange = noop,
     onstart = noop,
     onpause = noop,
     onremove = noop,
     onfinish = noop,
-    autoplay = true,
   } = {},
 ) => {
   // "idle", "running", "paused", "removed", "finished"
@@ -24,12 +22,10 @@ export const createPlaybackController = (
     });
   };
   const cleanupCallbackSet = new Set();
-  const playRequestedSignal = signal(autoplay);
+  const playRequestedSignal = signal(false);
   let resumeMethod;
   const goToState = (newState) => {
-    const currentState = stateSignal.peek();
     stateSignal.value = newState;
-    playbackController.onstatechange(newState, currentState);
     if (newState === "running") {
       playbackController.onstart();
     } else if (newState === "paused") {
@@ -44,13 +40,11 @@ export const createPlaybackController = (
 
   const playbackController = {
     stateSignal,
-    onstatechange,
     onstart,
     onpause,
     onremove,
     onfinish,
     finished: createFinishedPromise(),
-    content,
 
     play: () => {
       playRequestedSignal.value = true;

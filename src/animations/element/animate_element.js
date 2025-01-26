@@ -17,13 +17,17 @@ export const animateElement = (
     playbackRate = 1,
     easing,
     delay,
-    ...params
+    autoplay = true,
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
   },
 ) => {
   const elementAnimation = {};
   const elementAnimationContent = {
     type: "element_animation",
-    start: ({ finished, playbackController }) => {
+    start: ({ finished }) => {
       const fromStep = stepFromAnimationDescription(from);
       const toStep = stepFromAnimationDescription(to);
       const steps = [];
@@ -102,12 +106,18 @@ export const animateElement = (
   };
   const playbackController = createPlaybackController(elementAnimationContent, {
     playbackPreventedSignal: visualContentPlaybackIsPreventedSignal,
-    ...params,
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
   });
   Object.assign(
     elementAnimation,
     exposePlaybackControllerProps(playbackController),
   );
+  if (autoplay) {
+    elementAnimation.play();
+  }
   return elementAnimation;
 };
 

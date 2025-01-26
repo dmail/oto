@@ -7,7 +7,15 @@ import { visualContentPlaybackIsPreventedSignal } from "/playback/visual_content
 
 export const animateFrames = (
   frames,
-  { msBetweenFrames = 350, loop = true, ...params } = {},
+  {
+    msBetweenFrames = 350,
+    loop = true,
+    autoplay = true,
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
+  } = {},
 ) => {
   const frameSignal = signal();
   const frameAnimation = {
@@ -65,11 +73,17 @@ export const animateFrames = (
   };
   const playbackController = createPlaybackController(frameContent, {
     playbackPreventedSignal: visualContentPlaybackIsPreventedSignal,
-    ...params,
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
   });
   Object.assign(
     frameAnimation,
     exposePlaybackControllerProps(playbackController),
   );
+  if (autoplay) {
+    frameAnimation.play();
+  }
   return frameAnimation;
 };
