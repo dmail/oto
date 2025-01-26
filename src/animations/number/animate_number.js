@@ -7,15 +7,15 @@ export const animateNumber = (
   to,
   {
     // step = 0.0000001, // TODO
+    isAudio,
     duration,
     easing,
-    isAudio,
+    autoplay,
     effect,
     onstart,
     onpause,
     onremove,
     onfinish,
-    autoplay,
   } = {},
 ) => {
   const valueSignal = signal(from);

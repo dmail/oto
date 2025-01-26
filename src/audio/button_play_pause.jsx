@@ -2,7 +2,7 @@ import {
   pauseAllMusics,
   playAllMusics,
   useMusicsAllPaused,
-} from "./music/music.js";
+} from "./music/music_global_controls.js";
 import { Box } from "/components/box/box.jsx";
 
 export const ButtonPlayPause = () => {

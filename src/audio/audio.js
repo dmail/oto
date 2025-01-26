@@ -1,5 +1,8 @@
 import { effect, signal } from "@preact/signals";
-import { muteAllMusics, unmuteAllMusics } from "./music/music.js";
+import {
+  muteAllMusics,
+  unmuteAllMusics,
+} from "./music/music_global_controls.js";
 import { muteAllSounds, unmuteAllSounds } from "./sound/sound.js";
 
 const mutedLocalStorageItem = localStorage.getItem("muted");

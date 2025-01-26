@@ -1,3 +1,5 @@
+- BUG: fast leave + back to page and music never starts again
+
 - consider removing commitStyles, instead we'll explicitely set the from
 everything should still work
 

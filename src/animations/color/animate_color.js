@@ -6,7 +6,16 @@ import { WELL_KNOWN_COLORS } from "../utils/well_known_colors.js";
 export const animateColor = (
   fromColor,
   toColor,
-  { effect, onstart, onpause, onremove, onfinish } = {},
+  {
+    duration,
+    easing,
+    autoplay,
+    effect,
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
+  } = {},
 ) => {
   if (typeof fromColor === "string") fromColor = WELL_KNOWN_COLORS[fromColor];
   if (typeof toColor === "string") toColor = WELL_KNOWN_COLORS[toColor];
@@ -21,10 +30,9 @@ export const animateColor = (
     props: {
       colorSignal,
     },
-    onstart,
-    onpause,
-    onremove,
-    onfinish,
+    duration,
+    easing,
+    autoplay,
     effect: (ratio) => {
       r = applyRatioToDiff(rFrom, rTo, ratio);
       g = applyRatioToDiff(gFrom, gTo, ratio);
@@ -35,6 +43,10 @@ export const animateColor = (
         effect(color);
       }
     },
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
   });
   return colorAnimation;
 };

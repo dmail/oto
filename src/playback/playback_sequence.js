@@ -8,6 +8,7 @@ export const createPlaybackSequenceController = (
   {
     type = "sequence",
     onbeforestart = () => {},
+    autoplay = true,
     onstart,
     onpause,
     onremove,
@@ -47,11 +48,19 @@ export const createPlaybackSequenceController = (
           return;
         }
         currentChild = getNextChild();
-        overrideEventCallback(currentChild, "onpause", () => {
+        const state = currentChild.playbackController.stateSignal.peek();
+        if (state === "running") {
+          playbackController.play();
+        } else if (state === "paused") {
           playbackController.pause();
-        });
+        } else if (state === "finished") {
+          startNext();
+        }
         overrideEventCallback(currentChild, "onplay", () => {
           playbackController.play();
+        });
+        overrideEventCallback(currentChild, "onpause", () => {
+          playbackController.pause();
         });
         overrideEventCallback(currentChild, "onfinish", () => {
           const state = playbackController.stateSignal.peek();
@@ -102,6 +111,9 @@ export const createPlaybackSequenceController = (
   };
   const playbackController = createPlaybackController(sequenceContent);
   exposePlaybackControllerProps(playbackController, sequence);
+  if (autoplay) {
+    sequence.play();
+  }
   return sequence;
 };
 

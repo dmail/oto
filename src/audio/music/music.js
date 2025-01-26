@@ -199,7 +199,6 @@ export const music = ({
     let volumeFadeoutThenPauseAnimation = null;
     const handleShouldBePaused = () => {
       if (audio.paused) {
-        console.log("already paused");
         return;
       }
       if (!fadeOut) {
