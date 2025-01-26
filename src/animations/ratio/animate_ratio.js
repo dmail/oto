@@ -22,6 +22,10 @@ export const animateRatio = ({
 }) => {
   const ratioAnimation = {
     duration,
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
   };
   const ratioAnimationContent = {
     type,
@@ -124,16 +128,9 @@ export const animateRatio = ({
     playbackPreventedSignal: isAudio
       ? undefined
       : visualContentPlaybackIsPreventedSignal,
-    onstart,
-    onpause,
-    onremove,
-    onfinish,
   });
-  Object.assign(
-    ratioAnimation,
-    exposePlaybackControllerProps(playbackController),
-    props,
-  );
+  exposePlaybackControllerProps(playbackController, ratioAnimation);
+  Object.assign(ratioAnimation, props);
   if (autoplay) {
     ratioAnimation.play();
   }

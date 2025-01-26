@@ -20,6 +20,10 @@ export const animateFrames = (
   const frameSignal = signal();
   const frameAnimation = {
     frameSignal,
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
   };
   const frameContent = {
     type: "frame_animation",
@@ -73,15 +77,8 @@ export const animateFrames = (
   };
   const playbackController = createPlaybackController(frameContent, {
     playbackPreventedSignal: visualContentPlaybackIsPreventedSignal,
-    onstart,
-    onpause,
-    onremove,
-    onfinish,
   });
-  Object.assign(
-    frameAnimation,
-    exposePlaybackControllerProps(playbackController),
-  );
+  exposePlaybackControllerProps(playbackController, frameAnimation);
   if (autoplay) {
     frameAnimation.play();
   }

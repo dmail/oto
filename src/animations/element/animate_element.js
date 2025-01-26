@@ -24,7 +24,12 @@ export const animateElement = (
     onfinish,
   },
 ) => {
-  const elementAnimation = {};
+  const elementAnimation = {
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
+  };
   const elementAnimationContent = {
     type: "element_animation",
     start: ({ finished }) => {
@@ -106,15 +111,8 @@ export const animateElement = (
   };
   const playbackController = createPlaybackController(elementAnimationContent, {
     playbackPreventedSignal: visualContentPlaybackIsPreventedSignal,
-    onstart,
-    onpause,
-    onremove,
-    onfinish,
   });
-  Object.assign(
-    elementAnimation,
-    exposePlaybackControllerProps(playbackController),
-  );
+  exposePlaybackControllerProps(playbackController, elementAnimation);
   if (autoplay) {
     elementAnimation.play();
   }

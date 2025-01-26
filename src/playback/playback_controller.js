@@ -1,15 +1,10 @@
 import { effect, signal } from "@preact/signals";
 
-const noop = () => {};
+const NOOP = () => {};
+
 export const createPlaybackController = (
   content,
-  {
-    playbackPreventedSignal = signal(false),
-    onstart = noop,
-    onpause = noop,
-    onremove = noop,
-    onfinish = noop,
-  } = {},
+  { playbackPreventedSignal = signal(false) } = {},
 ) => {
   // "idle", "running", "paused", "removed", "finished"
   const stateSignal = signal("idle");
@@ -40,10 +35,10 @@ export const createPlaybackController = (
 
   const playbackController = {
     stateSignal,
-    onstart,
-    onpause,
-    onremove,
-    onfinish,
+    onstart: NOOP,
+    onpause: NOOP,
+    onremove: NOOP,
+    onfinish: NOOP,
     finished: createFinishedPromise(),
 
     play: () => {
@@ -131,8 +126,8 @@ export const createPlaybackController = (
   return playbackController;
 };
 
-export const exposePlaybackControllerProps = (playbackController) => {
-  return {
+export const exposePlaybackControllerProps = (playbackController, object) => {
+  Object.assign(object, {
     playbackController,
     play: playbackController.play,
     pause: playbackController.pause,
@@ -141,6 +136,18 @@ export const exposePlaybackControllerProps = (playbackController) => {
     get finished() {
       return playbackController.finished;
     },
+  });
+  playbackController.onstart = () => {
+    object.onstart?.();
+  };
+  playbackController.onpause = () => {
+    object.onpause?.();
+  };
+  playbackController.onremove = () => {
+    object.onremove?.();
+  };
+  playbackController.onfinish = () => {
+    object.onfinish?.();
   };
 };
 

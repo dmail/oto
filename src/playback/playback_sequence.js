@@ -14,47 +14,52 @@ export const createPlaybackSequenceController = (
     onfinish,
   } = {},
 ) => {
-  const sequenceFacade = {};
+  const sequence = {
+    onstart,
+    onpause,
+    onremove,
+    onfinish,
+  };
   const sequenceContent = {
     type,
-    start: ({ finished, playbackController }) => {
+    start: ({ finished }) => {
       let childIndex;
-      const getNextPlaybackController = () => {
+      const getNextChild = () => {
         const isFirst = childIndex === 0;
         const isLast = childIndex === childCallbacks.length - 1;
         const childCallback = childCallbacks[childIndex];
-        const nextPlaybackController = childCallback({
+        const nextChild = childCallback({
           index: childIndex,
           isFirst,
           isLast,
         });
         // nextAnimation.canPlayWhileGloballyPaused = true; // ensure subanimation cannot play/pause on its own
         childIndex++;
-        return nextPlaybackController;
+        return nextChild;
       };
 
-      let currentPlaybackController;
+      let currentChild;
       childIndex = 0;
       const startNext = () => {
         if (childIndex === childCallbacks.length) {
-          currentPlaybackController = undefined;
+          currentChild = undefined;
           finished();
           return;
         }
-        currentPlaybackController = getNextPlaybackController();
-        overrideEventCallback(currentPlaybackController, "onpause", () => {
+        currentChild = getNextChild();
+        overrideEventCallback(currentChild, "onpause", () => {
           playbackController.pause();
         });
-        overrideEventCallback(currentPlaybackController, "onplay", () => {
+        overrideEventCallback(currentChild, "onplay", () => {
           playbackController.play();
         });
-        overrideEventCallback(currentPlaybackController, "onfinish", () => {
+        overrideEventCallback(currentChild, "onfinish", () => {
           const state = playbackController.stateSignal.peek();
           if (state === "running") {
             startNext();
           }
         });
-        overrideEventCallback(currentPlaybackController, "onremove", () => {
+        overrideEventCallback(currentChild, "onremove", () => {
           playbackController.remove();
         });
       };
@@ -62,50 +67,42 @@ export const createPlaybackSequenceController = (
       startNext();
       return {
         pause: () => {
-          if (currentPlaybackController) {
-            currentPlaybackController.pause();
+          if (currentChild) {
+            currentChild.pause();
             return () => {
-              currentPlaybackController.play();
+              currentChild.play();
             };
           }
           return () => {};
         },
         finish: () => {
-          if (currentPlaybackController) {
-            currentPlaybackController.finish();
+          if (currentChild) {
+            currentChild.finish();
             while (childIndex < childCallbacks.length) {
-              const nextPlaybackController = getNextPlaybackController();
-              nextPlaybackController.finish();
+              const nextChild = getNextChild();
+              nextChild.finish();
             }
-            currentPlaybackController = null;
+            currentChild = null;
           }
         },
         stop: () => {
-          if (currentPlaybackController) {
-            currentPlaybackController.stop();
-            currentPlaybackController = undefined;
+          if (currentChild) {
+            currentChild.stop();
+            currentChild = undefined;
           }
         },
         remove: () => {
-          if (currentPlaybackController) {
-            currentPlaybackController.remove();
-            currentPlaybackController = undefined;
+          if (currentChild) {
+            currentChild.remove();
+            currentChild = undefined;
           }
         },
       };
     },
   };
-  const playbackController = createPlaybackController(sequenceContent, {
-    onstart,
-    onpause,
-    onremove,
-    onfinish,
-  });
-  Object.assign(
-    sequenceFacade,
-    exposePlaybackControllerProps(playbackController),
-  );
-  return sequenceFacade;
+  const playbackController = createPlaybackController(sequenceContent);
+  exposePlaybackControllerProps(playbackController, sequence);
+  return sequence;
 };
 
 const overrideEventCallback = (object, property, callback) => {
