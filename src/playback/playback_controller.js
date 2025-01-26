@@ -133,6 +133,7 @@ export const createPlaybackController = (
 
 export const exposePlaybackControllerProps = (playbackController) => {
   return {
+    playbackController,
     play: playbackController.play,
     pause: playbackController.pause,
     finish: playbackController.finish,

@@ -39,49 +39,53 @@
         update();
       };
 
-      let numberAnimationController;
+      let numberAnimation;
       const playButton = document.querySelector('[name="play"]');
       playButton.onclick = () => {
-        if (!numberAnimationController) {
-          numberAnimationController = animateNumber(from, to, {
+        if (!numberAnimation) {
+          numberAnimation = animateNumber(from, to, {
             duration: 1000,
             fps: 10,
             effect: (value) => {
               document.querySelector("#output").innerHTML +=
                 `${Math.round(value)}<br />`;
             },
+            onfinish: () => {
+              update();
+            },
           });
-          numberAnimationController.onfinish = () => {
-            update();
-          };
         } else {
-          numberAnimationController.play();
+          numberAnimation.play();
         }
         update();
       };
       const pauseButton = document.querySelector('[name="pause"]');
       pauseButton.onclick = () => {
-        numberAnimationController.pause();
+        numberAnimation.pause();
         update();
       };
 
       const update = () => {
-        if (!numberAnimationController) {
+        if (!numberAnimation) {
           playButton.disabled = false;
           pauseButton.disabled = true;
           return;
         }
-        if (numberAnimationController.stateSignal.value === "running") {
+        if (
+          numberAnimation.playbackController.stateSignal.value === "running"
+        ) {
           playButton.disabled = true;
           pauseButton.disabled = false;
           return;
         }
-        if (numberAnimationController.stateSignal.value === "paused") {
+        if (numberAnimation.playbackController.stateSignal.value === "paused") {
           playButton.disabled = false;
           pauseButton.disabled = true;
           return;
         }
-        if (numberAnimationController.stateSignal.value === "finished") {
+        if (
+          numberAnimation.playbackController.stateSignal.value === "finished"
+        ) {
           playButton.disabled = false;
           pauseButton.disabled = true;
           return;

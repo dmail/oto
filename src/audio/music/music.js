@@ -90,6 +90,9 @@ export const music = ({
       onfinish = NO_OP,
       ...rest
     }) => {
+      if (debug) {
+        console.log("animate", from, to);
+      }
       removeVolumeAnimation();
       const volumeAnimation = animateNumber(from, to, {
         // when doc is hidden the browser won't let the animation run
@@ -97,6 +100,9 @@ export const music = ({
         isAudio: true,
         ...rest,
         effect: (volumeValue) => {
+          if (debug) {
+            console.log("set animated volume to", to);
+          }
           volumeAnimatedSignal.value = volumeValue;
         },
         onremove: () => {
@@ -137,18 +143,28 @@ export const music = ({
       value,
       { animated = volumeAnimation, duration = 500 } = {},
     ) => {
-      volumeRequestedSignal.value = value;
+      if (debug) {
+        console.log("set volume", value);
+      }
       removeVolumeAnimation();
       if (!animated) {
+        volumeRequestedSignal.value = value;
         return;
       }
       const from = volumeSignal.peek();
+      volumeRequestedSignal.value = value;
       const to = value;
       animateVolume({
         from,
         to,
         duration,
         easing: EASING.EASE_OUT_EXPO,
+        onremove: () => {
+          volumeAnimatedSignal.value = undefined;
+        },
+        onfinish: () => {
+          volumeAnimatedSignal.value = undefined;
+        },
       });
     };
 
@@ -193,6 +209,7 @@ export const music = ({
     let volumeFadeoutThenPauseAnimation = null;
     const handleShouldBePaused = () => {
       if (audio.paused) {
+        console.log("already paused");
         return;
       }
       if (!fadeOut) {
@@ -209,7 +226,7 @@ export const music = ({
             console.log("remove fadeout then pause -> pause");
           }
           volumeFadeoutThenPauseAnimation = null;
-          audio.pause();
+          // audio.pause();
         },
         onfinish: () => {
           if (debug) {
@@ -247,7 +264,6 @@ export const music = ({
       }
       musicObject.fadeInVolume({
         onstart: async () => {
-          console.log("onstart");
           try {
             await audio.play();
           } catch {}

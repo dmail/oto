@@ -25,20 +25,20 @@
         return stateSignal.value === "running";
       });
       const durationSignal = signal(1000);
-      const ratioAnimationController = animateRatio({
+      const ratioAnimation = animateRatio({
         effect: (ratio) => {
           ratioSignal.value = ratio;
         },
         duration: durationSignal.value,
         autoplay: false,
       });
-      const stateSignal = ratioAnimationController.stateSignal;
+      const stateSignal = ratioAnimation.playbackController.stateSignal;
       const play = () => {
-        ratioAnimationController.content.duration = durationSignal.value;
-        ratioAnimationController.play();
+        ratioAnimation.duration = durationSignal.value;
+        ratioAnimation.play();
       };
       const pause = () => {
-        ratioAnimationController.pause();
+        ratioAnimation.pause();
       };
 
       // eslint-disable-next-line no-unused-vars

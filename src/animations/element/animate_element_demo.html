@@ -17,7 +17,7 @@
       import { computed } from "@preact/signals";
       import { animateElement } from "./animate_element.js";
 
-      const elementAnimationController = animateElement(
+      const elementAnimation = animateElement(
         document.querySelector("#animated_el"),
         {
           from: {
@@ -33,7 +33,7 @@
           autoplay: false,
         },
       );
-      const stateSignal = elementAnimationController.stateSignal;
+      const stateSignal = elementAnimation.playbackController.stateSignal;
       const canPlaySignal = computed(() => {
         return (
           stateSignal.value === "idle" ||
@@ -46,10 +46,10 @@
       });
 
       const play = () => {
-        elementAnimationController.play();
+        elementAnimation.play();
       };
       const pause = () => {
-        elementAnimationController.pause();
+        elementAnimation.pause();
       };
 
       // eslint-disable-next-line no-unused-vars

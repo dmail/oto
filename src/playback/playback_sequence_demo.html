@@ -10,7 +10,7 @@
     <div id="root"></div>
     <script type="module" jsenv-type="module/jsx">
       import { render } from "preact";
-      import { signal, computed } from "@preact/signals";
+      import { signal, computed, effect } from "@preact/signals";
       import { animateRatio } from "/animations/ratio/animate_ratio.js";
       import { createPlaybackSequenceController } from "./playback_sequence.js";
 
@@ -21,47 +21,54 @@
       const secondStepStateSignal = signal("idle");
       const thirdStepStateSignal = signal("idle");
 
-      const sequenceController = createPlaybackSequenceController(
+      const sequence = createPlaybackSequenceController(
         [
           () => {
-            return animateRatio({
+            const firstRatioAnimation = animateRatio({
               effect: (ratio) => {
                 firstStepRatioSignal.value = ratio;
               },
               duration: 1000,
-              onstatechange: (state) => {
-                firstStepStateSignal.value = state;
-              },
             });
+            effect(() => {
+              firstStepStateSignal.value =
+                firstRatioAnimation.playbackController.stateSignal;
+            });
+            return firstRatioAnimation;
           },
           () => {
-            return animateRatio({
+            const secondRatioAnimation = animateRatio({
               effect: (ratio) => {
                 secondStepRatioSignal.value = ratio;
               },
               duration: 1000,
-              onstatechange: (state) => {
-                secondStepStateSignal.value = state;
-              },
             });
+            effect(() => {
+              secondStepStateSignal.value =
+                secondRatioAnimation.playbackController.stateSignal;
+            });
+            return secondRatioAnimation;
           },
           () => {
-            return animateRatio({
+            const thirdAnimation = animateRatio({
               effect: (ratio) => {
                 thirdStepRatioSignal.value = ratio;
               },
               duration: 1000,
-              onstatechange: (state) => {
-                thirdStepStateSignal.value = state;
-              },
             });
+
+            effect(() => {
+              thirdStepStateSignal.value =
+                thirdAnimation.playbackController.stateSignal;
+            });
+            return thirdAnimation;
           },
         ],
         {
           autoplay: false,
         },
       );
-      const stateSignal = sequenceController.stateSignal;
+      const stateSignal = sequence.playbackController.stateSignal;
       const canPlaySignal = computed(() => {
         return (
           stateSignal.value === "idle" ||
@@ -73,10 +80,10 @@
         return stateSignal.value === "running";
       });
       const play = () => {
-        sequenceController.play();
+        sequence.play();
       };
       const pause = () => {
-        sequenceController.pause();
+        sequence.pause();
       };
 
       // eslint-disable-next-line no-unused-vars
