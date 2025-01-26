@@ -1,12 +1,3 @@
-// ok le fix c'est que fadeout ne set pas le volume courant a zéro
-// du coup il revient a 0.2 lorsque le volume global change
-/*
-a priori fadeout on garde le animated volume
-ans mettre a jour le vrai volume
-
-par contre lorsqu'on anime la on met a jour le vrai volume direct
-*/
-
 import { computed, effect, signal } from "@preact/signals";
 import {
   musicGlobalVolumeSignal,
@@ -19,7 +10,7 @@ import { EASING } from "/animations/utils/easing.js";
 import { documentHiddenSignal } from "/utils/document_visibility.js";
 import { userActivationSignal } from "/utils/user_activation.js";
 
-let debug = true;
+let debug = false;
 const fadeInDefaults = {
   duration: 600,
   easing: EASING.EASE_IN_EXPO,
@@ -100,9 +91,6 @@ export const music = ({
         isAudio: true,
         ...rest,
         effect: (volumeValue) => {
-          if (debug) {
-            console.log("set animated volume to", volumeValue);
-          }
           volumeAnimatedSignal.value = volumeValue;
         },
         onremove: () => {
@@ -152,13 +140,15 @@ export const music = ({
         return;
       }
       const from = volumeSignal.peek();
-      volumeRequestedSignal.value = value;
       const to = value;
       animateVolume({
         from,
         to,
         duration,
         easing: EASING.EASE_OUT_EXPO,
+        onstart: () => {
+          volumeRequestedSignal.value = value;
+        },
         onremove: () => {
           volumeAnimatedSignal.value = undefined;
         },

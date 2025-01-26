@@ -32,10 +32,17 @@ export const setMusicGlobalVolume = (
   }
   const from = musicGlobalVolumeSignal.peek();
   const to = value;
-  musicGlobalVolumeRequestedSignal.value = value;
   animateMusicGlobalVolume(from, to, {
     duration,
     easing: EASING.EASE_OUT_EXPO,
+    onstart: () => {
+      // we must wait onstart to set the requested signal
+      // otherwise if musics are reacting to a signal to change volume at the same time
+      // global volume is updated (like document hidden which pause the game)
+      // musics would read global volume "requested" instead of "animated"
+      // (they would fadeout from 0.2 global volume instead of 1)
+      musicGlobalVolumeRequestedSignal.value = value;
+    },
   });
 };
 let removeGlobalVolumeAnimation = NO_OP;
