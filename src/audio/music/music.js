@@ -1,3 +1,12 @@
+// ok le fix c'est que fadeout ne set pas le volume courant a zéro
+// du coup il revient a 0.2 lorsque le volume global change
+/*
+a priori fadeout on garde le animated volume
+ans mettre a jour le vrai volume
+
+par contre lorsqu'on anime la on met a jour le vrai volume direct
+*/
+
 import { computed, effect, signal } from "@preact/signals";
 import {
   musicGlobalCurrentVolumeSignal,
@@ -10,6 +19,7 @@ import { EASING } from "/animations/utils/easing.js";
 import { documentHiddenSignal } from "/utils/document_visibility.js";
 import { userActivationSignal } from "/utils/user_activation.js";
 
+let debug = true;
 const fadeInDefaults = {
   duration: 600,
   easing: EASING.EASE_IN_EXPO,
@@ -54,21 +64,24 @@ export const music = ({
 
   init_volume: {
     const volumeAnimatedSignal = signal();
-    const volumeSignal = signal(volume);
-    const volumeCurrentSignal = computed(() => {
+    const volumeRequestedSignal = signal(volume);
+    const volumeSignal = computed(() => {
       const musicGlobalCurrentVolume = musicGlobalCurrentVolumeSignal.value;
       const volumeAnimated = volumeAnimatedSignal.value;
-      const volume = volumeSignal.value;
+      const volumeRequested = volumeRequestedSignal.value;
       const volumeToSet =
-        volumeAnimated === undefined ? volume : volumeAnimated;
+        volumeAnimated === undefined ? volumeRequested : volumeAnimated;
       const volumeToSetResolved = volumeToSet * musicGlobalCurrentVolume;
+      // if (debug) {
+      //   console.log({ volume, volumeAnimated, volumeToSetResolved });
+      // }
       return volumeToSetResolved;
     });
 
     let removeVolumeAnimation = NO_OP;
     const animateVolume = ({
-      from = volumeCurrentSignal.peek(),
-      to = volumeSignal.peek(),
+      from,
+      to,
       onremove = NO_OP,
       onfinish = NO_OP,
       ...rest
@@ -83,13 +96,11 @@ export const music = ({
           volumeAnimatedSignal.value = volumeValue;
         },
         onremove: () => {
-          volumeAnimatedSignal.value = undefined;
           removeVolumeAnimation = NO_OP;
           onremove();
         },
         onfinish: () => {
           removeVolumeAnimation = NO_OP;
-          volumeAnimatedSignal.value = undefined;
           onfinish();
         },
       });
@@ -99,35 +110,52 @@ export const music = ({
       return volumeAnimation;
     };
 
+    const fadeInVolume = () => {
+      return animateVolume({
+        ...fadeInDefaults,
+        ...fadeIn,
+        from: 0,
+        to: volumeRequestedSignal.peek(),
+      });
+    };
+    const fadeOutVolume = () => {
+      return animateVolume({
+        ...fadeOutDefaults,
+        ...fadeOut,
+        from: volumeSignal.peek(),
+        to: 0,
+      });
+    };
+
     effect(() => {
-      const volumeCurrent = volumeCurrentSignal.value;
+      const volumeCurrent = volumeSignal.value;
       audio.volume = volumeCurrent;
     });
     const setVolume = (
       value,
       { animated = volumeAnimation, duration = 500 } = {},
     ) => {
+      volumeRequestedSignal.value = value;
       removeVolumeAnimation();
       if (!animated) {
-        volumeSignal.value = value;
         return;
       }
-      const from = volumeCurrentSignal.peek();
+      const from = volumeSignal.peek();
       const to = value;
       animateVolume({
         from,
         to,
         duration,
         easing: EASING.EASE_OUT_EXPO,
-        onstart: () => {
-          volumeCurrentSignal.value = to;
-        },
       });
     };
 
     Object.assign(musicObject, {
+      volumeSignal,
+      volumeRequestedSignal,
       setVolume,
-      animateVolume,
+      fadeInVolume,
+      fadeOutVolume,
       removeVolumeAnimation: () => {
         removeVolumeAnimation();
       },
@@ -169,17 +197,22 @@ export const music = ({
         audio.pause();
         return;
       }
+      if (debug) {
+        console.log("start fadeout then pause");
+      }
       // volume fadeout then pause
-      volumeFadeoutThenPauseAnimation = musicObject.animateVolume({
-        ...fadeOutDefaults,
-        ...fadeOut,
-        from: undefined,
-        to: 0,
+      volumeFadeoutThenPauseAnimation = musicObject.fadeOutVolume({
         onremove: () => {
+          if (debug) {
+            console.log("remove fadeout then pause -> pause");
+          }
           volumeFadeoutThenPauseAnimation = null;
           audio.pause();
         },
         onfinish: () => {
+          if (debug) {
+            console.log("finish fadeout -> pause");
+          }
           volumeFadeoutThenPauseAnimation = null;
           audio.pause();
         },
@@ -210,11 +243,7 @@ export const music = ({
         } catch {}
         return;
       }
-      musicObject.animateVolume({
-        ...fadeInDefaults,
-        ...fadeIn,
-        from: 0,
-        to: undefined,
+      musicObject.fadeInVolume({
         onstart: async () => {
           try {
             await audio.play();
