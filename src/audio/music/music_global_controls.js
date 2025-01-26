@@ -7,16 +7,16 @@ import { gamePausedSignal } from "/game_pause/game_pause.js";
 const NO_OP = () => {};
 
 // global volume
-const musicGlobalVolumeSignal = signal(1);
+const musicGlobalVolumeRequestedSignal = signal(1);
 const musicGlobalVolumeAnimatedSignal = signal();
-export const musicGlobalCurrentVolumeSignal = computed(() => {
+export const musicGlobalVolumeSignal = computed(() => {
   const musicGlobalVolumeAnimated = musicGlobalVolumeAnimatedSignal.value;
-  const musicGlobalVolume = musicGlobalVolumeSignal.value;
-  const musicGlobalCurrentVolume =
+  const musicGlobalVolumeRequested = musicGlobalVolumeRequestedSignal.value;
+  const musicGlobalVolume =
     musicGlobalVolumeAnimated === undefined
-      ? musicGlobalVolume
+      ? musicGlobalVolumeRequested
       : musicGlobalVolumeAnimated;
-  return musicGlobalCurrentVolume;
+  return musicGlobalVolume;
 });
 export const useMusicGlobalVolume = () => {
   return musicGlobalVolumeSignal.value;
@@ -27,12 +27,12 @@ export const setMusicGlobalVolume = (
 ) => {
   removeGlobalVolumeAnimation();
   if (!animate) {
-    musicGlobalVolumeSignal.value = value;
+    musicGlobalVolumeRequestedSignal.value = value;
     return;
   }
-  const from = musicGlobalCurrentVolumeSignal.peek();
+  const from = musicGlobalVolumeSignal.peek();
   const to = value;
-  musicGlobalVolumeSignal.value = value;
+  musicGlobalVolumeRequestedSignal.value = value;
   animateMusicGlobalVolume(from, to, {
     duration,
     easing: EASING.EASE_OUT_EXPO,

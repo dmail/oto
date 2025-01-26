@@ -9,7 +9,7 @@ par contre lorsqu'on anime la on met a jour le vrai volume direct
 
 import { computed, effect, signal } from "@preact/signals";
 import {
-  musicGlobalCurrentVolumeSignal,
+  musicGlobalVolumeSignal,
   musicsAllMutedSignal,
   musicsAllPausedSignal,
   playOneAtATimeSignal,
@@ -66,12 +66,12 @@ export const music = ({
     const volumeAnimatedSignal = signal();
     const volumeRequestedSignal = signal(volume);
     const volumeSignal = computed(() => {
-      const musicGlobalCurrentVolume = musicGlobalCurrentVolumeSignal.value;
+      const musicGlobalVolume = musicGlobalVolumeSignal.value;
       const volumeAnimated = volumeAnimatedSignal.value;
       const volumeRequested = volumeRequestedSignal.value;
       const volumeToSet =
         volumeAnimated === undefined ? volumeRequested : volumeAnimated;
-      const volumeToSetResolved = volumeToSet * musicGlobalCurrentVolume;
+      const volumeToSetResolved = volumeToSet * musicGlobalVolume;
       // if (debug) {
       //   console.log({ volume, volumeAnimated, volumeToSetResolved });
       // }
