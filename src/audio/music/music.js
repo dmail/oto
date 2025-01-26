@@ -77,6 +77,10 @@ export const music = ({
       // }
       return volumeToSetResolved;
     });
+    effect(() => {
+      const volume = volumeSignal.value;
+      audio.volume = volume;
+    });
 
     let removeVolumeAnimation = NO_OP;
     const animateVolume = ({
@@ -110,27 +114,25 @@ export const music = ({
       return volumeAnimation;
     };
 
-    const fadeInVolume = () => {
+    const fadeInVolume = (params) => {
       return animateVolume({
         ...fadeInDefaults,
         ...fadeIn,
         from: 0,
         to: volumeRequestedSignal.peek(),
+        ...params,
       });
     };
-    const fadeOutVolume = () => {
+    const fadeOutVolume = (params) => {
       return animateVolume({
         ...fadeOutDefaults,
         ...fadeOut,
         from: volumeSignal.peek(),
         to: 0,
+        ...params,
       });
     };
 
-    effect(() => {
-      const volumeCurrent = volumeSignal.value;
-      audio.volume = volumeCurrent;
-    });
     const setVolume = (
       value,
       { animated = volumeAnimation, duration = 500 } = {},
@@ -245,6 +247,7 @@ export const music = ({
       }
       musicObject.fadeInVolume({
         onstart: async () => {
+          console.log("onstart");
           try {
             await audio.play();
           } catch {}
