@@ -1,7 +1,3 @@
-
-
-
-
 --- GAME ---
 
 - le bouton pause ouvre les options de gestions du sons (et autre plus tard)
