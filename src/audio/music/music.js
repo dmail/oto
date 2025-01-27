@@ -94,6 +94,7 @@ export const music = ({
           volumeAnimatedSignal.value = volumeValue;
         },
         onremove: () => {
+          volumeAnimatedSignal.value = undefined;
           removeVolumeAnimation = NO_OP;
           onremove();
         },

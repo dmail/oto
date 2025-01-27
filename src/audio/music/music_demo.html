@@ -1,15 +1,3 @@
-<!-- 
-TO FIX:
-1. Play a music
-2. Click simulate document hidden
-Actual
-Music drops quickly to zero
-Then drop back to 0.2
-Expected
-Music volume drops to zero slowly
-Music volume stays at zero
--->
-
 <!doctype html>
 <html lang="en">
   <head>
@@ -242,7 +230,18 @@ Music volume stays at zero
                     }, 200);
                   }}
                 >
-                  repro fast leave back to page
+                  fast pause play all
+                </button>
+
+                <button
+                  onClick={() => {
+                    simulateDocumentHidden();
+                    setTimeout(() => {
+                      simulateDocumentVisible();
+                    }, 200);
+                  }}
+                >
+                  fast leave back to page
                 </button>
               </fieldset>
             </div>
