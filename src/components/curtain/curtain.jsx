@@ -19,14 +19,15 @@ export const Curtain = forwardRef((props, ref) => {
       fadeIn: async ({ color = "black", toOpacity = 1 } = {}) => {
         const canvas = innerRef.current;
         drawCurtain(canvas, { color, opacity: 1 });
+        canvas.style.display = "block";
         await animateElement(canvas, {
           to: { opacity: toOpacity },
-        });
+        }).finished;
       },
       fadeOut: async ({ toOpacity = 0 } = {}) => {
         await animateElement(innerRef.current, {
-          to: { opacity: toOpacity },
-        });
+          to: { opacity: toOpacity, display: "none" },
+        }).finished;
       },
     };
   });

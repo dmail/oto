@@ -14,6 +14,7 @@ export const animateElement = (
     duration = 500,
     iterations = 1,
     fill = "forwards",
+    commit,
     playbackRate = 1,
     easing,
     delay,
@@ -69,14 +70,16 @@ export const animateElement = (
       }
       webAnimation.onfinish = () => {
         if (toStep) {
-          try {
-            webAnimation.commitStyles();
-          } catch (e) {
-            console.error(
-              `Error during "commitStyles" on animation "${id}"`,
-              element.style.display,
-            );
-            console.error(e);
+          if (commit) {
+            try {
+              webAnimation.commitStyles();
+            } catch (e) {
+              console.error(
+                `Error during "commitStyles" on animation "${id}"`,
+                element.style.display,
+              );
+              console.error(e);
+            }
           }
         }
         if (shouldDisplay) {
