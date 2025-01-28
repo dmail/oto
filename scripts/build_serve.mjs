@@ -3,8 +3,8 @@
  * Read more in https://github.com/jsenv/core
  */
 
-import open from "open";
 import { startBuildServer } from "@jsenv/core";
+import open from "open";
 
 const buildServer = await startBuildServer({
   buildDirectoryUrl: new URL("../dist/", import.meta.url),
