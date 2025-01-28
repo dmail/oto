@@ -19,5 +19,9 @@ await build({
       },
     },
   },
+  runtimeCompat: {
+    chrome: "100",
+  },
+  minification: false,
   plugins: [jsenvPluginPreact()],
 });
