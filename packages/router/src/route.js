@@ -21,7 +21,7 @@ const buildUrlFromDocument = (build) => {
 
 const routeSet = new Set();
 let fallbackRoute;
-const createRoute = (name, { urlTemplate, load = () => {} }) => {
+const createRoute = (name, { urlTemplate, load = () => {} } = {}) => {
   const documentRootUrl = new URL("/", window.location.origin);
   const routeUrlInstance = new URL(urlTemplate, documentRootUrl);
 
@@ -207,7 +207,7 @@ export const applyRouting = async ({ url, state, signal }) => {
       }
       activeRouteSet.add(routeToEnter);
       routeToEnter.onEnter();
-      const loadPromise = routeToEnter.load({ signal });
+      const loadPromise = Promise.resolve(routeToEnter.load({ signal }));
       loadPromise.then(
         () => {
           routeToEnter.onLoadEnd();
