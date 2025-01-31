@@ -1,4 +1,5 @@
 import { effect, signal } from "@preact/signals";
+import { userActivationSignal } from "/utils/user_activation.js";
 
 const soundsAllMutedSignal = signal(false);
 export const useSoundsAllMuted = () => {
@@ -61,7 +62,8 @@ export const sound = ({
     };
     effect(() => {
       const playRequested = playRequestedSignal.value;
-      if (playRequested) {
+      const userActivation = userActivationSignal.value;
+      if (playRequested && userActivation !== "inactive") {
         if (restartOnPlay) {
           audio.currentTime = startTime;
         }
