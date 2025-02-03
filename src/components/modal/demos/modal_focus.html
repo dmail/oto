@@ -33,7 +33,13 @@ This scenario is to test
           openedSetter(false);
         };
 
-        // TODO: a second dialog with focusable elements
+        const [secondOpened, secondOpenedSetter] = useState(false);
+        const openSecondDialog = () => {
+          secondOpenedSetter(true);
+        };
+        const closeSecondDialog = () => {
+          secondOpenedSetter(false);
+        };
 
         return (
           <>
@@ -42,10 +48,18 @@ This scenario is to test
                 openDialog();
               }}
             >
-              Open dialog
+              Open text only modal
             </button>
             <Modal opened={opened} onRequestClose={closeDialog}>
               Hello world
+            </Modal>
+
+            <button onClick={openSecondDialog}>
+              Open modal containing focusable elements
+            </button>
+            <Modal opened={secondOpened} onRequestClose={closeSecondDialog}>
+              <button>A</button>
+              <button>B</button>
             </Modal>
           </>
         );
