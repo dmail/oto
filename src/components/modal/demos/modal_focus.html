@@ -1,0 +1,57 @@
+<!--
+
+This scenario is to test
+1. escape can be used to close modal even when it does not have focusable elements
+2. focus is trapped inside the modal 
+
+-->
+
+<!doctype html>
+<html>
+  <head>
+    <title>Modal focus demo</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+  </head>
+
+  <body>
+    <div id="app"></div>
+    <script type="module" jsenv-type="module/jsx">
+      import { render } from "preact";
+      import { useState } from "preact/hooks";
+      // eslint-disable-next-line no-unused-vars
+      import { Modal } from "../modal.jsx";
+
+      // eslint-disable-next-line no-unused-vars
+      const App = () => {
+        const [opened, openedSetter] = useState(false);
+        const openDialog = () => {
+          openedSetter(true);
+        };
+        const closeDialog = () => {
+          openedSetter(false);
+        };
+
+        // TODO: a second dialog with focusable elements
+
+        return (
+          <>
+            <button
+              onClick={() => {
+                openDialog();
+              }}
+            >
+              Open dialog
+            </button>
+            <Modal opened={opened} onRequestClose={closeDialog}>
+              Hello world
+            </Modal>
+          </>
+        );
+      };
+
+      render(<App />, document.querySelector("#app"));
+    </script>
+  </body>
+</html>

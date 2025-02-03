@@ -3,6 +3,7 @@ import {
   findFirstDescendant,
   getAncestorScrolls,
   setAttributes,
+  trapFocusInside,
   trapScrollInside,
 } from "dom";
 import { createPortal } from "preact/compat";
@@ -19,12 +20,14 @@ const ModalOpened = ({
   height,
   container = document.body,
   children,
-  requestCloseOnClickOutside = true,
   onRequestClose = () => {},
+  requestCloseOnClickOutside = true,
+  requestCloseOnEscape = true,
   insert = {},
   backgroundColor = "white",
   onFocusIn = () => {},
   onFocusOut = () => {},
+  onKeyDown = () => {},
 }) => {
   const modalRef = useRef();
 
@@ -150,8 +153,10 @@ const ModalOpened = ({
     const nodeFocusedBeforeTransfer = document.activeElement;
     const firstFocusableElementOrSelf = getFirstFocusableElementOrSelf();
     firstFocusableElementOrSelf.focus({ preventScroll: true });
+    const removeFocusTrap = trapFocusInside(modalRef.current);
     return () => {
       nodeFocusedBeforeTransfer.focus({ preventScroll: true });
+      removeFocusTrap();
     };
   }, []);
 
@@ -162,6 +167,14 @@ const ModalOpened = ({
       role="dialog"
       className="modal"
       tabIndex="-1"
+      onKeyDown={(keydownEvent) => {
+        if (requestCloseOnEscape && keydownEvent.key === "Escape") {
+          keydownEvent.stopPropagation();
+          keydownEvent.preventDefault();
+          onRequestClose(keydownEvent);
+        }
+        onKeyDown(keydownEvent);
+      }}
     >
       <div
         className="modal_backdrop"
