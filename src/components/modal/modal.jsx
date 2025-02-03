@@ -1,5 +1,5 @@
 import { createPortal } from "preact/compat";
-import { useLayoutEffect, useRef } from "preact/hooks";
+import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { findFirstDescendant } from "./dom_traversal.js";
 import { isFocusable } from "./focus_management.js";
 import { Inserts } from "./inserts.jsx";
@@ -15,8 +15,14 @@ const ModalOpened = ({
   onRequestClose = () => {},
   insert = {},
   backgroundColor = "white",
+  onFocusIn = () => {},
+  onFocusOut = () => {},
 }) => {
   const modalRef = useRef();
+
+  /**
+   * Display the modal where document scroll is + trap scroll inside
+   */
   useLayoutEffect(() => {
     const modal = modalRef.current;
     const { scrollX, scrollY } = getAncestorScrolls(modal);
@@ -24,6 +30,116 @@ const ModalOpened = ({
     modal.style.top = `${scrollY}px`;
     return trapScrollInside(modal);
   }, [container]);
+
+  /**
+   * Put aria-hidden on elements behind this dialog
+   *
+   * we hide previous and next siblings
+   * because when opened everything around it should be considered
+   * hidden (you cannot have several modal visible at the same time).
+   * Let's keep in mind we are talking about a dialog in accessibility terms.
+   * It should focus trap, prevent interaction with the rest of the page
+   * and consider the rest as hidden.
+   * This is not meant to be used for tooltip and so on.
+   */
+  useLayoutEffect(() => {
+    const modal = modalRef.current;
+    const parentChildren = Array.from(modal.parentNode.children);
+    const siblings = [];
+    for (const childCandidate of parentChildren) {
+      if (childCandidate !== modal) {
+        siblings.push(childCandidate);
+      }
+    }
+    const cleanupCallbackSet = new Set();
+    const hideElement = (el) => {
+      el.setAttribute("aria-hidden", "true");
+      cleanupCallbackSet.add(() => {
+        el.removeAttribute("aria-hidden", "true");
+      });
+    };
+    for (const sibling of siblings) {
+      hideElement(sibling);
+    }
+    return () => {
+      for (const cleanupCallback of cleanupCallbackSet) {
+        cleanupCallback();
+      }
+      cleanupCallbackSet.clear();
+    };
+  }, []);
+
+  const getFirstFocusableElementOrSelf = () => {
+    const modal = modalRef.current;
+    const firstFocusableDescendant = findFirstDescendant(modal, isFocusable);
+    if (firstFocusableDescendant) {
+      return firstFocusableDescendant;
+    }
+    return modal;
+  };
+
+  /**
+   * focusin/focusout
+   */
+  const [focusIsInside, focusIsInsideSetter] = useState(false);
+  const focusInsideEffect = () => {
+    focusIsInsideRef.current = true;
+    focusIsInsideSetter(true);
+  };
+  const focusOutsideEffect = () => {
+    focusIsInsideRef.current = false;
+    focusIsInsideSetter(false);
+  };
+  const focusIsInsideRef = useRef(false);
+  useLayoutEffect(() => {
+    const modal = modalRef.current;
+
+    if (hasOrContainsFocus(modal)) {
+      focusInsideEffect();
+    }
+    const onDocumentBlur = (blurEvent) => {
+      // focus is leaving the document and it was inside
+      if (!blurEvent.relatedTarget) {
+        if (hasOrContainsFocus(modal)) {
+          focusOutsideEffect();
+          onFocusOut(blurEvent);
+        }
+      }
+    };
+    const onInnerFocus = (focusEvent) => {
+      focusInsideEffect();
+      onFocusIn(focusEvent);
+    };
+    const onDocumentFocus = (focusEvent) => {
+      if (hasOrContainsFocus(modal)) {
+        focusInsideEffect();
+      } else {
+        focusOutsideEffect();
+        onFocusOut(focusEvent);
+      }
+    };
+
+    modal.addEventListener("focus", onInnerFocus, true);
+    document.addEventListener("focus", onDocumentFocus, true);
+    document.addEventListener("blur", onDocumentBlur, true);
+    return () => {
+      modal.removeEventListener("focus", onInnerFocus, true);
+      document.removeEventListener("focus", onDocumentFocus, true);
+      document.removeEventListener("blur", onDocumentBlur, true);
+    };
+  }, []);
+
+  /**
+   * Steal focus when opens, restore when closes + trap focus
+   */
+  useLayoutEffect(() => {
+    const nodeFocusedBeforeTransfer = document.activeElement;
+    const firstFocusableElementOrSelf = getFirstFocusableElementOrSelf();
+    firstFocusableElementOrSelf.focus({ preventScroll: true });
+    return () => {
+      nodeFocusedBeforeTransfer.focus({ preventScroll: true });
+    };
+  }, []);
 
   return createPortal(
     <div
@@ -69,6 +185,7 @@ const ModalOpened = ({
           height="200"
           overflow="auto"
           overscrollBehavior="contain"
+          focused={true}
         >
           <Inserts {...insert}>
             <div className="modal_scrollable_content">{children}</div>

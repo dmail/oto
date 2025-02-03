@@ -8,6 +8,7 @@ export const trapScrollInside = (element) => {
   const cleanupCallbackSet = new Set();
   const lockScroll = (el) => {
     const [scrollbarWidth, scrollbarHeight] = mesureScrollbar(el);
+    // scrollbar-gutter would work but would display an empty blank space
     const paddingRight = parseInt(getStyleValue(el, "padding-right"), 0);
     const paddingTop = parseInt(getStyleValue(el, "padding-top"), 0);
     const removeScrollLockStyles = setStyles(el, {
