@@ -290,7 +290,7 @@ export const Fight = ({ onFightEnd }) => {
           />
         </Box>
         <Box name="front_line" width="100%" height="10%"></Box>
-        <Box name="allies_box" height="10%" width="100%">
+        <Box name="allies_box" height="15%" width="100%">
           <Ally ref={heroRef} />
         </Box>
         <Box name="bottom_ui" width="100%" height="...">

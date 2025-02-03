@@ -4,7 +4,7 @@ import { animateDamageDisplay } from "/animations/damage/damage.js";
 import { animateElement } from "/animations/element/animate_element.js";
 import { animateRecoilAfterHit } from "/animations/recoil_after_hit.js";
 import { Box } from "/components/box/box.jsx";
-import { Benjamin } from "/components/character/benjamin.jsx";
+import { Oto } from "/components/character/oto.jsx";
 import { Digits } from "/components/text/digits.jsx";
 
 export const Ally = forwardRef((props, ref) => {
@@ -49,7 +49,7 @@ export const Ally = forwardRef((props, ref) => {
 
   return (
     <Box name="ally_box" ratio="1/1" height="100%" x="center">
-      <Benjamin ref={elementRef} direction="top" activity="walking" />
+      <Oto ref={elementRef} direction="top" activity="walking" />
       <Box
         ref={digitsElementRef}
         name="digits_box"
