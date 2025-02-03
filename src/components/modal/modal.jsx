@@ -100,10 +100,10 @@ const ModalOpened = ({
     const onDocumentBlur = (blurEvent) => {
       // focus is leaving the document and it was inside
       if (!blurEvent.relatedTarget) {
-        if (hasOrContainsFocus(modal)) {
-          focusOutsideEffect();
+        if (focusIsInsideRef.current) {
           onFocusOut(blurEvent);
         }
+        focusOutsideEffect();
       }
     };
     const onInnerFocus = (focusEvent) => {
@@ -111,7 +111,7 @@ const ModalOpened = ({
       onFocusIn(focusEvent);
     };
     const onDocumentFocus = (focusEvent) => {
-      if (hasOrContainsFocus(modal)) {
+      if (focusIsInsideRef.current) {
         focusInsideEffect();
       } else {
         focusOutsideEffect();
@@ -181,11 +181,9 @@ const ModalOpened = ({
           backgroundColor={backgroundColor}
           x="center"
           y="center"
-          width="400"
+          width="420"
           height="200"
-          overflow="auto"
-          overscrollBehavior="contain"
-          focused={true}
+          focused={focusIsInside}
         >
           <Inserts {...insert}>
             <div className="modal_scrollable_content">{children}</div>
