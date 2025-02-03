@@ -2,6 +2,7 @@ import {
   elementIsFocusable,
   findFirstDescendant,
   getAncestorScrolls,
+  setAttributes,
   trapScrollInside,
 } from "dom";
 import { createPortal } from "preact/compat";
@@ -60,9 +61,12 @@ const ModalOpened = ({
     }
     const cleanupCallbackSet = new Set();
     const hideElement = (el) => {
-      el.setAttribute("aria-hidden", "true");
+      const removeAriaHidden = setAttributes(el, {
+        "aria-hidden": "true",
+      });
+
       cleanupCallbackSet.add(() => {
-        el.removeAttribute("aria-hidden", "true");
+        removeAriaHidden();
       });
     };
     for (const sibling of siblings) {
