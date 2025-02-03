@@ -20,9 +20,8 @@ const ModalOpened = ({
   useLayoutEffect(() => {
     const modal = modalRef.current;
     const { scrollX, scrollY } = getAncestorScrolls(modal);
-    modal.style.top = `${scrollX}px`;
-    modal.style.left = `${scrollY}px`;
-
+    modal.style.left = `${scrollX}px`;
+    modal.style.top = `${scrollY}px`;
     return trapScrollInside(modal);
   }, [container]);
 
