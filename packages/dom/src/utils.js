@@ -1,37 +1,6 @@
 // https://github.com/davidtheclark/tabbable/blob/master/index.js
 export const isDocumentElement = (node) =>
   node === node.ownerDocument.documentElement;
-export const getStyle = (element) =>
-  elementToOwnerWindow(element).getComputedStyle(element);
-export const getStyleValue = (element, name) =>
-  getStyle(element).getPropertyValue(name);
-export const setStyle = (element, name, value) => {
-  const prevValue = element.style[name];
-  if (prevValue) {
-    element.style.setProperty(name, value);
-    return () => {
-      element.style.setProperty(name, prevValue);
-    };
-  }
-  element.style.setProperty(name, value);
-  return () => {
-    element.style.removeProperty(name);
-  };
-};
-export const setStyles = (element, styleDescription) => {
-  const cleanupCallbackSet = new Set();
-  for (const name of Object.keys(styleDescription)) {
-    const value = styleDescription[name];
-    const removeStyle = setStyle(element, name, value);
-    cleanupCallbackSet.add(removeStyle);
-  }
-  return () => {
-    for (const cleanupCallback of cleanupCallbackSet) {
-      cleanupCallback();
-    }
-    cleanupCallbackSet.clear();
-  };
-};
 
 /**
  * elementToOwnerWindow returns the window owning the element.

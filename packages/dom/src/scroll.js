@@ -1,4 +1,5 @@
-import { getStyleValue, isDocumentElement, setStyles } from "./dom_util.js";
+import { getStyle, setStyles } from "./style_and_attributes.js";
+import { isDocumentElement } from "./utils.js";
 
 export const getScrollLeftAndTop = (element) => {
   return [element.scrollLeft, element.scrollTop];
@@ -9,8 +10,8 @@ export const trapScrollInside = (element) => {
   const lockScroll = (el) => {
     const [scrollbarWidth, scrollbarHeight] = mesureScrollbar(el);
     // scrollbar-gutter would work but would display an empty blank space
-    const paddingRight = parseInt(getStyleValue(el, "padding-right"), 0);
-    const paddingTop = parseInt(getStyleValue(el, "padding-top"), 0);
+    const paddingRight = parseInt(getStyle(el, "padding-right"), 0);
+    const paddingTop = parseInt(getStyle(el, "padding-top"), 0);
     const removeScrollLockStyles = setStyles(el, {
       "padding-right": `${paddingRight + scrollbarWidth}px`,
       "padding-top": `${paddingTop + scrollbarHeight}px`,
@@ -45,7 +46,7 @@ export const trapScrollInside = (element) => {
 };
 
 // https://davidwalsh.name/detect-scrollbar-width
-const mesureScrollbar = (scrollableElement) => {
+export const mesureScrollbar = (scrollableElement) => {
   const hasXScrollbar =
     scrollableElement.scrollHeight > scrollableElement.clientHeight;
   const hasYScrollbar =
@@ -98,7 +99,7 @@ const getScrollableParent = (arg) => {
   if (element === document.documentElement) {
     return null;
   }
-  const position = getStyleValue(element, "position");
+  const position = getStyle(element, "position");
 
   if (position === "fixed") {
     return getScrollingElement(element.ownerDocument);
@@ -165,7 +166,7 @@ const bodyIsScrollable = (body) => {
 };
 
 const isHidden = (element) => {
-  const display = getStyleValue(element, "display");
+  const display = getStyle(element, "display");
   if (display === "none") {
     return false;
   }
@@ -175,7 +176,7 @@ const isHidden = (element) => {
     display === "table-group" ||
     display === "table-column"
   ) {
-    return getStyleValue(element, "visibility") !== "collapsed";
+    return getStyle(element, "visibility") !== "collapsed";
   }
 
   return true;
@@ -220,37 +221,34 @@ const isScrollable = (element) => {
 };
 
 const verticalOverflowIsVisible = (element) => {
-  const verticalOverflow = getStyleValue(element, "overflow-x");
+  const verticalOverflow = getStyle(element, "overflow-x");
   if (verticalOverflow === "visible") {
     return true;
   }
 
-  const overflow = getStyleValue(element, "overflow");
+  const overflow = getStyle(element, "overflow");
   return overflow === "visible";
 };
 
 const horizontalOverflowIsVisible = (element) => {
-  const horizontalOverflow = getStyleValue(element, "overflow-y");
+  const horizontalOverflow = getStyle(element, "overflow-y");
   if (horizontalOverflow === "visible") {
     return true;
   }
-  const overflow = getStyleValue(element, "overflow");
+  const overflow = getStyle(element, "overflow");
   return overflow === "visible";
 };
 
 const findScrollableParent = (element) => {
   if (element === document.documentElement) return null;
 
-  const position = getStyleValue(element, "position");
+  const position = getStyle(element, "position");
   let parent = element.parentNode;
   while (parent) {
     if (isDocumentElement(parent)) {
       return null;
     }
-    if (
-      position === "absolute" &&
-      getStyleValue(parent, "position") === "static"
-    ) {
+    if (position === "absolute" && getStyle(parent, "position") === "static") {
       parent = parent.parentNode;
       continue;
     }

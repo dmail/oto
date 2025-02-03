@@ -1,10 +1,13 @@
+import {
+  elementIsFocusable,
+  findFirstDescendant,
+  getAncestorScrolls,
+  trapScrollInside,
+} from "dom";
 import { createPortal } from "preact/compat";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
-import { findFirstDescendant } from "./dom_traversal.js";
-import { isFocusable } from "./focus_management.js";
 import { Inserts } from "./inserts.jsx";
 import modalStyleSheet from "./modal.css" with { type: "css" };
-import { getAncestorScrolls, trapScrollInside } from "./scroll_management.js";
 import { Box } from "/components/box/box.jsx";
 
 const ModalOpened = ({
@@ -75,7 +78,10 @@ const ModalOpened = ({
 
   const getFirstFocusableElementOrSelf = () => {
     const modal = modalRef.current;
-    const firstFocusableDescendant = findFirstDescendant(modal, isFocusable);
+    const firstFocusableDescendant = findFirstDescendant(
+      modal,
+      elementIsFocusable,
+    );
     if (firstFocusableDescendant) {
       return firstFocusableDescendant;
     }
@@ -161,15 +167,9 @@ const ModalOpened = ({
           // 2. transfer focus to the modal content is not already inside
           const modalNode = modalRef.current;
           if (!hasOrContainsFocus(modalNode)) {
-            const firstFocusableDescendant = findFirstDescendant(
-              modalNode,
-              isFocusable,
-            );
-            if (firstFocusableDescendant) {
-              firstFocusableDescendant.focus({ preventScroll: true });
-            } else {
-              modalNode.focus({ preventScroll: true });
-            }
+            const firstFocusableElementOrSelf =
+              getFirstFocusableElementOrSelf();
+            firstFocusableElementOrSelf.focus({ preventScroll: true });
           }
         }}
         onClick={(clickEvent) => {

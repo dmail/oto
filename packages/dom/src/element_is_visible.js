@@ -1,10 +1,11 @@
-import { getStyleValue, isDocumentElement } from "./dom_util.js";
+import { getStyle } from "./style_and_attributes.js";
+import { isDocumentElement } from "./utils.js";
 
-export const isVisible = (node) => {
+export const elementIsVisible = (node) => {
   if (isDocumentElement(node)) {
     return true;
   }
-  if (getStyleValue(node, "visibility") === "hidden") {
+  if (getStyle(node, "visibility") === "hidden") {
     return false;
   }
   let nodeOrAncestor = node;
@@ -12,7 +13,7 @@ export const isVisible = (node) => {
     if (isDocumentElement(nodeOrAncestor)) {
       break;
     }
-    if (getStyleValue(nodeOrAncestor, "display") === "none") {
+    if (getStyle(nodeOrAncestor, "display") === "none") {
       return false;
     }
     nodeOrAncestor = nodeOrAncestor.parentNode;
