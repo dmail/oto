@@ -1,0 +1,5 @@
+.modal_scrollable_content {
+  overflow: auto;
+  overscroll-behavior: contain;
+  flex-grow: 1;
+}

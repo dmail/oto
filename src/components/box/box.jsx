@@ -89,6 +89,7 @@ const BoxComponent = (
     NodeName = "div",
     role,
     name,
+    className,
     vertical = false,
     absolute = false,
     hidden = false,
@@ -325,7 +326,7 @@ const BoxComponent = (
     <NodeName
       ref={innerRef}
       name={name}
-      className="box"
+      className={`box${className ? ` ${className}` : ""}`}
       role={role}
       data-focused={innerIsFocused || undefined}
       data-vertical={vertical || undefined}

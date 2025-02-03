@@ -17,7 +17,7 @@ export const Inserts = ({ children, Top, Left, Right, Bottom }) => {
     return <>{children}</>;
   }
   return (
-    <>
+    <div name="inserts_wrapper">
       <div name="insert_top">{Top}</div>
       <div name="main">
         <div name="insert_left">{Left}</div>
@@ -25,6 +25,6 @@ export const Inserts = ({ children, Top, Left, Right, Bottom }) => {
         <div name="insert_right">{Right}</div>
       </div>
       <div name="insert_bottom">{Bottom}</div>
-    </>
+    </div>
   );
 };
