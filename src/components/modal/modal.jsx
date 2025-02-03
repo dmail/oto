@@ -9,6 +9,10 @@ import { Box } from "/components/box/box.jsx";
 
 const ModalOpened = ({
   name,
+  x = "center",
+  y = "center",
+  width,
+  height,
   container = document.body,
   children,
   requestCloseOnClickOutside = true,
@@ -179,10 +183,10 @@ const ModalOpened = ({
         <Box.div
           className="modal_box"
           backgroundColor={backgroundColor}
-          x="center"
-          y="center"
-          width="420"
-          height="200"
+          width={width}
+          height={height}
+          x={x}
+          y={y}
           focused={focusIsInside}
         >
           <Inserts {...insert}>
