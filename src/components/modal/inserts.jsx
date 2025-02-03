@@ -5,14 +5,14 @@ export const Inserts = ({ children, Top, Left, Right, Bottom }) => {
     return <>{children}</>;
   }
   return (
-    <div name="inserts_wrapper">
-      <div name="insert_top">{Top}</div>
-      <div name="main">
-        <div name="insert_left">{Left}</div>
+    <div className="inserts_wrapper">
+      <div className="insert_top">{Top}</div>
+      <div className="insert_main">
+        <div className="insert_left">{Left}</div>
         {children}
-        <div name="insert_right">{Right}</div>
+        <div className="insert_right">{Right}</div>
       </div>
-      <div name="insert_bottom">{Bottom}</div>
+      <div className="insert_bottom">{Bottom}</div>
     </div>
   );
 };
