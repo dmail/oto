@@ -87,6 +87,7 @@ export const borderOutsidePartial = ({
 const BoxComponent = (
   {
     NodeName = "div",
+    role,
     name,
     vertical = false,
     absolute = false,
@@ -325,6 +326,7 @@ const BoxComponent = (
       ref={innerRef}
       name={name}
       className="box"
+      role={role}
       data-focused={innerIsFocused || undefined}
       data-vertical={vertical || undefined}
       data-hidden={hidden || undefined}

@@ -1,0 +1,11 @@
+.insert_top,
+.insert_left,
+.insert_right,
+.insert_bottom {
+  position: relative;
+}
+
+.insert_left,
+.insert_right {
+  overflow: hidden;
+}
