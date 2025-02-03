@@ -5,28 +5,34 @@ export const getScrollLeftAndTop = (element) => {
 };
 
 export const trapScrollInside = (element) => {
-  const elementsToScrollLock = [];
+  const cleanupCallbackSet = new Set();
+  const lockScroll = (el) => {
+    const [scrollbarWidth, scrollbarHeight] = mesureScrollbar(el);
+    const paddingRight = parseInt(getStyleValue(el, "padding-right"), 0);
+    const paddingTop = parseInt(getStyleValue(el, "padding-top"), 0);
+    const removeScrollLockStyles = setStyles(el, {
+      "padding-right": `${paddingRight + scrollbarWidth}px`,
+      "padding-top": `${paddingTop + scrollbarHeight}px`,
+      "overflow": "hidden",
+    });
+    cleanupCallbackSet.add(() => {
+      removeScrollLockStyles();
+    });
+  };
   let previous = element.previousSibling;
   while (previous) {
     if (previous.nodeType === 1) {
       if (isScrollable(previous)) {
-        elementsToScrollLock.push(previous);
+        lockScroll(previous);
       }
     }
     previous = previous.previousSibling;
   }
 
-  const scrollableParents = getAllScrollableParent(element);
-  elementsToScrollLock.push(...scrollableParents);
-  const cleanupCallbackSet = new Set();
-  for (const elementToScrollLock of elementsToScrollLock) {
-    const removeScrollLockStyles = setStyles(elementToScrollLock, {
-      scrollbarGutter: "stable",
-      overflow: "hidden",
-    });
-    cleanupCallbackSet.add(() => {
-      removeScrollLockStyles();
-    });
+  const ancestorScrolls = getAncestorScrolls(element);
+  for (const ancestorScroll of ancestorScrolls) {
+    const elementToScrollLock = ancestorScroll.scrollableParent;
+    lockScroll(elementToScrollLock);
   }
 
   return () => {
@@ -37,13 +43,40 @@ export const trapScrollInside = (element) => {
   };
 };
 
-export const getAllScrollableParent = (element) => {
-  const scrollableParents = [];
+// https://davidwalsh.name/detect-scrollbar-width
+const mesureScrollbar = (scrollableElement) => {
+  const hasXScrollbar =
+    scrollableElement.scrollHeight > scrollableElement.clientHeight;
+  const hasYScrollbar =
+    scrollableElement.scrollWidth > scrollableElement.clientWidth;
+  if (!hasXScrollbar && !hasYScrollbar) {
+    return [0, 0];
+  }
+  const scrollDiv = document.createElement("div");
+  scrollDiv.style.cssText = `position: absolute; width: 100px; height: 100px; overflow: scroll; pointer-events: none; visibility: hidden;`;
+  scrollableElement.appendChild(scrollDiv);
+  const scrollbarWidth = scrollDiv.offsetWidth - scrollDiv.clientWidth;
+  const scrollbarHeight = scrollDiv.offsetHeight - scrollDiv.clientHeight;
+  scrollableElement.removeChild(scrollDiv);
+  return [
+    hasXScrollbar ? scrollbarWidth : 0,
+    hasYScrollbar ? scrollbarHeight : 0,
+  ];
+};
 
+export const getAncestorScrolls = (element) => {
+  let scrollX = 0;
+  let scrollY = 0;
+  const ancestorScrolls = [];
   const visitElement = (elementOrScrollableParent) => {
     const scrollableParent = getScrollableParent(elementOrScrollableParent);
     if (scrollableParent) {
-      scrollableParents.push(scrollableParent);
+      ancestorScrolls.push({
+        element: elementOrScrollableParent,
+        scrollableParent,
+      });
+      scrollX += scrollableParent.scrollLeft;
+      scrollY += scrollableParent.scrollTop;
       if (scrollableParent === document) {
         return;
       }
@@ -51,8 +84,9 @@ export const getAllScrollableParent = (element) => {
     }
   };
   visitElement(element);
-
-  return scrollableParents;
+  ancestorScrolls.scrollX = scrollX;
+  ancestorScrolls.scrollY = scrollY;
+  return ancestorScrolls;
 };
 
 const getScrollableParent = (arg) => {

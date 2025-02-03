@@ -20,9 +20,10 @@ export const setStyle = (element, name, value) => {
 };
 export const setStyles = (element, styleDescription) => {
   const cleanupCallbackSet = new Set();
-  for (const [name] of Object.key(styleDescription)) {
+  for (const name of Object.keys(styleDescription)) {
     const value = styleDescription[name];
-    cleanupCallbackSet.add(setStyle(element, name, value));
+    const removeStyle = setStyle(element, name, value);
+    cleanupCallbackSet.add(removeStyle);
   }
   return () => {
     for (const cleanupCallback of cleanupCallbackSet) {

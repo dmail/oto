@@ -4,11 +4,7 @@ import { findFirstDescendant } from "./dom_traversal.js";
 import { isFocusable } from "./focus_management.js";
 import { Inserts } from "./inserts.jsx";
 import modalStyleSheet from "./modal.css" with { type: "css" };
-import {
-  getAllScrollableParent,
-  getScrollLeftAndTop,
-  trapScrollInside,
-} from "./scroll_management.js";
+import { getAncestorScrolls, trapScrollInside } from "./scroll_management.js";
 import { Box } from "/components/box/box.jsx";
 
 const ModalOpened = ({
@@ -23,16 +19,9 @@ const ModalOpened = ({
   const modalRef = useRef();
   useLayoutEffect(() => {
     const modal = modalRef.current;
-    const scrollableParents = getAllScrollableParent(modal);
-    let allScrollLeft = 0;
-    let allScrollTop = 0;
-    for (const scrollableParent of scrollableParents) {
-      const [scrollLeft, scrollTop] = getScrollLeftAndTop(scrollableParent);
-      allScrollLeft += scrollLeft;
-      allScrollTop += scrollTop;
-    }
-    modal.style.top = `${allScrollTop}px`;
-    modal.style.left = `${allScrollLeft}px`;
+    const { scrollX, scrollY } = getAncestorScrolls(modal);
+    modal.style.top = `${scrollX}px`;
+    modal.style.left = `${scrollY}px`;
 
     return trapScrollInside(modal);
   }, [container]);
