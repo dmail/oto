@@ -1,17 +1,5 @@
 import insertsStyleSheet from "./inserts.css" with { type: "css" };
 
-document.adoptedStyleSheets = [
-  ...document.adoptedStyleSheets,
-  insertsStyleSheet,
-];
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
-      (s) => s !== insertsStyleSheet,
-    );
-  });
-}
-
 export const Inserts = ({ children, Top, Left, Right, Bottom }) => {
   if (!Top && !Left && !Right && !Bottom) {
     return <>{children}</>;
@@ -28,3 +16,15 @@ export const Inserts = ({ children, Top, Left, Right, Bottom }) => {
     </div>
   );
 };
+
+document.adoptedStyleSheets = [
+  ...document.adoptedStyleSheets,
+  insertsStyleSheet,
+];
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
+      (s) => s !== insertsStyleSheet,
+    );
+  });
+}
