@@ -110,6 +110,8 @@ const BoxComponent = (
     innerSpacingLeft,
     innerSpacingRight,
     innerSpacingBottom,
+    overflow,
+    overscrollBehavior,
     ratio,
     color,
     backgroundColor,
@@ -228,6 +230,8 @@ const BoxComponent = (
     color,
     backgroundColor,
     cursor,
+    overflow,
+    overscrollBehavior,
     ...props.style,
   };
   if (height === "..." || width === "...") {
