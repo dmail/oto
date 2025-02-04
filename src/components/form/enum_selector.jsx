@@ -1,8 +1,8 @@
-import { useLocalStorageState } from "hooks/use_local_storage_state.js";
+import { usePersistentState } from "hooks/use_persistent_state.js";
 import { useLayoutEffect } from "preact/hooks";
 
 export const EnumSelector = ({ name, values, onChange, ...props }) => {
-  const [selectedValue, selectedValueSetter] = useLocalStorageState(
+  const [selectedValue, selectedValueSetter] = usePersistentState(
     name,
     values[0],
   );

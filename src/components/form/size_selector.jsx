@@ -1,4 +1,4 @@
-import { useLocalStorageState } from "hooks/use_local_storage_state.js";
+import { usePersistentState } from "hooks/use_persistent_state.js";
 import { useLayoutEffect } from "preact/hooks";
 
 export const SizeSelector = ({
@@ -9,15 +9,15 @@ export const SizeSelector = ({
   em,
   ...props
 }) => {
-  const [typeSelected, typeSelectedSetter] = useLocalStorageState(
+  const [typeSelected, typeSelectedSetter] = usePersistentState(
     `${name}_type`,
     "auto",
   );
-  const [sizeAsNumber, sizeAsNumberSetter] = useLocalStorageState(
+  const [sizeAsNumber, sizeAsNumberSetter] = usePersistentState(
     `${name}_number`,
     0,
   );
-  const [sizeAsEm, sizeAsEmSetter] = useLocalStorageState(`${name}_em`, 0);
+  const [sizeAsEm, sizeAsEmSetter] = usePersistentState(`${name}_em`, 0);
 
   useLayoutEffect(() => {
     if (typeSelected === "auto") {

@@ -24,7 +24,7 @@
       import { EnumSelector } from "/components/form/enum_selector.jsx";
       // eslint-disable-next-line no-unused-vars
       import { SizeSelector } from "/components/form/size_selector.jsx";
-      import { useLocalStorageState } from "hooks/use_local_storage_state.js";
+      import { usePersistentState } from "hooks/use_persistent_state.js";
 
       // eslint-disable-next-line no-unused-vars
       const App = () => {
@@ -41,10 +41,10 @@
       const TextWithForm = () => {
         const [containerWidth, containerWidthSetter] = useState("auto");
         const [containerHeight, containerHeightSetter] = useState("auto");
-        const [text, textSetter] = useLocalStorageState("text", "Coucou");
+        const [text, textSetter] = usePersistentState("text", "Coucou");
         const [color, colorSetter] = useState("black");
         const [fontSize, fontSizeSetter] = useState(18);
-        const [lineHeight, lineHeightSetter] = useLocalStorageState(
+        const [lineHeight, lineHeightSetter] = usePersistentState(
           "line_height",
           1.4,
         );
