@@ -238,12 +238,7 @@ const initTextFiller = (
   svgElement.style.width = "auto";
   svgElement.style.height = "auto";
 
-  let currentLines = null;
   const renderLines = (lines) => {
-    if (lines === currentLines) {
-      return;
-    }
-    currentLines = lines;
     const textChildren = [];
     let lineIndex = 0;
     const childrenToDisplay = [];
