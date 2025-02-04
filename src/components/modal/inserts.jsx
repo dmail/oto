@@ -1,4 +1,4 @@
-import insertsStyleSheet from "./inserts.css" with { type: "css" };
+import "./inserts.css" with { type: "css" };
 
 export const Inserts = ({ children, Top, Left, Right, Bottom }) => {
   if (!Top && !Left && !Right && !Bottom) {
@@ -16,15 +16,3 @@ export const Inserts = ({ children, Top, Left, Right, Bottom }) => {
     </div>
   );
 };
-
-document.adoptedStyleSheets = [
-  ...document.adoptedStyleSheets,
-  insertsStyleSheet,
-];
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
-      (s) => s !== insertsStyleSheet,
-    );
-  });
-}

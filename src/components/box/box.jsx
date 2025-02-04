@@ -5,20 +5,11 @@ import {
   useRef,
   useState,
 } from "preact/hooks";
-import boxStylesheet from "./box.css" with { type: "css" };
+import "./box.css" with { type: "css" };
 import { getInnerSpacingStyles } from "./inner_spacing_styles.js";
 import { MultiBorder, useMultiBorder } from "./multi_border.jsx";
 import { FOCUSED_OUTLINE_COLOR } from "/globals/colors.js";
 import { getAvailableSize } from "/utils/get_available_size.js";
-
-document.adoptedStyleSheets = [...document.adoptedStyleSheets, boxStylesheet];
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
-      (s) => s !== boxStylesheet,
-    );
-  });
-}
 
 export const borderWithStroke = ({
   color = "black",

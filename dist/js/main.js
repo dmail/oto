@@ -429,7 +429,7 @@ const buildUrlFromDocument = (build) => {
 
 const routeSet = new Set();
 let fallbackRoute;
-const createRoute = (name, { urlTemplate, load = () => {} }) => {
+const createRoute = (name, { urlTemplate, load = () => {} } = {}) => {
   const documentRootUrl = new URL("/", window.location.origin);
   const routeUrlInstance = new URL(urlTemplate, documentRootUrl);
 
@@ -615,7 +615,7 @@ const applyRouting = async ({ url, state, signal }) => {
       }
       activeRouteSet.add(routeToEnter);
       routeToEnter.onEnter();
-      const loadPromise = routeToEnter.load({ signal });
+      const loadPromise = Promise.resolve(routeToEnter.load({ signal }));
       loadPromise.then(
         () => {
           routeToEnter.onLoadEnd();
@@ -1026,6 +1026,51 @@ const playAllMusics = () => {
 // single playback
 const playOneAtATimeSignal = d(true);
 
+// https://developer.mozilla.org/en-US/docs/Web/API/UserActivation
+
+
+const { userActivation } = window.navigator;
+const getUserActivationState = () => {
+  if (userActivation.isActive) {
+    return "active";
+  }
+  if (userActivation.hasBeenActive) {
+    return "hasBeenActive";
+  }
+  return "inactive";
+};
+
+const updateState = () => {
+  userActivationSignal.value = getUserActivationState();
+};
+
+const userActivationSignal = d(getUserActivationState());
+
+if (userActivationSignal.peek() === "inactive") {
+  const onmousedown = (mousedownEvent) => {
+    if (!mousedownEvent.isTrusted) {
+      return;
+    }
+    updateState();
+    if (userActivationSignal.peek() !== "inactive") {
+      document.removeEventListener("mousedown", onmousedown, { capture: true });
+      document.removeEventListener("keydown", onkeydown, { capture: true });
+    }
+  };
+  const onkeydown = (keydownEvent) => {
+    if (!keydownEvent.isTrusted) {
+      return;
+    }
+    updateState();
+    if (userActivationSignal.peek() !== "inactive") {
+      document.removeEventListener("mousedown", onmousedown, { capture: true });
+      document.removeEventListener("keydown", onkeydown, { capture: true });
+    }
+  };
+  document.addEventListener("mousedown", onmousedown, { capture: true });
+  document.addEventListener("keydown", onkeydown, { capture: true });
+}
+
 const soundsAllMutedSignal = d(false);
 const muteAllSounds = () => {
   soundsAllMutedSignal.value = true;
@@ -1084,7 +1129,8 @@ const sound = ({
     };
     E(() => {
       const playRequested = playRequestedSignal.value;
-      if (playRequested) {
+      const userActivation = userActivationSignal.value;
+      if (playRequested && userActivation !== "inactive") {
         if (restartOnPlay) {
           audio.currentTime = startTime;
         }
@@ -1139,6 +1185,8 @@ E(() => {
 const inlineContent$1 = new __InlineContent__(".box {\n  font-size: inherit;\n  box-sizing: border-box;\n  align-items: flex-start;\n  display: inline-flex;\n  position: relative;\n}\n\n.box[data-vertical] {\n  flex-direction: column;\n}\n\n.box[data-invisible], .box[data-hidden] {\n  visibility: hidden;\n}\n\nbutton.box {\n  background: none;\n  border: none;\n  padding: 0;\n}\n", { type: "text/css" });
 const stylesheet$1 = new CSSStyleSheet();
 stylesheet$1.replaceSync(inlineContent$1.text);
+
+document.adoptedStyleSheets = [...document.adoptedStyleSheets, stylesheet$1];
 
 const getInnerSpacingStyles = ({
   around,
@@ -2146,7 +2194,6 @@ const getPaddingAndBorderSizes = (element) => {
   };
 };
 
-document.adoptedStyleSheets = [...document.adoptedStyleSheets, stylesheet$1];
 const borderWithStroke = ({
   color = "black",
   size = 2,
@@ -2206,7 +2253,9 @@ const borderOutsidePartial = ({
 };
 const BoxComponent = ({
   NodeName = "div",
+  role,
   name,
+  className,
   vertical = false,
   absolute = false,
   hidden = false,
@@ -2227,6 +2276,8 @@ const BoxComponent = ({
   innerSpacingLeft,
   innerSpacingRight,
   innerSpacingBottom,
+  overflow,
+  overscrollBehavior,
   ratio,
   color,
   backgroundColor,
@@ -2328,6 +2379,8 @@ const BoxComponent = ({
     color,
     backgroundColor,
     cursor,
+    overflow,
+    overscrollBehavior,
     ...props.style
   };
   if (height === "..." || width === "...") {
@@ -2415,7 +2468,8 @@ const BoxComponent = ({
   return u(NodeName, {
     ref: innerRef,
     name: name,
-    className: "box",
+    className: `box${className ? ` ${className}` : ""}`,
+    role: role,
     "data-focused": innerIsFocused || undefined,
     "data-vertical": vertical || undefined,
     "data-hidden": hidden || undefined,
@@ -3259,445 +3313,12 @@ const useFrame = (frames, { msBetweenFrames = 350, loop } = {}) => {
   return [frame, play, pause];
 };
 
-const useDrawImage = (
-  canvas,
-  source,
-  { x = 0, y = 0, width, height, opacity = 1, onFirstDraw, onDraw, debug } = {},
-) => {
-  const firstDrawRef = A(true);
-  const draw = () => {
-    if (!canvas) return;
-    if (typeof source === "function") source = source();
-    if (!source) return;
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    if (width === undefined) {
-      width = canvas.width;
-    }
-    if (height === undefined) {
-      height = canvas.height;
-    }
-    if (debug) {
-      console.log("draw image", {
-        sx: x,
-        sy: y,
-        sWidth: width,
-        sHeight: height,
-        dx: 0,
-        dy: 0,
-        dWidth: canvas.width,
-        dHeight: canvas.height,
-      });
-    }
-    context.globalAlpha = opacity;
-    context.drawImage(
-      source,
-      x,
-      y,
-      width,
-      height,
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
-    if (onDraw) {
-      onDraw();
-    }
-    if (firstDrawRef.current) {
-      firstDrawRef.current = false;
-      if (onFirstDraw) {
-        onFirstDraw();
-      }
-    }
-  };
-
-  _(() => {
-    draw();
-  }, [canvas, source, x, y, width, height, opacity, onDraw]);
-
-  return draw;
-};
-
-const useSubscription = (get, subscribe) => {
-  const [value, valueSetter] = h(get());
-  const cleanupRef = A(null);
-  if (cleanupRef.current === null) {
-    const subscribeReturnValue = subscribe(() => {
-      valueSetter(get());
-    });
-    if (typeof subscribeReturnValue === "function") {
-      cleanupRef.current = subscribeReturnValue;
-    } else {
-      cleanupRef.current = true;
-    }
-  }
-  y(() => {
-    return () => {
-      const cleanup = cleanupRef.current;
-      if (typeof cleanup === "function") {
-        cleanup();
-      }
-      cleanupRef.current = null;
-    };
-  }, []);
-  return value;
-};
-
-const useImageLoader = (source) => {
-  const dataRef = A({
-    image: null,
-    loading: false,
-    error: null,
-  });
-  const onLoadStart = () => {
-    dataRef.current.loading = true;
-  };
-  const onLoadError = (image, error) => {
-    dataRef.current.image = image;
-    dataRef.current.loading = false;
-    dataRef.current.error = error;
-  };
-  const onLoadEnd = (image) => {
-    dataRef.current.image = image;
-    dataRef.current.loading = false;
-  };
-
-  let subscribe;
-  if (typeof source === "string" || source instanceof URL) {
-    onLoadStart();
-    subscribe = (update) => {
-      const image = new Image();
-      const onerror = (errorEvent) => {
-        image.removeEventListener("error", onerror);
-        image.removeEventListener("load", onload);
-        onLoadError(image, errorEvent);
-        update();
-      };
-      const onload = () => {
-        image.removeEventListener("error", onerror);
-        image.removeEventListener("load", onload);
-        onLoadEnd(image);
-        update();
-      };
-      image.addEventListener("error", onerror);
-      image.addEventListener("load", onload);
-      image.src = source;
-      return () => {
-        image.removeEventListener("error", onerror);
-        image.removeEventListener("load", onload);
-      };
-    };
-  } else if (
-    source instanceof HTMLImageElement ||
-    source instanceof SVGImageElement ||
-    source instanceof HTMLCanvasElement ||
-    source instanceof OffscreenCanvas
-  ) {
-    onLoadEnd(source);
-    subscribe = () => {};
-  } else {
-    throw new Error("unknown source");
-  }
-
-  return useSubscription(() => {
-    const { image, loading, error } = dataRef.current;
-    if (loading) {
-      return [null, null];
-    }
-    if (error) {
-      return [null, error];
-    }
-    return [image, null];
-  }, subscribe);
-};
-
-// https://github.com/leeoniya/transformation-matrix-js/blob/3595d2b36aa1b0f593bdffdb786b9e832c50c3b0/src/matrix.js#L45
-
-const fromTransformations = ({ flip, translate, rotate, scale }) => {
-  let _a = 1;
-  let _b = 0;
-  let _c = 0;
-  let _d = 1;
-  let _e = 0;
-  let _f = 0;
-  const transform = (a, b, c, d, e, f) => {
-    _a = _a * a + _c * b;
-    _b = _b * a + _d * b;
-    _c = _a * c + _c * d;
-    _d = _b * c + _d * d;
-    _e = _a * e + _c * f + _e;
-    _f = _b * e + _d * f + _f;
-  };
-
-  if (flip) {
-    const { x, y } = flip;
-    if (x) {
-      transform(-1, 0, 0, 1, 0, 0);
-    }
-    if (y) {
-      transform(1, 0, 0, -1, 0, 0);
-    }
-  }
-  if (translate) {
-    const { x, y } = translate;
-    if (x !== undefined) {
-      transform(1, 0, 0, 1, x, 0);
-    }
-    if (y !== undefined) {
-      transform(1, 0, 0, 1, 0, y);
-    }
-  }
-  if (rotate) {
-    const angle = rotate * 0.017453292519943295;
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    transform(cos, sin, -sin, cos, 0, 0);
-  }
-  if (scale) {
-    if (typeof scale === "object") {
-      const { x, y } = scale;
-      if (x !== undefined) {
-        transform(x, 0, 0, 1, 0, 0);
-      }
-      if (y !== undefined) {
-        transform(1, 0, 0, y, 0, 0);
-      }
-    } else {
-      transform(scale, 0, 0, scale, 0, 0);
-    }
-  }
-
-  return [_a, _b, _c, _d, _e, _f];
-};
-
-/*
- * TODO:
- *  - when there is an error while loading image draw a message on the canvas
- */
-
-const Img = D(({
-  name,
-  source,
-  width,
-  height,
-  onFirstDisplay,
-  ...props
-}, ref) => {
-  const innerRef = A();
-  F(ref, () => innerRef.current);
-  const imageAsCanvas = useImageCanvas(source, {
-    width,
-    height
-  });
-  useDrawImage(innerRef.current, imageAsCanvas, {
-    onFirstDraw: onFirstDisplay
-  });
-  return u("canvas", {
-    name: name,
-    ref: innerRef,
-    width: width,
-    height: height,
-    ...props,
-    style: {
-      width: "100%",
-      height: "100%",
-      ...props.style
-    }
-  });
-});
-const useImageCanvas = (sourceArg, {
-  name,
-  width,
-  height
-} = {}) => {
-  let source;
-  let sourceX;
-  let sourceY;
-  let sourceWidth;
-  let sourceHeight;
-  let sourceMirrorX;
-  let sourceMirrorY;
-  let sourceTransparentColor;
-  if (isPlainObject(sourceArg)) {
-    source = sourceArg.url || sourceArg.source;
-    sourceX = sourceArg.x;
-    if (sourceX === undefined) {
-      sourceX = 0;
-    } else {
-      sourceX = parseInt(sourceX);
-    }
-    sourceY = sourceArg.y;
-    if (sourceY === undefined) {
-      sourceY = 0;
-    } else {
-      sourceY = parseInt(sourceY);
-    }
-    sourceWidth = sourceArg.width;
-    sourceHeight = sourceArg.height;
-    sourceTransparentColor = sourceArg.transparentColor;
-    if (sourceTransparentColor === undefined) {
-      sourceTransparentColor = [];
-    } else if (typeof sourceTransparentColor[0] === "number") {
-      sourceTransparentColor = [sourceTransparentColor];
-    }
-    sourceMirrorX = sourceArg.mirrorX;
-    sourceMirrorY = sourceArg.mirrorY;
-  }
-  const [image] = useImageLoader(source);
-  const [imageWidth, imageHeight] = getImageSize(image);
-  if (width === undefined) {
-    width = imageWidth;
-  } else {
-    width = parseInt(width);
-  }
-  if (height === undefined) {
-    height = imageHeight;
-  } else {
-    height = parseInt(height);
-  }
-  if (sourceWidth === undefined) {
-    sourceWidth = width;
-  }
-  if (sourceHeight === undefined) {
-    sourceHeight = height;
-  }
-  const shouldReplace = T(() => createShouldReplace(sourceTransparentColor), sourceTransparentColor.map(color => `${color[0]}${color[1]}${color[2]}`));
-  return T(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    if (!image) {
-      return canvas;
-    }
-    const context = canvas.getContext("2d", {
-      willReadFrequently: true
-    });
-    const transformations = {
-      ...(sourceMirrorX || sourceMirrorY ? {
-        flip: {
-          x: sourceMirrorX,
-          y: sourceMirrorY
-        },
-        translate: {
-          x: sourceMirrorX ? -parseInt(width) : 0,
-          y: sourceMirrorY ? -parseInt(height) : 0
-        }
-      } : {})
-    };
-    const hasTransformations = Object.keys(transformations).length > 0;
-    context.clearRect(0, 0, width, height);
-    if (hasTransformations) {
-      context.save();
-      const matrix = fromTransformations(transformations);
-      context.setTransform(...matrix);
-      // context.setTransform(-1, 0, 0, 1, parseInt(width), 0);
-    }
-    context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
-    if (hasTransformations) {
-      context.restore();
-    }
-    if (shouldReplace) {
-      const imageData = context.getImageData(0, 0, width, height);
-      const pixels = imageData.data;
-      for (let i = 0, n = pixels.length; i < n; i += 4) {
-        const r = pixels[i];
-        const g = pixels[i + 1];
-        const b = pixels[i + 2];
-        if (shouldReplace(r, g, b)) {
-          pixels[i + 3] = 0;
-        }
-      }
-      context.putImageData(imageData, 0, 0);
-    }
-    return canvas;
-  }, [name, image, width, height, sourceX, sourceY, sourceWidth, sourceHeight, sourceMirrorX, sourceMirrorY, shouldReplace]);
-};
-const getImageSize = object => {
-  if (object instanceof HTMLImageElement || object instanceof SVGImageElement) {
-    return [object.naturalWidth, object.naturalHeight];
-  }
-  if (object instanceof HTMLCanvasElement || object instanceof OffscreenCanvas) {
-    return [object.width, object.height];
-  }
-  return [undefined, undefined];
-};
-const createShouldReplace = colorsToReplace => {
-  if (!colorsToReplace) {
-    return null;
-  }
-  if (colorsToReplace.length === 0) {
-    return null;
-  }
-  if (colorsToReplace.length === 1) {
-    const colorToReplace = colorsToReplace[0];
-    const rToReplace = parseInt(colorToReplace[0]);
-    const gToReplace = parseInt(colorToReplace[1]);
-    const bToReplace = parseInt(colorToReplace[2]);
-    return (r, g, b) => {
-      return r === rToReplace && g === gToReplace && b === bToReplace;
-    };
-  }
-  return (r, g, b) => {
-    return colorsToReplace.some(c => {
-      return r === c[0] && g === c[1] && b === c[2];
-    });
-  };
-};
-const isPlainObject = obj => {
-  if (typeof obj !== "object" || obj === null) {
-    return false;
-  }
-  let proto = obj;
-  while (Object.getPrototypeOf(proto) !== null) {
-    proto = Object.getPrototypeOf(proto);
-  }
-  return Object.getPrototypeOf(obj) === proto || Object.getPrototypeOf(obj) === null;
-};
-
-const characterSpritesheetUrl = new URL(__v__("/other/character_spritesheet.png"), import.meta.url);
-const HERO_STATE_CELL = {
-  walking_bottom_a: {
-    x: 0 + 9,
-    y: 0 + 17
-  },
-  walking_bottom_b: {
-    x: 17 + 9,
-    y: 0 + 17
-  },
-  walking_left_a: {
-    x: 17 * 2 + 9,
-    y: 0 + 17
-  },
-  walking_left_b: {
-    x: 17 * 3 + 9,
-    y: 0 + 17
-  },
-  walking_top_a: {
-    x: 17 * 4 + 9,
-    y: 0 + 17
-  },
-  walking_top_b: {
-    x: 17 * 5 + 9,
-    y: 0 + 17
-  },
-  walking_right_a: {
-    x: 17 * 2 + 9,
-    y: 0 + 17,
-    mirrorX: true
-  },
-  walking_right_b: {
-    x: 17 * 3 + 9,
-    y: 0 + 17,
-    mirrorX: true
-  }
-};
-const Benjamin = D(({
-  direction = "top",
+const otoWalkASvgUrl = new URL(__v__("/other/oto_1.svg"), import.meta.url);
+const otoWalkBSvgUrl = new URL(__v__("/other/oto_2.svg"), import.meta.url);
+const Oto = D(({
   activity = "",
   // 'walking', 'jumping', 'pushing', 'wondering'
-  animate = true,
-  ...props
+  animate = true
 }, ref) => {
   const hasAnimation = activity !== "";
   const [frame, playFrameAnimation, pauseFrameAnimation] = useFrame(["a", "b"], {
@@ -3708,26 +3329,12 @@ const Benjamin = D(({
     playFrameAnimation();
     return pauseFrameAnimation;
   }, [animate, hasAnimation, playFrameAnimation, pauseFrameAnimation]);
-  const {
-    x,
-    y,
-    mirrorX,
-    mirrorY
-  } = HERO_STATE_CELL[`${activity}_${direction}_${frame}`];
-  return u(Img, {
+  const url = frame === "a" ? otoWalkASvgUrl : otoWalkBSvgUrl;
+  return u("img", {
     ref: ref,
-    name: "benjamin",
-    source: {
-      url: characterSpritesheetUrl,
-      x,
-      y,
-      mirrorX,
-      mirrorY,
-      transparentColor: [[0, 206, 206], [0, 155, 155]]
-    },
-    width: "17",
-    height: "17",
-    ...props
+    width: "100%",
+    height: "auto",
+    src: url
   });
 });
 
@@ -4328,7 +3935,7 @@ const Ally = D((props, ref) => {
     ratio: "1/1",
     height: "100%",
     x: "center",
-    children: [u(Benjamin, {
+    children: [u(Oto, {
       ref: elementRef,
       direction: "top",
       activity: "walking"
@@ -4353,6 +3960,402 @@ const Ally = D((props, ref) => {
   });
 });
 
+const useDrawImage = (
+  canvas,
+  source,
+  { x = 0, y = 0, width, height, opacity = 1, onFirstDraw, onDraw, debug } = {},
+) => {
+  const firstDrawRef = A(true);
+  const draw = () => {
+    if (!canvas) return;
+    if (typeof source === "function") source = source();
+    if (!source) return;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    if (width === undefined) {
+      width = canvas.width;
+    }
+    if (height === undefined) {
+      height = canvas.height;
+    }
+    if (debug) {
+      console.log("draw image", {
+        sx: x,
+        sy: y,
+        sWidth: width,
+        sHeight: height,
+        dx: 0,
+        dy: 0,
+        dWidth: canvas.width,
+        dHeight: canvas.height,
+      });
+    }
+    context.globalAlpha = opacity;
+    context.drawImage(
+      source,
+      x,
+      y,
+      width,
+      height,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
+    if (onDraw) {
+      onDraw();
+    }
+    if (firstDrawRef.current) {
+      firstDrawRef.current = false;
+      if (onFirstDraw) {
+        onFirstDraw();
+      }
+    }
+  };
+
+  _(() => {
+    draw();
+  }, [canvas, source, x, y, width, height, opacity, onDraw]);
+
+  return draw;
+};
+
+const useSubscription = (get, subscribe) => {
+  const [value, valueSetter] = h(get());
+  const cleanupRef = A(null);
+  if (cleanupRef.current === null) {
+    const subscribeReturnValue = subscribe(() => {
+      valueSetter(get());
+    });
+    if (typeof subscribeReturnValue === "function") {
+      cleanupRef.current = subscribeReturnValue;
+    } else {
+      cleanupRef.current = true;
+    }
+  }
+  y(() => {
+    return () => {
+      const cleanup = cleanupRef.current;
+      if (typeof cleanup === "function") {
+        cleanup();
+      }
+      cleanupRef.current = null;
+    };
+  }, []);
+  return value;
+};
+
+const useImageLoader = (source) => {
+  const dataRef = A({
+    image: null,
+    loading: false,
+    error: null,
+  });
+  const onLoadStart = () => {
+    dataRef.current.loading = true;
+  };
+  const onLoadError = (image, error) => {
+    dataRef.current.image = image;
+    dataRef.current.loading = false;
+    dataRef.current.error = error;
+  };
+  const onLoadEnd = (image) => {
+    dataRef.current.image = image;
+    dataRef.current.loading = false;
+  };
+
+  let subscribe;
+  if (typeof source === "string" || source instanceof URL) {
+    onLoadStart();
+    subscribe = (update) => {
+      const image = new Image();
+      const onerror = (errorEvent) => {
+        image.removeEventListener("error", onerror);
+        image.removeEventListener("load", onload);
+        onLoadError(image, errorEvent);
+        update();
+      };
+      const onload = () => {
+        image.removeEventListener("error", onerror);
+        image.removeEventListener("load", onload);
+        onLoadEnd(image);
+        update();
+      };
+      image.addEventListener("error", onerror);
+      image.addEventListener("load", onload);
+      image.src = source;
+      return () => {
+        image.removeEventListener("error", onerror);
+        image.removeEventListener("load", onload);
+      };
+    };
+  } else if (
+    source instanceof HTMLImageElement ||
+    source instanceof SVGImageElement ||
+    source instanceof HTMLCanvasElement ||
+    source instanceof OffscreenCanvas
+  ) {
+    onLoadEnd(source);
+    subscribe = () => {};
+  } else {
+    throw new Error("unknown source");
+  }
+
+  return useSubscription(() => {
+    const { image, loading, error } = dataRef.current;
+    if (loading) {
+      return [null, null];
+    }
+    if (error) {
+      return [null, error];
+    }
+    return [image, null];
+  }, subscribe);
+};
+
+// https://github.com/leeoniya/transformation-matrix-js/blob/3595d2b36aa1b0f593bdffdb786b9e832c50c3b0/src/matrix.js#L45
+
+const fromTransformations = ({ flip, translate, rotate, scale }) => {
+  let _a = 1;
+  let _b = 0;
+  let _c = 0;
+  let _d = 1;
+  let _e = 0;
+  let _f = 0;
+  const transform = (a, b, c, d, e, f) => {
+    _a = _a * a + _c * b;
+    _b = _b * a + _d * b;
+    _c = _a * c + _c * d;
+    _d = _b * c + _d * d;
+    _e = _a * e + _c * f + _e;
+    _f = _b * e + _d * f + _f;
+  };
+
+  if (flip) {
+    const { x, y } = flip;
+    if (x) {
+      transform(-1, 0, 0, 1, 0, 0);
+    }
+    if (y) {
+      transform(1, 0, 0, -1, 0, 0);
+    }
+  }
+  if (translate) {
+    const { x, y } = translate;
+    if (x !== undefined) {
+      transform(1, 0, 0, 1, x, 0);
+    }
+    if (y !== undefined) {
+      transform(1, 0, 0, 1, 0, y);
+    }
+  }
+  if (rotate) {
+    const angle = rotate * 0.017453292519943295;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+    transform(cos, sin, -sin, cos, 0, 0);
+  }
+  if (scale) {
+    if (typeof scale === "object") {
+      const { x, y } = scale;
+      if (x !== undefined) {
+        transform(x, 0, 0, 1, 0, 0);
+      }
+      if (y !== undefined) {
+        transform(1, 0, 0, y, 0, 0);
+      }
+    } else {
+      transform(scale, 0, 0, scale, 0, 0);
+    }
+  }
+
+  return [_a, _b, _c, _d, _e, _f];
+};
+
+/*
+ * TODO:
+ *  - when there is an error while loading image draw a message on the canvas
+ */
+
+const Img = D(({
+  name,
+  source,
+  width,
+  height,
+  onFirstDisplay,
+  ...props
+}, ref) => {
+  const innerRef = A();
+  F(ref, () => innerRef.current);
+  const imageAsCanvas = useImageCanvas(source, {
+    width,
+    height
+  });
+  useDrawImage(innerRef.current, imageAsCanvas, {
+    onFirstDraw: onFirstDisplay
+  });
+  return u("canvas", {
+    name: name,
+    ref: innerRef,
+    width: width,
+    height: height,
+    ...props,
+    style: {
+      width: "100%",
+      height: "100%",
+      ...props.style
+    }
+  });
+});
+const useImageCanvas = (sourceArg, {
+  name,
+  width,
+  height
+} = {}) => {
+  let source;
+  let sourceX;
+  let sourceY;
+  let sourceWidth;
+  let sourceHeight;
+  let sourceMirrorX;
+  let sourceMirrorY;
+  let sourceTransparentColor;
+  if (isPlainObject(sourceArg)) {
+    source = sourceArg.url || sourceArg.source;
+    sourceX = sourceArg.x;
+    if (sourceX === undefined) {
+      sourceX = 0;
+    } else {
+      sourceX = parseInt(sourceX);
+    }
+    sourceY = sourceArg.y;
+    if (sourceY === undefined) {
+      sourceY = 0;
+    } else {
+      sourceY = parseInt(sourceY);
+    }
+    sourceWidth = sourceArg.width;
+    sourceHeight = sourceArg.height;
+    sourceTransparentColor = sourceArg.transparentColor;
+    if (sourceTransparentColor === undefined) {
+      sourceTransparentColor = [];
+    } else if (typeof sourceTransparentColor[0] === "number") {
+      sourceTransparentColor = [sourceTransparentColor];
+    }
+    sourceMirrorX = sourceArg.mirrorX;
+    sourceMirrorY = sourceArg.mirrorY;
+  }
+  const [image] = useImageLoader(source);
+  const [imageWidth, imageHeight] = getImageSize(image);
+  if (width === undefined) {
+    width = imageWidth;
+  } else {
+    width = parseInt(width);
+  }
+  if (height === undefined) {
+    height = imageHeight;
+  } else {
+    height = parseInt(height);
+  }
+  if (sourceWidth === undefined) {
+    sourceWidth = width;
+  }
+  if (sourceHeight === undefined) {
+    sourceHeight = height;
+  }
+  const shouldReplace = T(() => createShouldReplace(sourceTransparentColor), sourceTransparentColor.map(color => `${color[0]}${color[1]}${color[2]}`));
+  return T(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    if (!image) {
+      return canvas;
+    }
+    const context = canvas.getContext("2d", {
+      willReadFrequently: true
+    });
+    const transformations = {
+      ...(sourceMirrorX || sourceMirrorY ? {
+        flip: {
+          x: sourceMirrorX,
+          y: sourceMirrorY
+        },
+        translate: {
+          x: sourceMirrorX ? -parseInt(width) : 0,
+          y: sourceMirrorY ? -parseInt(height) : 0
+        }
+      } : {})
+    };
+    const hasTransformations = Object.keys(transformations).length > 0;
+    context.clearRect(0, 0, width, height);
+    if (hasTransformations) {
+      context.save();
+      const matrix = fromTransformations(transformations);
+      context.setTransform(...matrix);
+      // context.setTransform(-1, 0, 0, 1, parseInt(width), 0);
+    }
+    context.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+    if (hasTransformations) {
+      context.restore();
+    }
+    if (shouldReplace) {
+      const imageData = context.getImageData(0, 0, width, height);
+      const pixels = imageData.data;
+      for (let i = 0, n = pixels.length; i < n; i += 4) {
+        const r = pixels[i];
+        const g = pixels[i + 1];
+        const b = pixels[i + 2];
+        if (shouldReplace(r, g, b)) {
+          pixels[i + 3] = 0;
+        }
+      }
+      context.putImageData(imageData, 0, 0);
+    }
+    return canvas;
+  }, [name, image, width, height, sourceX, sourceY, sourceWidth, sourceHeight, sourceMirrorX, sourceMirrorY, shouldReplace]);
+};
+const getImageSize = object => {
+  if (object instanceof HTMLImageElement || object instanceof SVGImageElement) {
+    return [object.naturalWidth, object.naturalHeight];
+  }
+  if (object instanceof HTMLCanvasElement || object instanceof OffscreenCanvas) {
+    return [object.width, object.height];
+  }
+  return [undefined, undefined];
+};
+const createShouldReplace = colorsToReplace => {
+  if (!colorsToReplace) {
+    return null;
+  }
+  if (colorsToReplace.length === 0) {
+    return null;
+  }
+  if (colorsToReplace.length === 1) {
+    const colorToReplace = colorsToReplace[0];
+    const rToReplace = parseInt(colorToReplace[0]);
+    const gToReplace = parseInt(colorToReplace[1]);
+    const bToReplace = parseInt(colorToReplace[2]);
+    return (r, g, b) => {
+      return r === rToReplace && g === gToReplace && b === bToReplace;
+    };
+  }
+  return (r, g, b) => {
+    return colorsToReplace.some(c => {
+      return r === c[0] && g === c[1] && b === c[2];
+    });
+  };
+};
+const isPlainObject = obj => {
+  if (typeof obj !== "object" || obj === null) {
+    return false;
+  }
+  let proto = obj;
+  while (Object.getPrototypeOf(proto) !== null) {
+    proto = Object.getPrototypeOf(proto);
+  }
+  return Object.getPrototypeOf(obj) === proto || Object.getPrototypeOf(obj) === null;
+};
+
 const battleBackgroundsSpritesheetUrl = new URL(__v__("/other/battle_background_spritesheet.png"), import.meta.url);
 const MountainAndSkyBattleBackground = D((props, ref) => {
   return u(Img, {
@@ -4372,6 +4375,8 @@ const MountainAndSkyBattleBackground = D((props, ref) => {
 const inlineContent = new __InlineContent__("button {\n  outline: none;\n  position: relative;\n}\n\n.focus_ring, .active_ring {\n  color: #0000;\n  position: absolute;\n  inset: 0;\n  overflow: visible;\n}\n\n:focus-visible > .focus_ring {\n  color: #ff0;\n}\n\n@media (hover: hover) {\n  :hover > .active_ring, :active > .active_ring {\n    color: #fff3;\n  }\n}\n", { type: "text/css" });
 const stylesheet = new CSSStyleSheet();
 stylesheet.replaceSync(inlineContent.text);
+
+document.adoptedStyleSheets = [...document.adoptedStyleSheets, stylesheet];
 
 const MessageComponent = ({
   name,
@@ -4423,7 +4428,6 @@ const MessageComponent = ({
 };
 const Message = D(MessageComponent);
 
-document.adoptedStyleSheets = [...document.adoptedStyleSheets, stylesheet];
 const Button = ({
   children,
   color,
@@ -4894,51 +4898,6 @@ const taurus = {
     },
   },
 };
-
-// https://developer.mozilla.org/en-US/docs/Web/API/UserActivation
-
-
-const { userActivation } = window.navigator;
-const getUserActivationState = () => {
-  if (userActivation.isActive) {
-    return "active";
-  }
-  if (userActivation.hasBeenActive) {
-    return "hasBeenActive";
-  }
-  return "inactive";
-};
-
-const updateState = () => {
-  userActivationSignal.value = getUserActivationState();
-};
-
-const userActivationSignal = d(getUserActivationState());
-
-if (userActivationSignal.peek() === "inactive") {
-  const onmousedown = (mousedownEvent) => {
-    if (!mousedownEvent.isTrusted) {
-      return;
-    }
-    updateState();
-    if (userActivationSignal.peek() !== "inactive") {
-      document.removeEventListener("mousedown", onmousedown, { capture: true });
-      document.removeEventListener("keydown", onkeydown, { capture: true });
-    }
-  };
-  const onkeydown = (keydownEvent) => {
-    if (!keydownEvent.isTrusted) {
-      return;
-    }
-    updateState();
-    if (userActivationSignal.peek() !== "inactive") {
-      document.removeEventListener("mousedown", onmousedown, { capture: true });
-      document.removeEventListener("keydown", onkeydown, { capture: true });
-    }
-  };
-  document.addEventListener("mousedown", onmousedown, { capture: true });
-  document.addEventListener("keydown", onkeydown, { capture: true });
-}
 
 const fadeInDefaults = {
   duration: 600,
@@ -5753,7 +5712,7 @@ const Fight = ({
         height: "10%"
       }), u(Box, {
         name: "allies_box",
-        height: "10%",
+        height: "15%",
         width: "100%",
         children: u(Ally, {
           ref: heroRef

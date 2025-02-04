@@ -2,8 +2,6 @@
 
 - le bouton pause ouvre les options de gestions du sons (et autre plus tard)
 
-- integration svg flore
-
 - lorsqu'on bat le monstre on affiche un écran de selection
   - on voit qu'on a battu le premier et on peut affronter un second
   - on va faire cela avec des routes
@@ -11,6 +9,8 @@
   cette option ne soit plus disponible (donc replace dans navigate)
 
 - mockup de tout le jeu en v1
+
+- packages/independent packages/related for oto too
 
 - écran de game over (choix retry/revenir a la carte du monde)
 

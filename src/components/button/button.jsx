@@ -1,20 +1,8 @@
 import { useState } from "preact/hooks";
-import buttonStylesheet from "./button.css" with { type: "css" };
+import "./button.css" with { type: "css" };
 import { Box } from "/components/box/box.jsx";
 import { Message } from "/components/message/message.jsx";
 import { HOVER_TEXT_COLOR } from "/globals/colors.js";
-
-document.adoptedStyleSheets = [
-  ...document.adoptedStyleSheets,
-  buttonStylesheet,
-];
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    document.adoptedStyleSheets = document.adoptedStyleSheets.filter(
-      (s) => s !== buttonStylesheet,
-    );
-  });
-}
 
 export const Button = ({ children, color, ...props }) => {
   const [hovered, hoveredSetter] = useState(false);
