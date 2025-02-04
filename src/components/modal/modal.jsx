@@ -13,6 +13,7 @@ import modalStyleSheet from "./modal.css" with { type: "css" };
 import { Box } from "/components/box/box.jsx";
 
 const ModalOpened = ({
+  id,
   name,
   x = "center",
   y = "center",
@@ -163,6 +164,7 @@ const ModalOpened = ({
   return createPortal(
     <div
       ref={modalRef}
+      id={id}
       name={name}
       role="dialog"
       className="modal"
