@@ -12,13 +12,6 @@ await build({
   entryPoints: {
     "./index.html": "index.html",
   },
-  bundling: {
-    js_module: {
-      chunks: {
-        vendors: { "file:///**/node_modules/": true },
-      },
-    },
-  },
   runtimeCompat: {
     chrome: "100",
   },
