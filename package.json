@@ -28,7 +28,7 @@
     "@babel/plugin-syntax-import-attributes": "7.26.0",
     "@babel/plugin-transform-react-jsx": "7.25.9",
     "@jsenv/assert": "4.4.5",
-    "@jsenv/core": "40.1.2",
+    "@jsenv/core": "40.1.3",
     "@jsenv/custom-elements-redefine": "0.0.1",
     "@jsenv/eslint-config-relax": "1.4.6",
     "@jsenv/plugin-preact": "1.7.8",

@@ -7,14 +7,16 @@ import { build } from "@jsenv/core";
 import { jsenvPluginPreact } from "@jsenv/plugin-preact";
 
 await build({
-  sourceDirectoryUrl: new URL("../src/", import.meta.url),
-  buildDirectoryUrl: new URL("../dist/", import.meta.url),
+  sourceDirectoryUrl: import.meta.resolve("../src/"),
+  buildDirectoryUrl: import.meta.resolve("../dist/"),
   entryPoints: {
-    "./index.html": "index.html",
+    "./index.html": {
+      runtimeCompat: {
+        chrome: "100",
+      },
+      minification: false,
+      plugins: [jsenvPluginPreact()],
+    }
   },
-  runtimeCompat: {
-    chrome: "100",
-  },
-  minification: false,
-  plugins: [jsenvPluginPreact()],
+
 });
