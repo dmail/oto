@@ -1,5 +1,5 @@
-import { registerRoutes, useResizeObserver, useStructuredMemo, useDrawImage, useImageLoader, fromTransformations, useKeyEffect, useFontFace } from "/js/workspaces.js";
-import { E, w, d$1 as d, d as d$1, _, u, k, D, A, F, q, y, E$1, H, T, b } from "/js/vendors.js";
+import { registerRoutes, useResizeObserver, useStructuredMemo, useDrawImage, useImageLoader, fromTransformations, useKeyEffect, useFontFace } from "/oto_packages.js";
+import { d$1 as d, E, w, d as d$1, _, u, k, D, A, F, q, y, E$1, H, T, b } from "/oto_node_modules.js";
 
 const goblinFontUrl = new URL(__v__("/other/AGoblinAppears-o2aV.ttf"), import.meta.url).href;
 new URL(__v__("/other/SuperLegendBoy-4w8Y.ttf"), import.meta.url).href;
@@ -436,30 +436,15 @@ const animateNumber = (
 // https://easings.net/
 
 const EASING = {
-  LINEAR: (x) => x,
   EASE: (x) => {
     return cubicBezier(x, 0.25, 0.1, 0.25, 1.0);
-  },
-  EASE_IN_OUT_CUBIC: (x) => {
-    return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
   },
   EASE_IN_EXPO: (x) => {
     return x === 0 ? 0 : Math.pow(2, 10 * x - 10);
   },
   EASE_OUT_EXPO: (x) => {
     return x === 1 ? 1 : 1 - Math.pow(2, -10 * x);
-  },
-  EASE_OUT_ELASTIC: (x) => {
-    const c4 = (2 * Math.PI) / 3;
-    if (x === 0) {
-      return 0;
-    }
-    if (x === 1) {
-      return 1;
-    }
-    return Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
-  },
-};
+  }};
 
 const cubicBezier = (t, initial, p1, p2, final) => {
   return (
@@ -2262,9 +2247,7 @@ const Curtain = D((props, ref) => {
       } = {}) => {
         await animateElement(innerRef.current, {
           to: {
-            opacity: toOpacity,
-            display: "none"
-          }
+            opacity: toOpacity}
         }).finished;
       }
     };
@@ -2820,7 +2803,6 @@ const TextComponent = ({
         autoIsRelativeToFont: true
       });
       const [paragraphs, setParagraph] = initTextFiller(lines, {
-        name,
         dx,
         dy,
         lineHeight,
@@ -2832,7 +2814,6 @@ const TextComponent = ({
         color,
         outlineColor,
         outlineSize,
-        controller,
         svgElement,
         textElement
       });
@@ -3868,16 +3849,11 @@ const Opponent = D(({
     return {
       glow: async () => {
         await glow(imgRef.current, {
-          id: "enemy_glow",
-          elementRef: imgRef,
-          from: "black",
-          to: "white",
           duration: 300
         }).finished;
       },
       erase: async () => {
         await erase(imgRef.current, {
-          id: "enemy_erase",
           iterations: 4,
           duration: 300
         }).finished;

@@ -1,4 +1,4 @@
-import { A, d, d$1, w, _, q, y, T } from "/js/vendors.js";
+import { A, d, d$1, w, _, q, y, T } from "/oto_node_modules.js";
 
 const useFontFace = (
   family,
