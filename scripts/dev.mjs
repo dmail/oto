@@ -8,7 +8,7 @@ import { jsenvPluginPreact } from "@jsenv/plugin-preact";
 import open from "open";
 
 export const devServer = await startDevServer({
-  sourceDirectoryUrl: new URL("../src/", import.meta.url),
+  sourceDirectoryUrl: import.meta.resolve("../src/"),
   plugins: [
     jsenvPluginPreact({
       refreshInstrumentation: { "file://**/*.jsx": true },
